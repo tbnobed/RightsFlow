@@ -107,7 +107,7 @@ export default function Royalties() {
                 </tr>
               </thead>
               <tbody>
-                {royalties?.map((royalty: any) => (
+                {Array.isArray(royalties) && royalties.map((royalty: any) => (
                   <tr key={royalty.id} className="border-b border-border hover:bg-muted/50 transition-all">
                     <td className="py-3 text-foreground font-medium" data-testid={`text-contract-${royalty.id}`}>
                       {royalty.contract.ipName}
@@ -131,7 +131,7 @@ export default function Royalties() {
                     </td>
                   </tr>
                 ))}
-                {(!royalties || royalties.length === 0) && (
+                {(!Array.isArray(royalties) || royalties.length === 0) && (
                   <tr>
                     <td colSpan={6} className="py-8 text-center text-muted-foreground">
                       No royalty calculations found. Create a new calculation to get started.

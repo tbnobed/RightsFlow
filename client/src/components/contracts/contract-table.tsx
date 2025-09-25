@@ -120,8 +120,8 @@ export default function ContractTable({ contracts, isLoading, onUpdate }: Contra
                   {new Date(contract.endDate).toLocaleDateString()}
                 </td>
                 <td className="py-4 px-6" data-testid={`status-${contract.id}`}>
-                  <Badge className={getStatusColor(contract.status)}>
-                    {contract.status}
+                  <Badge className={getStatusColor(contract.status || "Pending")}>
+                    {contract.status || "Pending"}
                   </Badge>
                 </td>
                 <td className="py-4 px-6">

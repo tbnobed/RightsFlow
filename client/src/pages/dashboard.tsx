@@ -54,7 +54,7 @@ export default function Dashboard() {
       </div>
 
       <StatsCards stats={stats} />
-      <RecentActivity contracts={contracts?.slice(0, 5) || []} />
+      <RecentActivity contracts={Array.isArray(contracts) ? contracts.slice(0, 5) : []} />
     </div>
   );
 }

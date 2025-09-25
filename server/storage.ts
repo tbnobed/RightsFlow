@@ -126,7 +126,7 @@ export class DatabaseStorage implements IStorage {
     const conditions = [];
     
     if (filters.status) {
-      conditions.push(eq(contracts.status, filters.status));
+      conditions.push(eq(contracts.status, filters.status as any));
     }
     
     if (filters.territory) {
@@ -144,7 +144,7 @@ export class DatabaseStorage implements IStorage {
     }
     
     if (conditions.length > 0) {
-      query = query.where(and(...conditions));
+      query = query.where(and(...conditions)) as any;
     }
     
     return await query.orderBy(desc(contracts.createdAt));

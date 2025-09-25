@@ -66,8 +66,8 @@ export default function RecentActivity({ contracts }: RecentActivityProps) {
                     <p className="font-medium text-foreground">{contract.ipName}</p>
                     <p className="text-sm text-muted-foreground">{contract.licensee} • {contract.territory}</p>
                   </div>
-                  <Badge className={getStatusColor(contract.status)}>
-                    {contract.status}
+                  <Badge className={getStatusColor(contract.status || "Pending")}>
+                    {contract.status || "Pending"}
                   </Badge>
                 </div>
               ))}
