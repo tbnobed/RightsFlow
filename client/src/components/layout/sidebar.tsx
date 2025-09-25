@@ -1,5 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 import { 
   BarChart3, 
   File, 
@@ -20,6 +21,7 @@ const navigation = [
 
 export default function Sidebar() {
   const [location] = useLocation();
+  const { user } = useAuth();
 
   return (
     <div className="w-64 bg-card border-r border-border flex flex-col">
@@ -57,11 +59,13 @@ export default function Sidebar() {
       <div className="p-4 border-t border-border">
         <div className="flex items-center">
           <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-medium mr-3">
-            U
+            {user?.firstName?.[0] || 'U'}
           </div>
           <div>
-            <p className="text-sm font-medium text-foreground">User</p>
-            <p className="text-xs text-muted-foreground">Role</p>
+            <p className="text-sm font-medium text-foreground">
+              {user ? `${user.firstName} ${user.lastName}` : 'Loading...'}
+            </p>
+            <p className="text-xs text-muted-foreground">{user?.role || 'Role'}</p>
           </div>
         </div>
       </div>
