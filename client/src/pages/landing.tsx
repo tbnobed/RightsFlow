@@ -111,7 +111,6 @@ export default function Landing() {
           </Form>
           
           <div className="mt-6 text-center text-sm text-muted-foreground">
-            <p>Default admin: admin@example.com / admin123</p>
             <p className="mt-1">Contact your administrator for account access</p>
           </div>
         </CardContent>
