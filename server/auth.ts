@@ -232,4 +232,39 @@ export function setupAuth(app: Express) {
       res.status(500).json({ message: "Failed to update user" });
     }
   });
+
+  // Toggle user active status (admin only)
+  app.patch("/api/auth/users/:id/toggle", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const userId = req.params.id;
+      const { isActive } = req.body;
+      
+      const oldUser = await storage.getUser(userId);
+      const updatedUser = await storage.updateUser(userId, { isActive });
+      
+      // Create audit log
+      await storage.createAuditLog({
+        action: isActive ? "User Activated" : "User Deactivated",
+        entityType: "User",
+        entityId: userId,
+        oldValues: { isActive: oldUser.isActive },
+        newValues: { isActive },
+        userId: req.session.userId,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
+      });
+      
+      res.json({
+        id: updatedUser.id,
+        email: updatedUser.email,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+        role: updatedUser.role,
+        isActive: updatedUser.isActive,
+      });
+    } catch (error) {
+      console.error("Error toggling user status:", error);
+      res.status(500).json({ message: "Failed to toggle user status" });
+    }
+  });
 }

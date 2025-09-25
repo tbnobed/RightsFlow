@@ -7,21 +7,32 @@ import {
   Calendar, 
   DollarSign, 
   ChartBar, 
-  History 
+  History,
+  Users
 } from "lucide-react";
 
-const navigation = [
-  { name: "Dashboard", href: "/", icon: BarChart3 },
-  { name: "Contracts", href: "/contracts", icon: File },
-  { name: "Rights Availability", href: "/availability", icon: Calendar },
-  { name: "Royalties", href: "/royalties", icon: DollarSign },
-  { name: "Reports", href: "/reports", icon: ChartBar },
-  { name: "Audit Trail", href: "/audit", icon: History },
-];
+const getNavigation = (isAdmin: boolean) => {
+  const baseNavigation = [
+    { name: "Dashboard", href: "/", icon: BarChart3 },
+    { name: "Contracts", href: "/contracts", icon: File },
+    { name: "Rights Availability", href: "/availability", icon: Calendar },
+    { name: "Royalties", href: "/royalties", icon: DollarSign },
+    { name: "Reports", href: "/reports", icon: ChartBar },
+    { name: "Audit Trail", href: "/audit", icon: History },
+  ];
+
+  if (isAdmin) {
+    baseNavigation.push({ name: "Users", href: "/users", icon: Users });
+  }
+
+  return baseNavigation;
+};
 
 export default function Sidebar() {
   const [location] = useLocation();
   const { user } = useAuth();
+  
+  const navigation = getNavigation(user?.role === "Admin" || false);
 
   return (
     <div className="w-64 bg-card border-r border-border flex flex-col">

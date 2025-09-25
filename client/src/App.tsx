@@ -11,6 +11,7 @@ import Availability from "@/pages/availability";
 import Royalties from "@/pages/royalties";
 import Reports from "@/pages/reports";
 import Audit from "@/pages/audit";
+import Users from "@/pages/users";
 import NotFound from "@/pages/not-found";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
@@ -46,6 +47,7 @@ function Router() {
             <Route path="/royalties" component={Royalties} />
             <Route path="/reports" component={Reports} />
             <Route path="/audit" component={Audit} />
+            <Route path="/users" component={Users} />
             <Route component={NotFound} />
           </Switch>
         </main>
