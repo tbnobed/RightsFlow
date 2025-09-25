@@ -40,25 +40,6 @@ export default function Users() {
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
 
-  // Only allow admin access
-  if (currentUser?.role !== "Admin") {
-    return (
-      <div className="p-6">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <Shield className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Access Denied</h3>
-              <p className="text-muted-foreground">
-                You need Admin privileges to access user management.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   const createUserForm = useForm<CreateUserData>({
     resolver: zodResolver(createUserSchema),
     defaultValues: {
@@ -146,6 +127,25 @@ export default function Users() {
       isActive: !currentStatus,
     });
   };
+
+  // Only allow admin access
+  if (currentUser?.role !== "Admin") {
+    return (
+      <div className="p-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <Shield className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Access Denied</h3>
+              <p className="text-muted-foreground">
+                You need Admin privileges to access user management.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">

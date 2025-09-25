@@ -104,6 +104,9 @@ export default function Contracts() {
                   setShowForm(false);
                   refetch();
                 }}
+                onCancel={() => {
+                  setShowForm(false);
+                }}
               />
             </DialogContent>
           </Dialog>
