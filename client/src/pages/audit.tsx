@@ -49,7 +49,7 @@ export default function Audit() {
               <SelectValue placeholder="All Actions" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Actions</SelectItem>
+              <SelectItem value="all">All Actions</SelectItem>
               <SelectItem value="Contract Created">Contract Created</SelectItem>
               <SelectItem value="Contract Updated">Contract Updated</SelectItem>
               <SelectItem value="Contract Deleted">Contract Deleted</SelectItem>
@@ -65,7 +65,7 @@ export default function Audit() {
               <SelectValue placeholder="All Users" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Users</SelectItem>
+              <SelectItem value="all">All Users</SelectItem>
               {/* Users would be populated from API */}
             </SelectContent>
           </Select>

@@ -39,8 +39,8 @@ export default function Contracts() {
     queryFn: async () => {
       const params = new URLSearchParams();
       if (filters.search) params.append('search', filters.search);
-      if (filters.status) params.append('status', filters.status);
-      if (filters.territory) params.append('territory', filters.territory);
+      if (filters.status && filters.status !== 'all') params.append('status', filters.status);
+      if (filters.territory && filters.territory !== 'all') params.append('territory', filters.territory);
       
       const response = await fetch(`/api/contracts?${params}`);
       if (!response.ok) throw new Error('Failed to fetch contracts');
@@ -127,7 +127,7 @@ export default function Contracts() {
               <SelectValue placeholder="All Statuses" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Statuses</SelectItem>
+              <SelectItem value="all">All Statuses</SelectItem>
               <SelectItem value="Active">Active</SelectItem>
               <SelectItem value="Expired">Expired</SelectItem>
               <SelectItem value="Pending">Pending</SelectItem>
@@ -142,7 +142,7 @@ export default function Contracts() {
               <SelectValue placeholder="All Territories" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Territories</SelectItem>
+              <SelectItem value="all">All Territories</SelectItem>
               <SelectItem value="North America">North America</SelectItem>
               <SelectItem value="Europe">Europe</SelectItem>
               <SelectItem value="Asia Pacific">Asia Pacific</SelectItem>
