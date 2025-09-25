@@ -255,6 +255,7 @@ export default function ContractTable({ contracts, isLoading, onUpdate }: Contra
                 setEditContract(null);
                 onUpdate();
               }}
+              onCancel={() => setEditContract(null)}
             />
           )}
         </DialogContent>

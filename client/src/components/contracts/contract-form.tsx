@@ -23,9 +23,10 @@ type FormData = z.infer<typeof formSchema>;
 interface ContractFormProps {
   contractId?: string;
   onSuccess?: () => void;
+  onCancel?: () => void;
 }
 
-export default function ContractForm({ contractId, onSuccess }: ContractFormProps) {
+export default function ContractForm({ contractId, onSuccess, onCancel }: ContractFormProps) {
   const { toast } = useToast();
   const [documentUrl, setDocumentUrl] = useState<string>("");
 
@@ -345,7 +346,13 @@ export default function ContractForm({ contractId, onSuccess }: ContractFormProp
           <Button 
             type="button" 
             variant="outline" 
-            onClick={() => form.reset()}
+            onClick={() => {
+              if (onCancel) {
+                onCancel();
+              } else {
+                form.reset();
+              }
+            }}
             data-testid="button-cancel"
           >
             Cancel
