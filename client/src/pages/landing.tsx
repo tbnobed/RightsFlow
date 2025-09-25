@@ -56,7 +56,6 @@ export default function Landing() {
         <CardHeader>
           <CardTitle className="text-center">
             <h1 className="text-3xl font-bold text-foreground mb-2">Rights & Royalties System</h1>
-            <p className="text-muted-foreground font-normal">Manage contracts, track royalties, and monitor rights availability</p>
           </CardTitle>
         </CardHeader>
         <CardContent>
