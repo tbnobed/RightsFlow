@@ -9,6 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import promissioLogo from "@assets/promissio_1758823299279.png";
 
 export default function Landing() {
   const { toast } = useToast();
@@ -55,7 +56,15 @@ export default function Landing() {
       <Card className="w-full max-w-md mx-4">
         <CardHeader>
           <CardTitle className="text-center">
-            <h1 className="text-3xl font-bold text-foreground mb-2">Rights & Royalties System</h1>
+            <div className="flex flex-col items-center space-y-4">
+              <img 
+                src={promissioLogo} 
+                alt="Promissio Logo" 
+                className="h-16 w-auto"
+                data-testid="img-promissio-logo"
+              />
+              <h1 className="text-2xl font-bold text-foreground">Rights & Royalties System</h1>
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>

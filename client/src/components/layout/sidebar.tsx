@@ -10,6 +10,7 @@ import {
   History,
   Users
 } from "lucide-react";
+import promissioLogo from "@assets/promissio_1758823299279.png";
 
 const getNavigation = (isAdmin: boolean) => {
   const baseNavigation = [
@@ -37,8 +38,18 @@ export default function Sidebar() {
   return (
     <div className="w-64 bg-card border-r border-border flex flex-col">
       <div className="p-6 border-b border-border">
-        <h1 className="text-xl font-semibold text-foreground">R&R Management</h1>
-        <p className="text-sm text-muted-foreground">Rights & Royalties</p>
+        <div className="flex flex-col items-center space-y-2">
+          <img 
+            src={promissioLogo} 
+            alt="Promissio Logo" 
+            className="h-12 w-auto"
+            data-testid="img-sidebar-logo"
+          />
+          <div className="text-center">
+            <h1 className="text-lg font-semibold text-foreground">R&R Management</h1>
+            <p className="text-xs text-muted-foreground">Rights & Royalties</p>
+          </div>
+        </div>
       </div>
       
       <nav className="flex-1 p-4">
@@ -47,19 +58,18 @@ export default function Sidebar() {
             const isActive = location === item.href;
             return (
               <li key={item.name}>
-                <Link href={item.href}>
-                  <a
-                    className={cn(
-                      "flex items-center px-3 py-2 rounded-md transition-all",
-                      isActive
-                        ? "bg-primary text-primary-foreground"
-                        : "hover:bg-secondary text-foreground"
-                    )}
-                    data-testid={`nav-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
-                  >
-                    <item.icon className="h-4 w-4 mr-3" />
-                    {item.name}
-                  </a>
+                <Link 
+                  href={item.href}
+                  className={cn(
+                    "flex items-center px-3 py-2 rounded-md transition-all",
+                    isActive
+                      ? "bg-primary text-primary-foreground"
+                      : "hover:bg-secondary text-foreground"
+                  )}
+                  data-testid={`nav-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
+                >
+                  <item.icon className="h-4 w-4 mr-3" />
+                  {item.name}
                 </Link>
               </li>
             );
