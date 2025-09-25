@@ -7,11 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { ObjectUploader } from "@/components/ObjectUploader";
+// import { ObjectUploader } from "@/components/ObjectUploader"; // Temporarily disabled
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import type { UploadResult } from "@uppy/core";
+// import type { UploadResult } from "@uppy/core"; // Temporarily disabled
 
 const formSchema = insertContractSchema.extend({
   startDate: z.string().min(1, "Start date is required"),
@@ -88,16 +88,17 @@ export default function ContractForm({ onSuccess }: ContractFormProps) {
     };
   };
 
-  const handleUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
-    if (result.successful.length > 0) {
-      const uploadURL = result.successful[0].uploadURL as string;
-      setDocumentUrl(uploadURL);
-      toast({
-        title: "Success",
-        description: "Document uploaded successfully",
-      });
-    }
-  };
+  // Temporarily disabled file upload functionality
+  // const handleUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+  //   if (result.successful.length > 0) {
+  //     const uploadURL = result.successful[0].uploadURL as string;
+  //     setDocumentUrl(uploadURL);
+  //     toast({
+  //       title: "Success",
+  //       description: "Document uploaded successfully",
+  //     });
+  //   }
+  // };
 
   const onSubmit = (data: FormData) => {
     createContractMutation.mutate(data);
@@ -295,18 +296,11 @@ export default function ContractForm({ onSuccess }: ContractFormProps) {
           <div className="md:col-span-2">
             <FormLabel>Contract Document</FormLabel>
             <div className="mt-2">
-              <ObjectUploader
-                maxNumberOfFiles={1}
-                maxFileSize={10485760} // 10MB
-                onGetUploadParameters={getUploadParameters}
-                onComplete={handleUploadComplete}
-                buttonClassName="w-full"
-              >
-                <div className="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-border rounded-lg">
-                  <span>📁</span>
-                  <span>{documentUrl ? "Document uploaded" : "Upload Contract PDF"}</span>
-                </div>
-              </ObjectUploader>
+              {/* Temporarily disabled file upload functionality */}
+              <div className="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-muted rounded-lg text-muted-foreground">
+                <span>📁</span>
+                <span>File upload temporarily disabled for testing</span>
+              </div>
             </div>
           </div>
         </div>
