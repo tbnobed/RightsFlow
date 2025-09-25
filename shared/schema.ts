@@ -29,11 +29,14 @@ export const sessions = pgTable(
 // User storage table.
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  email: varchar("email").unique(),
+  email: varchar("email").unique().notNull(),
+  password: varchar("password").notNull(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
   role: varchar("role", { enum: ["Admin", "Legal", "Finance", "Sales"] }).notNull().default("Sales"),
+  isActive: boolean("is_active").notNull().default(true),
+  lastLoginAt: timestamp("last_login_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -162,3 +165,25 @@ export const availabilityRequestSchema = z.object({
 );
 
 export type AvailabilityRequest = z.infer<typeof availabilityRequestSchema>;
+
+// Auth schemas
+export const loginSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(1, "Password is required"),
+});
+
+export const createUserSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  role: z.enum(["Admin", "Legal", "Finance", "Sales"]),
+});
+
+export const updateUserSchema = createUserSchema.partial().extend({
+  isActive: z.boolean().optional(),
+});
+
+export type LoginData = z.infer<typeof loginSchema>;
+export type CreateUserData = z.infer<typeof createUserSchema>;
+export type UpdateUserData = z.infer<typeof updateUserSchema>;

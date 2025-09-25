@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupAuth, isAuthenticated, isAdmin } from "./auth";
 import {
   ObjectStorageService,
   ObjectNotFoundError,
@@ -11,20 +11,8 @@ import { insertContractSchema, insertRoyaltySchema, availabilityRequestSchema } 
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth middleware
-  await setupAuth(app);
-
-  // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
-    }
-  });
+  // Setup authentication system
+  setupAuth(app);
 
   // Dashboard routes
   app.get("/api/dashboard/stats", isAuthenticated, async (req, res) => {
@@ -68,10 +56,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/contracts", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const contractData = insertContractSchema.parse({
         ...req.body,
-        createdBy: userId,
+        createdBy: req.session.userId,
       });
       
       const contract = await storage.createContract(contractData);
@@ -99,7 +87,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/contracts/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const contractId = req.params.id;
       
       const oldContract = await storage.getContract(contractId);
@@ -134,7 +122,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/contracts/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const contractId = req.params.id;
       
       const contract = await storage.getContract(contractId);
@@ -195,7 +183,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/royalties", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const royaltyData = insertRoyaltySchema.parse({
         ...req.body,
         calculatedBy: userId,
@@ -226,7 +214,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/royalties/:id", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const royaltyId = req.params.id;
       
       const oldRoyalty = await storage.getRoyalty(royaltyId);
@@ -290,7 +278,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/contracts/:id/document", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.session.userId;
       const contractId = req.params.id;
       
       if (!req.body.documentURL) {
