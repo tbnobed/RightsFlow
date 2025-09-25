@@ -240,6 +240,10 @@ export function setupAuth(app: Express) {
       const { isActive } = req.body;
       
       const oldUser = await storage.getUser(userId);
+      if (!oldUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
       const updatedUser = await storage.updateUser(userId, { isActive });
       
       // Create audit log

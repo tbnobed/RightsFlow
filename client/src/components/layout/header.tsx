@@ -1,6 +1,7 @@
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Bell, Settings, LogOut } from "lucide-react";
+import { queryClient } from "@/lib/queryClient";
 
 const pageTitles: Record<string, string> = {
   "/": "Dashboard",
@@ -9,13 +10,30 @@ const pageTitles: Record<string, string> = {
   "/royalties": "Royalty Management",
   "/reports": "Reports & Analytics",
   "/audit": "Audit Trail",
+  "/users": "User Management",
 };
 
 export default function Header() {
   const [location] = useLocation();
   
-  const handleLogout = () => {
-    window.location.href = "/api/logout";
+  const handleLogout = async () => {
+    try {
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+      
+      if (response.ok) {
+        // Clear the query cache to remove user data
+        queryClient.clear();
+        // Redirect to reload the page and show login form
+        window.location.reload();
+      } else {
+        console.error("Logout failed");
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   return (
