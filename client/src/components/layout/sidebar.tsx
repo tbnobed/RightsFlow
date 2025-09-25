@@ -42,11 +42,10 @@ export default function Sidebar() {
           <img 
             src={promissioLogo} 
             alt="Promissio Logo" 
-            className="h-12 w-auto"
+            className="h-24 w-auto"
             data-testid="img-sidebar-logo"
           />
           <div className="text-center">
-            <h1 className="text-lg font-semibold text-foreground">R&R Management</h1>
             <p className="text-xs text-muted-foreground">Rights & Royalties</p>
           </div>
         </div>
