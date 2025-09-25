@@ -2,11 +2,13 @@ import { useState } from "react";
 import { Contract } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Eye, Edit, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import ContractForm from "./contract-form";
 
 interface ContractTableProps {
   contracts: Contract[];
@@ -16,6 +18,8 @@ interface ContractTableProps {
 
 export default function ContractTable({ contracts, isLoading, onUpdate }: ContractTableProps) {
   const { toast } = useToast();
+  const [viewContract, setViewContract] = useState<Contract | null>(null);
+  const [editContract, setEditContract] = useState<Contract | null>(null);
 
   const deleteContractMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -129,6 +133,7 @@ export default function ContractTable({ contracts, isLoading, onUpdate }: Contra
                     <Button 
                       variant="ghost" 
                       size="icon"
+                      onClick={() => setViewContract(contract)}
                       data-testid={`button-view-${contract.id}`}
                     >
                       <Eye className="h-4 w-4" />
@@ -136,6 +141,7 @@ export default function ContractTable({ contracts, isLoading, onUpdate }: Contra
                     <Button 
                       variant="ghost" 
                       size="icon"
+                      onClick={() => setEditContract(contract)}
                       data-testid={`button-edit-${contract.id}`}
                     >
                       <Edit className="h-4 w-4" />
@@ -163,6 +169,96 @@ export default function ContractTable({ contracts, isLoading, onUpdate }: Contra
           </tbody>
         </table>
       </div>
+
+      {/* View Contract Dialog */}
+      <Dialog open={!!viewContract} onOpenChange={() => setViewContract(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Contract Details</DialogTitle>
+          </DialogHeader>
+          {viewContract && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">IP Name</label>
+                  <p className="text-sm">{viewContract.ipName}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Licensor</label>
+                  <p className="text-sm">{viewContract.licensor}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Licensee</label>
+                  <p className="text-sm">{viewContract.licensee}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Territory</label>
+                  <p className="text-sm">{viewContract.territory}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Platform</label>
+                  <p className="text-sm">{viewContract.platform}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Royalty Rate</label>
+                  <p className="text-sm">{viewContract.royaltyRate}%</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Start Date</label>
+                  <p className="text-sm">{new Date(viewContract.startDate).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">End Date</label>
+                  <p className="text-sm">{new Date(viewContract.endDate).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Exclusivity</label>
+                  <p className="text-sm">{viewContract.exclusivity}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Status</label>
+                  <Badge className={getStatusColor(viewContract.status || "Pending")}>
+                    {viewContract.status || "Pending"}
+                  </Badge>
+                </div>
+              </div>
+              {viewContract.contractDocumentUrl && (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Contract Document</label>
+                  <p className="text-sm">
+                    <a 
+                      href={viewContract.contractDocumentUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline"
+                    >
+                      View Document
+                    </a>
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Contract Dialog */}
+      <Dialog open={!!editContract} onOpenChange={() => setEditContract(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Contract</DialogTitle>
+          </DialogHeader>
+          {editContract && (
+            <ContractForm 
+              contractId={editContract.id}
+              onSuccess={() => {
+                setEditContract(null);
+                onUpdate();
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

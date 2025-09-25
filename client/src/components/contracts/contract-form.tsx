@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertContractSchema } from "@shared/schema";
@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 // import { ObjectUploader } from "@/components/ObjectUploader"; // Temporarily disabled
 import { useToast } from "@/hooks/use-toast";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 // import type { UploadResult } from "@uppy/core"; // Temporarily disabled
 
@@ -21,12 +21,25 @@ const formSchema = insertContractSchema.extend({
 type FormData = z.infer<typeof formSchema>;
 
 interface ContractFormProps {
+  contractId?: string;
   onSuccess?: () => void;
 }
 
-export default function ContractForm({ onSuccess }: ContractFormProps) {
+export default function ContractForm({ contractId, onSuccess }: ContractFormProps) {
   const { toast } = useToast();
   const [documentUrl, setDocumentUrl] = useState<string>("");
+
+  // Fetch existing contract data if editing
+  const { data: existingContract } = useQuery({
+    queryKey: ["/api/contracts", contractId],
+    queryFn: async () => {
+      if (!contractId) return null;
+      const response = await fetch(`/api/contracts/${contractId}`);
+      if (!response.ok) throw new Error('Failed to fetch contract');
+      return response.json();
+    },
+    enabled: !!contractId,
+  });
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -44,9 +57,32 @@ export default function ContractForm({ onSuccess }: ContractFormProps) {
     },
   });
 
+  // Update form when existing contract data loads
+  useEffect(() => {
+    if (existingContract && contractId) {
+      form.reset({
+        ipName: existingContract.ipName || "",
+        licensor: existingContract.licensor || "",
+        licensee: existingContract.licensee || "",
+        territory: existingContract.territory || "",
+        platform: existingContract.platform || "",
+        startDate: existingContract.startDate || "",
+        endDate: existingContract.endDate || "",
+        royaltyRate: existingContract.royaltyRate || "0",
+        exclusivity: existingContract.exclusivity || "Non-Exclusive",
+        status: existingContract.status || "Pending",
+      });
+      setDocumentUrl(existingContract.contractDocumentUrl || "");
+    }
+  }, [existingContract, contractId, form]);
+
   const createContractMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      return await apiRequest("POST", "/api/contracts", data);
+      if (contractId) {
+        return await apiRequest("PUT", `/api/contracts/${contractId}`, data);
+      } else {
+        return await apiRequest("POST", "/api/contracts", data);
+      }
     },
     onSuccess: async (response) => {
       const contract = await response.json();
@@ -60,7 +96,7 @@ export default function ContractForm({ onSuccess }: ContractFormProps) {
       
       toast({
         title: "Success",
-        description: "Contract created successfully",
+        description: contractId ? "Contract updated successfully" : "Contract created successfully",
       });
       form.reset();
       setDocumentUrl("");
