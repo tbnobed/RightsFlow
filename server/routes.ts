@@ -7,7 +7,7 @@ import {
   ObjectNotFoundError,
 } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
-import { insertContractSchema, insertRoyaltySchema } from "@shared/schema";
+import { insertContractSchema, insertRoyaltySchema, availabilityRequestSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -165,22 +165,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Rights availability routes
   app.post("/api/availability/check", isAuthenticated, async (req, res) => {
     try {
-      const { ipName, territory, platform, startDate, endDate } = req.body;
+      const availabilityData = availabilityRequestSchema.parse(req.body);
       
-      if (!ipName || !territory || !platform || !startDate || !endDate) {
-        return res.status(400).json({ message: "All fields are required" });
-      }
-      
-      const result = await storage.checkRightsAvailability({
-        ipName,
-        territory,
-        platform,
-        startDate,
-        endDate,
-      });
+      const result = await storage.checkRightsAvailability(availabilityData);
       
       res.json(result);
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Invalid request data", 
+          errors: error.errors 
+        });
+      }
       console.error("Error checking rights availability:", error);
       res.status(500).json({ message: "Failed to check rights availability" });
     }

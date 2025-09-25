@@ -166,12 +166,14 @@ export class DatabaseStorage implements IStorage {
           eq(contracts.ipName, params.ipName),
           eq(contracts.territory, params.territory),
           eq(contracts.platform, params.platform),
-          eq(contracts.status, "Active"),
           or(
-            and(
-              lte(contracts.startDate, params.endDate),
-              gte(contracts.endDate, params.startDate)
-            )
+            eq(contracts.status, "Active"),
+            eq(contracts.status, "Pending")
+          ),
+          // Date overlap: contract overlaps if contract.start <= check.end AND contract.end >= check.start
+          and(
+            lte(contracts.startDate, params.endDate),
+            gte(contracts.endDate, params.startDate)
           )
         )
       );
