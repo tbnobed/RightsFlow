@@ -90,6 +90,15 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Initialize admin user on first startup
+  try {
+    const { initializeAdminUser } = await import("./init-admin.js");
+    await initializeAdminUser();
+  } catch (error) {
+    console.error("Failed to initialize admin user:", error);
+    console.error("Application will continue, but you may need to create an admin user manually.");
+  }
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

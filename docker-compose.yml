@@ -38,6 +38,10 @@ services:
       PORT: 5000
       DATABASE_URL: postgresql://${POSTGRES_USER:-promissio}:${POSTGRES_PASSWORD:-promissio_secure_password}@postgres:5432/${POSTGRES_DB:-promissio_db}
       SESSION_SECRET: ${SESSION_SECRET:-change_this_to_a_random_secret_in_production}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+      ADMIN_FIRST_NAME: ${ADMIN_FIRST_NAME:-System}
+      ADMIN_LAST_NAME: ${ADMIN_LAST_NAME:-Administrator}
     depends_on:
       postgres:
         condition: service_healthy

@@ -46,6 +46,8 @@ After installation, log out and back in for group permissions to take effect.
    Edit the `.env` file and update the following critical values:
    - `POSTGRES_PASSWORD`: Set a strong password for the database
    - `SESSION_SECRET`: Generate a random string (minimum 32 characters)
+   - `ADMIN_EMAIL`: Email for the default admin account
+   - `ADMIN_PASSWORD`: Password for the default admin account
    - Update `DATABASE_URL` with your chosen password
 
 4. **Build and start the services**
@@ -60,6 +62,12 @@ After installation, log out and back in for group permissions to take effect.
 
 6. **Access the application**
    Open your browser and navigate to: `http://localhost:5000`
+   
+   **Default Admin Credentials:**
+   - Email: `admin@example.com` (or your configured `ADMIN_EMAIL`)
+   - Password: `admin123` (or your configured `ADMIN_PASSWORD`)
+   
+   ⚠️ **Important**: Change the admin password immediately after first login!
 
 ## Configuration
 
@@ -77,6 +85,10 @@ The application requires the following environment variables:
 | `POSTGRES_PORT` | PostgreSQL port | `5432` |
 | `DATABASE_URL` | Full database connection string | *Auto-configured* |
 | `SESSION_SECRET` | Secret key for session encryption | *Required* |
+| `ADMIN_EMAIL` | Default admin user email | `admin@example.com` |
+| `ADMIN_PASSWORD` | Default admin user password | `admin123` |
+| `ADMIN_FIRST_NAME` | Default admin first name | `System` |
+| `ADMIN_LAST_NAME` | Default admin last name | `Administrator` |
 
 ### Generating Secure Secrets
 
