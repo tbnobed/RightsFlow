@@ -39,6 +39,7 @@ export async function initializeAdminUser() {
       lastName: adminLastName,
       role: "Admin",
       isActive: true,
+      inviteStatus: "accepted",
       createdAt: new Date(),
       updatedAt: new Date(),
     }).returning();
