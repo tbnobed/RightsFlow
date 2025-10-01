@@ -30,12 +30,15 @@ export const sessions = pgTable(
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: varchar("email").unique().notNull(),
-  password: varchar("password").notNull(),
+  password: varchar("password"),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
   role: varchar("role", { enum: ["Admin", "Legal", "Finance", "Sales"] }).notNull().default("Sales"),
   isActive: boolean("is_active").notNull().default(true),
+  inviteToken: varchar("invite_token"),
+  inviteTokenExpiry: timestamp("invite_token_expiry"),
+  inviteStatus: varchar("invite_status", { enum: ["pending", "accepted"] }).default("accepted"),
   lastLoginAt: timestamp("last_login_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -180,10 +183,24 @@ export const createUserSchema = z.object({
   role: z.enum(["Admin", "Legal", "Finance", "Sales"]),
 });
 
+export const inviteUserSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  role: z.enum(["Admin", "Legal", "Finance", "Sales"]),
+});
+
+export const acceptInviteSchema = z.object({
+  token: z.string().min(1, "Invite token is required"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+});
+
 export const updateUserSchema = createUserSchema.partial().extend({
   isActive: z.boolean().optional(),
 });
 
 export type LoginData = z.infer<typeof loginSchema>;
 export type CreateUserData = z.infer<typeof createUserSchema>;
+export type InviteUserData = z.infer<typeof inviteUserSchema>;
+export type AcceptInviteData = z.infer<typeof acceptInviteSchema>;
 export type UpdateUserData = z.infer<typeof updateUserSchema>;
