@@ -35,6 +35,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=5000
 
+# Install PostgreSQL client for database operations
+RUN apk add --no-cache postgresql-client bash
+
 # Create a non-root user
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 appuser
@@ -42,9 +45,12 @@ RUN addgroup --system --gid 1001 nodejs && \
 # Copy built application from builder
 COPY --from=builder --chown=appuser:nodejs /app/dist ./dist
 COPY --from=builder --chown=appuser:nodejs /app/package*.json ./
-COPY --from=builder --chown=appuser:nodejs /app/init-db.sh ./init-db.sh
 COPY --from=builder --chown=appuser:nodejs /app/drizzle.config.ts ./drizzle.config.ts
 COPY --from=builder --chown=appuser:nodejs /app/shared ./shared
+
+# Copy init script and make it executable
+COPY --from=builder --chown=appuser:nodejs /app/init-db.sh ./init-db.sh
+RUN chmod +x /app/init-db.sh
 
 # Copy production dependencies from deps stage
 COPY --from=deps --chown=appuser:nodejs /app/node_modules ./node_modules
