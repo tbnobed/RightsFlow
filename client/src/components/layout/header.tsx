@@ -37,19 +37,19 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-card border-b border-border px-6 py-4">
+    <header className="bg-[hsl(215,20%,18%)] border-b border-[hsl(215,20%,25%)] px-6 py-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold text-foreground" data-testid="page-title">
+        <h2 className="text-xl font-semibold text-[hsl(215,15%,90%)]" data-testid="page-title">
           {pageTitles[location] || "Rights & Royalties Management"}
         </h2>
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" size="icon" data-testid="button-notifications">
+          <Button variant="ghost" size="icon" data-testid="button-notifications" className="text-[hsl(215,15%,85%)] hover:text-[hsl(215,15%,95%)] hover:bg-[hsl(215,20%,25%)]">
             <Bell className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" data-testid="button-settings">
+          <Button variant="ghost" size="icon" data-testid="button-settings" className="text-[hsl(215,15%,85%)] hover:text-[hsl(215,15%,95%)] hover:bg-[hsl(215,20%,25%)]">
             <Settings className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={handleLogout} data-testid="button-logout">
+          <Button variant="ghost" size="icon" onClick={handleLogout} data-testid="button-logout" className="text-[hsl(215,15%,85%)] hover:text-[hsl(215,15%,95%)] hover:bg-[hsl(215,20%,25%)]">
             <LogOut className="h-4 w-4" />
           </Button>
         </div>
