@@ -7,12 +7,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, Edit2, Shield, ShieldOff } from "lucide-react";
+import { Plus, Edit2, Shield, ShieldOff, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -24,7 +25,15 @@ const createUserSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
+const inviteUserSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  role: z.enum(["Admin", "Legal", "Finance", "Sales"]),
+});
+
 type CreateUserData = z.infer<typeof createUserSchema>;
+type InviteUserData = z.infer<typeof inviteUserSchema>;
 
 interface User {
   id: string;
@@ -33,10 +42,12 @@ interface User {
   lastName: string;
   role: string;
   isActive: boolean;
+  inviteStatus?: string;
 }
 
 export default function Users() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const { toast } = useToast();
   const { user: currentUser } = useAuth();
 
@@ -48,6 +59,16 @@ export default function Users() {
       lastName: "",
       role: "Sales",
       password: "",
+    },
+  });
+
+  const inviteUserForm = useForm<InviteUserData>({
+    resolver: zodResolver(inviteUserSchema),
+    defaultValues: {
+      email: "",
+      firstName: "",
+      lastName: "",
+      role: "Sales",
     },
   });
 
@@ -77,6 +98,38 @@ export default function Users() {
       toast({
         title: "Success",
         description: "User created successfully",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Invite user mutation
+  const inviteUserMutation = useMutation({
+    mutationFn: async (userData: InviteUserData) => {
+      const response = await fetch("/api/auth/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userData),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to send invitation");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/users"] });
+      setIsInviteDialogOpen(false);
+      inviteUserForm.reset();
+      toast({
+        title: "Success",
+        description: "Invitation sent successfully",
       });
     },
     onError: (error: Error) => {
@@ -121,6 +174,10 @@ export default function Users() {
     createUserMutation.mutate(data);
   };
 
+  const onInviteUser = (data: InviteUserData) => {
+    inviteUserMutation.mutate(data);
+  };
+
   const handleToggleUser = (userId: string, currentStatus: boolean) => {
     toggleUserMutation.mutate({
       userId,
@@ -156,13 +213,115 @@ export default function Users() {
             Manage user accounts and permissions
           </p>
         </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button data-testid="button-create-user">
-              <Plus className="h-4 w-4 mr-2" />
-              Create User
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" data-testid="button-invite-user">
+                <Mail className="h-4 w-4 mr-2" />
+                Invite User
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Invite New User</DialogTitle>
+                <DialogDescription>
+                  Send an email invitation to a new user. They will set their own password.
+                </DialogDescription>
+              </DialogHeader>
+              <Form {...inviteUserForm}>
+                <form onSubmit={inviteUserForm.handleSubmit(onInviteUser)} className="space-y-4">
+                  <FormField
+                    control={inviteUserForm.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input placeholder="user@company.com" {...field} data-testid="input-invite-email" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={inviteUserForm.control}
+                      name="firstName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>First Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="John" {...field} data-testid="input-invite-first-name" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={inviteUserForm.control}
+                      name="lastName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Last Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Doe" {...field} data-testid="input-invite-last-name" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <FormField
+                    control={inviteUserForm.control}
+                    name="role"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Role</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger data-testid="select-invite-role">
+                              <SelectValue placeholder="Select a role" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="Admin">Admin</SelectItem>
+                            <SelectItem value="Legal">Legal</SelectItem>
+                            <SelectItem value="Finance">Finance</SelectItem>
+                            <SelectItem value="Sales">Sales</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="flex justify-end space-x-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsInviteDialogOpen(false)}
+                      data-testid="button-invite-cancel"
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      type="submit" 
+                      disabled={inviteUserMutation.isPending}
+                      data-testid="button-invite-submit"
+                    >
+                      {inviteUserMutation.isPending ? "Sending..." : "Send Invitation"}
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button data-testid="button-create-user">
+                <Plus className="h-4 w-4 mr-2" />
+                Create User
+              </Button>
+            </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>Create New User</DialogTitle>
@@ -275,6 +434,7 @@ export default function Users() {
             </Form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <Card>
@@ -313,9 +473,15 @@ export default function Users() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={user.isActive ? "default" : "destructive"}>
-                        {user.isActive ? "Active" : "Inactive"}
-                      </Badge>
+                      {user.inviteStatus === "pending" ? (
+                        <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
+                          Pending Invite
+                        </Badge>
+                      ) : (
+                        <Badge variant={user.isActive ? "default" : "destructive"}>
+                          {user.isActive ? "Active" : "Inactive"}
+                        </Badge>
+                      )}
                     </TableCell>
                     <TableCell className="text-right">
                       <Button

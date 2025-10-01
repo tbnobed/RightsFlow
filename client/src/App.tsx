@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -12,12 +12,19 @@ import Royalties from "@/pages/royalties";
 import Reports from "@/pages/reports";
 import Audit from "@/pages/audit";
 import Users from "@/pages/users";
+import AcceptInvite from "@/pages/accept-invite";
 import NotFound from "@/pages/not-found";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
+  const [location] = useLocation();
+
+  // Check if this is the accept invite page
+  if (location.startsWith("/accept-invite")) {
+    return <AcceptInvite />;
+  }
 
   if (isLoading) {
     return (
