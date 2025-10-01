@@ -17,6 +17,22 @@ The build process creates optimized production bundles without Vite dependencies
 - At least 2GB of available RAM
 - At least 5GB of available disk space
 
+### Installing Docker
+
+If you don't have Docker installed, use the provided installation script:
+
+```bash
+# Run the installation script (requires sudo)
+sudo bash install-docker.sh
+```
+
+This script automatically detects your OS (Ubuntu, Debian, CentOS, Fedora) and installs:
+- Docker Engine
+- Docker Compose Plugin
+- All necessary dependencies
+
+After installation, log out and back in for group permissions to take effect.
+
 ## Quick Start
 
 1. **Clone the repository and navigate to the project directory**
