@@ -36,8 +36,8 @@ export default function Sidebar() {
   const navigation = getNavigation(user?.role === "Admin" || false);
 
   return (
-    <div className="w-64 bg-card border-r border-border flex flex-col">
-      <div className="p-6 border-b border-border">
+    <div className="w-64 sidebar border-r flex flex-col">
+      <div className="p-6 border-b border-[hsl(var(--sidebar-border))]">
         <div className="flex flex-col items-center space-y-2">
           <img 
             src={promissioLogo} 
@@ -46,7 +46,7 @@ export default function Sidebar() {
             data-testid="img-sidebar-logo"
           />
           <div className="text-center">
-            <p className="text-xs text-muted-foreground">Rights & Royalties</p>
+            <p className="text-xs sidebar-muted">Rights & Royalties</p>
           </div>
         </div>
       </div>
@@ -60,10 +60,8 @@ export default function Sidebar() {
                 <Link 
                   href={item.href}
                   className={cn(
-                    "flex items-center px-3 py-2 rounded-md transition-all",
-                    isActive
-                      ? "bg-primary text-primary-foreground"
-                      : "hover:bg-secondary text-foreground"
+                    "flex items-center px-3 py-2 rounded-md transition-all sidebar-link",
+                    isActive && "sidebar-link-active"
                   )}
                   data-testid={`nav-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
                 >
@@ -76,16 +74,16 @@ export default function Sidebar() {
         </ul>
       </nav>
       
-      <div className="p-4 border-t border-border">
+      <div className="p-4 border-t border-[hsl(var(--sidebar-border))]">
         <div className="flex items-center">
-          <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-medium mr-3">
+          <div className="w-8 h-8 rounded-full flex items-center justify-center font-medium mr-3 sidebar-link-active">
             {user?.firstName?.[0] || 'U'}
           </div>
           <div>
-            <p className="text-sm font-medium text-foreground">
+            <p className="text-sm font-medium">
               {user ? `${user.firstName} ${user.lastName}` : 'Loading...'}
             </p>
-            <p className="text-xs text-muted-foreground">{user?.role || 'Role'}</p>
+            <p className="text-xs sidebar-muted">{user?.role || 'Role'}</p>
           </div>
         </div>
       </div>
