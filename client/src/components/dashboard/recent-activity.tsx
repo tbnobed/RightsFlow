@@ -28,7 +28,7 @@ export default function RecentActivity({ contracts }: RecentActivityProps) {
         </CardHeader>
         <CardContent className="space-y-3">
           <Link href="/contracts">
-            <Button className="w-full justify-start" data-testid="quick-action-add-contract">
+            <Button variant="outline" className="w-full justify-start hover:bg-accent hover:text-accent-foreground" data-testid="quick-action-add-contract">
               Add New Contract
             </Button>
           </Link>
