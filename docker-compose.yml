@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: promissio-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-promissio}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-promissio_secure_password}
+      POSTGRES_DB: ${POSTGRES_DB:-promissio_db}
+    # NOTE: Port mapping commented out for production security
+    # Uncomment for local development/debugging only
+    # ports:
+    #   - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-promissio}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - promissio-network
+
+  # Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: promissio-app
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-5000}:5000"
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-promissio}:${POSTGRES_PASSWORD:-promissio_secure_password}@postgres:5432/${POSTGRES_DB:-promissio_db}
+      SESSION_SECRET: ${SESSION_SECRET:-change_this_to_a_random_secret_in_production}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - promissio-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  promissio-network:
+    driver: bridge

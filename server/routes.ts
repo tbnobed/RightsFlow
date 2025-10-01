@@ -14,6 +14,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication system
   setupAuth(app);
 
+  // Health check endpoint for Docker/monitoring
+  app.get("/api/health", (req, res) => {
+    res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+  });
+
   // Dashboard routes
   app.get("/api/dashboard/stats", isAuthenticated, async (req, res) => {
     try {

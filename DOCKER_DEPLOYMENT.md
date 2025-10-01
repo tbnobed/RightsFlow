@@ -1,0 +1,249 @@
+# Docker Deployment Guide
+
+This guide explains how to deploy the Promissio Rights and Royalties Management application using Docker and Docker Compose.
+
+## Architecture
+
+The application automatically switches database drivers based on the environment:
+- **Development**: Uses Neon serverless PostgreSQL driver (WebSocket-based)
+- **Production/Docker**: Uses standard `pg` PostgreSQL driver for better compatibility and performance
+
+The build process creates optimized production bundles without Vite dependencies.
+
+## Prerequisites
+
+- Docker Engine 20.10 or higher
+- Docker Compose 2.0 or higher
+- At least 2GB of available RAM
+- At least 5GB of available disk space
+
+## Quick Start
+
+1. **Clone the repository and navigate to the project directory**
+
+2. **Create environment file**
+   ```bash
+   cp .env.example .env
+   ```
+
+3. **Configure environment variables**
+   Edit the `.env` file and update the following critical values:
+   - `POSTGRES_PASSWORD`: Set a strong password for the database
+   - `SESSION_SECRET`: Generate a random string (minimum 32 characters)
+   - Update `DATABASE_URL` with your chosen password
+
+4. **Build and start the services**
+   ```bash
+   docker-compose up -d
+   ```
+
+5. **Run database migrations**
+   ```bash
+   docker-compose exec app npm run db:push
+   ```
+
+6. **Access the application**
+   Open your browser and navigate to: `http://localhost:5000`
+
+## Configuration
+
+### Environment Variables
+
+The application requires the following environment variables:
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `NODE_ENV` | Environment mode | `production` |
+| `APP_PORT` | External port for the application | `5000` |
+| `POSTGRES_USER` | PostgreSQL username | `promissio` |
+| `POSTGRES_PASSWORD` | PostgreSQL password | *Required* |
+| `POSTGRES_DB` | PostgreSQL database name | `promissio_db` |
+| `POSTGRES_PORT` | PostgreSQL port | `5432` |
+| `DATABASE_URL` | Full database connection string | *Auto-configured* |
+| `SESSION_SECRET` | Secret key for session encryption | *Required* |
+
+### Generating Secure Secrets
+
+For production deployments, generate strong random secrets:
+
+```bash
+# Generate SESSION_SECRET (64 characters)
+openssl rand -hex 32
+
+# Or using Node.js
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+## Docker Commands
+
+### Start services
+```bash
+docker-compose up -d
+```
+
+### Stop services
+```bash
+docker-compose down
+```
+
+### View logs
+```bash
+# All services
+docker-compose logs -f
+
+# Application only
+docker-compose logs -f app
+
+# Database only
+docker-compose logs -f postgres
+```
+
+### Restart services
+```bash
+docker-compose restart
+```
+
+### Stop and remove volumes (WARNING: Deletes all data)
+```bash
+docker-compose down -v
+```
+
+## Database Management
+
+### Run migrations
+```bash
+docker-compose exec app npm run db:push
+```
+
+### Access PostgreSQL CLI
+```bash
+docker-compose exec postgres psql -U promissio -d promissio_db
+```
+
+### Expose PostgreSQL Port (for debugging)
+By default, PostgreSQL is not exposed to the host for security reasons. To access it during local development:
+
+1. Uncomment the ports mapping in `docker-compose.yml`:
+   ```yaml
+   ports:
+     - "${POSTGRES_PORT:-5432}:5432"
+   ```
+2. Restart services: `docker-compose restart postgres`
+
+### Backup database
+```bash
+docker-compose exec postgres pg_dump -U promissio promissio_db > backup_$(date +%Y%m%d_%H%M%S).sql
+```
+
+### Restore database
+```bash
+cat backup_file.sql | docker-compose exec -T postgres psql -U promissio promissio_db
+```
+
+## Production Deployment
+
+### Security Checklist
+
+- [ ] Change default `POSTGRES_PASSWORD`
+- [ ] Generate strong `SESSION_SECRET` (minimum 32 characters)
+- [ ] Update database credentials in `DATABASE_URL`
+- [ ] Configure firewall to restrict database access
+- [ ] Use HTTPS/TLS for external connections
+- [ ] Set up regular database backups
+- [ ] Monitor application logs
+- [ ] Keep Docker images updated
+
+**Important**: The application enforces secret validation in production mode:
+- `SESSION_SECRET` must be set and at least 32 characters
+- Default/placeholder secrets will cause the application to fail at startup
+- This prevents accidentally running production with insecure defaults
+
+### Reverse Proxy Setup (Nginx)
+
+For production, it's recommended to use a reverse proxy:
+
+```nginx
+server {
+    listen 80;
+    server_name your-domain.com;
+
+    location / {
+        proxy_pass http://localhost:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
+### Health Monitoring
+
+The application provides a health check endpoint:
+
+```bash
+curl http://localhost:5000/api/health
+```
+
+Expected response:
+```json
+{
+  "status": "ok",
+  "timestamp": "2025-10-01T12:00:00.000Z"
+}
+```
+
+## Troubleshooting
+
+### Application won't start
+
+1. Check logs: `docker-compose logs app`
+2. Verify database is healthy: `docker-compose ps`
+3. Ensure environment variables are set correctly
+4. Check port 5000 is not already in use: `lsof -i :5000`
+
+### Database connection errors
+
+1. Check database is running: `docker-compose ps postgres`
+2. Verify `DATABASE_URL` format is correct
+3. Ensure database has completed initialization
+4. Check database logs: `docker-compose logs postgres`
+
+### Cannot access application
+
+1. Verify containers are running: `docker-compose ps`
+2. Check firewall rules
+3. Ensure port 5000 is exposed: `docker-compose port app 5000`
+4. Review application logs for errors
+
+### Out of disk space
+
+1. Remove unused images: `docker image prune -a`
+2. Remove unused volumes: `docker volume prune`
+3. Clean build cache: `docker builder prune`
+
+## Updating the Application
+
+1. Pull latest changes from repository
+2. Rebuild images: `docker-compose build --no-cache`
+3. Stop old containers: `docker-compose down`
+4. Start new containers: `docker-compose up -d`
+5. Run migrations if needed: `docker-compose exec app npm run db:push`
+
+## Scaling
+
+To run multiple application instances:
+
+```bash
+docker-compose up -d --scale app=3
+```
+
+Note: You'll need to configure a load balancer for this setup.
+
+## Support
+
+For issues or questions, please refer to the main application documentation or contact support.

@@ -1,0 +1,52 @@
+# Node
+node_modules
+npm-debug.log
+yarn-error.log
+.pnpm-store
+
+# Build outputs (will be created during build)
+dist
+.vite
+
+# Development
+.replit
+.replitdata
+.upm
+.cache
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Git
+.git
+.gitignore
+.github
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs
+*.log
+
+# Testing
+coverage
+.nyc_output
+
+# Documentation
+*.md
+!README.md
+
+# Misc
+.editorconfig
+.eslintrc*
+.prettierrc*
