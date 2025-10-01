@@ -33,12 +33,12 @@ export default function RecentActivity({ contracts }: RecentActivityProps) {
             </Button>
           </Link>
           <Link href="/availability">
-            <Button variant="secondary" className="w-full justify-start" data-testid="quick-action-check-availability">
+            <Button variant="outline" className="w-full justify-start hover:bg-accent hover:text-accent-foreground" data-testid="quick-action-check-availability">
               Check Rights Availability
             </Button>
           </Link>
           <Link href="/royalties">
-            <Button variant="secondary" className="w-full justify-start" data-testid="quick-action-calculate-royalties">
+            <Button variant="outline" className="w-full justify-start hover:bg-accent hover:text-accent-foreground" data-testid="quick-action-calculate-royalties">
               Calculate Royalties
             </Button>
           </Link>
