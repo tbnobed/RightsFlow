@@ -36,8 +36,8 @@ export default function Sidebar() {
   const navigation = getNavigation(user?.role === "Admin" || false);
 
   return (
-    <div className="w-64 sidebar border-r flex flex-col">
-      <div className="p-6 border-b bg-[hsl(215,20%,40%)]">
+    <div className="w-64 sidebar flex flex-col">
+      <div className="p-6 bg-[hsl(215,20%,40%)]">
         <div className="flex flex-col items-center space-y-2">
           <img 
             src={promissioLogo} 
@@ -74,7 +74,7 @@ export default function Sidebar() {
         </ul>
       </nav>
       
-      <div className="p-4 border-t">
+      <div className="p-4">
         <div className="flex items-center">
           <div className="w-8 h-8 rounded-full flex items-center justify-center font-medium mr-3 sidebar-link-active">
             {user?.firstName?.[0] || 'U'}
