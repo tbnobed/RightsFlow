@@ -18,7 +18,7 @@ PGPASSWORD=$POSTGRES_PASSWORD psql -h postgres -U $POSTGRES_USER -d postgres -c 
 
 echo "Database ready - running migrations"
 
-# Run Drizzle migrations
-npm run db:push
+# Run Drizzle migrations using npx to ensure it finds drizzle-kit
+npx drizzle-kit push
 
 echo "Database initialization complete!"
