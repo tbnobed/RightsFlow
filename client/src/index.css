@@ -111,28 +111,29 @@
 
 @layer components {
   .sidebar {
-    background-color: hsl(var(--sidebar));
-    color: hsl(var(--sidebar-foreground));
-    border-color: hsl(var(--sidebar-border));
+    background-color: var(--sidebar);
+    color: var(--sidebar-foreground);
+    border-color: var(--sidebar-border);
   }
 
   .sidebar-link {
-    color: hsl(var(--sidebar-foreground));
+    color: var(--sidebar-foreground);
   }
 
   .sidebar-link:hover:not(.sidebar-link-active) {
-    background-color: hsl(var(--sidebar-accent));
-    color: hsl(var(--sidebar-accent-foreground));
+    background-color: var(--sidebar-accent);
+    color: var(--sidebar-accent-foreground);
   }
 
   .sidebar-link-active,
   .sidebar-link-active:hover {
-    background-color: hsl(var(--sidebar-primary));
-    color: hsl(var(--sidebar-primary-foreground));
+    background-color: var(--sidebar-primary);
+    color: var(--sidebar-primary-foreground);
   }
 
   .sidebar-muted {
-    color: hsl(var(--sidebar-foreground) / 0.6);
+    color: var(--sidebar-foreground);
+    opacity: 0.6;
   }
 }
 

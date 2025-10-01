@@ -37,7 +37,7 @@ export default function Sidebar() {
 
   return (
     <div className="w-64 sidebar border-r flex flex-col">
-      <div className="p-6 border-b border-[hsl(var(--sidebar-border))]">
+      <div className="p-6 border-b">
         <div className="flex flex-col items-center space-y-2">
           <img 
             src={promissioLogo} 
@@ -74,7 +74,7 @@ export default function Sidebar() {
         </ul>
       </nav>
       
-      <div className="p-4 border-t border-[hsl(var(--sidebar-border))]">
+      <div className="p-4 border-t">
         <div className="flex items-center">
           <div className="w-8 h-8 rounded-full flex items-center justify-center font-medium mr-3 sidebar-link-active">
             {user?.firstName?.[0] || 'U'}
