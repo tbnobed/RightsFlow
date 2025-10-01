@@ -37,11 +37,14 @@ services:
       NODE_ENV: production
       PORT: 5000
       DATABASE_URL: postgresql://${POSTGRES_USER:-promissio}:${POSTGRES_PASSWORD:-promissio_secure_password}@postgres:5432/${POSTGRES_DB:-promissio_db}
-      SESSION_SECRET: ${SESSION_SECRET:-change_this_to_a_random_secret_in_production}
+      SESSION_SECRET: ${SESSION_SECRET}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
       ADMIN_FIRST_NAME: ${ADMIN_FIRST_NAME:-System}
       ADMIN_LAST_NAME: ${ADMIN_LAST_NAME:-Administrator}
+      POSTGRES_USER: ${POSTGRES_USER:-promissio}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-promissio_secure_password}
+      POSTGRES_DB: ${POSTGRES_DB:-promissio_db}
     depends_on:
       postgres:
         condition: service_healthy
@@ -53,6 +56,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    command: sh -c "chmod +x /app/init-db.sh && /app/init-db.sh && node dist/production.js"
 
 volumes:
   postgres_data:

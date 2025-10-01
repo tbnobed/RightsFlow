@@ -42,6 +42,9 @@ RUN addgroup --system --gid 1001 nodejs && \
 # Copy built application from builder
 COPY --from=builder --chown=appuser:nodejs /app/dist ./dist
 COPY --from=builder --chown=appuser:nodejs /app/package*.json ./
+COPY --from=builder --chown=appuser:nodejs /app/init-db.sh ./init-db.sh
+COPY --from=builder --chown=appuser:nodejs /app/drizzle.config.ts ./drizzle.config.ts
+COPY --from=builder --chown=appuser:nodejs /app/shared ./shared
 
 # Copy production dependencies from deps stage
 COPY --from=deps --chown=appuser:nodejs /app/node_modules ./node_modules

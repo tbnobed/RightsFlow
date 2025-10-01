@@ -43,24 +43,44 @@ After installation, log out and back in for group permissions to take effect.
    ```
 
 3. **Configure environment variables**
-   Edit the `.env` file and update the following critical values:
-   - `POSTGRES_PASSWORD`: Set a strong password for the database
-   - `SESSION_SECRET`: Generate a random string (minimum 32 characters)
-   - `ADMIN_EMAIL`: Email for the default admin account
-   - `ADMIN_PASSWORD`: Password for the default admin account
-   - Update `DATABASE_URL` with your chosen password
+   Edit the `.env` file and set these **required** values:
+   
+   ```bash
+   # Generate a secure SESSION_SECRET (REQUIRED - no default allowed)
+   SESSION_SECRET=$(openssl rand -hex 32)
+   
+   # Set a strong database password
+   POSTGRES_PASSWORD=your_secure_database_password_here
+   
+   # Optionally customize admin credentials
+   ADMIN_EMAIL=admin@yourdomain.com
+   ADMIN_PASSWORD=your_secure_admin_password
+   ```
+   
+   Your complete `.env` file should look like:
+   ```env
+   POSTGRES_USER=promissio
+   POSTGRES_PASSWORD=your_secure_database_password_here
+   POSTGRES_DB=promissio_db
+   DATABASE_URL=postgresql://promissio:your_secure_database_password_here@postgres:5432/promissio_db
+   SESSION_SECRET=a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6
+   ADMIN_EMAIL=admin@yourdomain.com
+   ADMIN_PASSWORD=SecurePassword123!
+   ```
 
 4. **Build and start the services**
    ```bash
    docker-compose up -d
    ```
+   
+   The application will automatically:
+   - Wait for PostgreSQL to be ready
+   - Create the database if it doesn't exist
+   - Run database migrations
+   - Create the admin user
+   - Start the web server
 
-5. **Run database migrations**
-   ```bash
-   docker-compose exec app npm run db:push
-   ```
-
-6. **Access the application**
+5. **Access the application**
    Open your browser and navigate to: `http://localhost:5000`
    
    **Default Admin Credentials:**
@@ -68,6 +88,25 @@ After installation, log out and back in for group permissions to take effect.
    - Password: `admin123` (or your configured `ADMIN_PASSWORD`)
    
    ⚠️ **Important**: Change the admin password immediately after first login!
+
+## Troubleshooting Docker Issues
+
+### "SESSION_SECRET is using a default/placeholder value"
+This security feature prevents running with insecure defaults. Fix:
+```bash
+# Generate a secure secret
+echo "SESSION_SECRET=$(openssl rand -hex 32)" >> .env
+# Restart
+docker-compose restart app
+```
+
+### "database does not exist"
+The init-db.sh script should handle this automatically. If you see this error:
+```bash
+# Restart the services
+docker-compose down
+docker-compose up -d
+```
 
 ## Configuration
 
