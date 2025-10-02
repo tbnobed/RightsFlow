@@ -3,6 +3,15 @@ import sgMail from '@sendgrid/mail';
 let connectionSettings: any;
 
 async function getCredentials() {
+  // Check if using standard environment variables (Docker/production)
+  if (process.env.SENDGRID_API_KEY && process.env.SENDGRID_FROM_EMAIL) {
+    return {
+      apiKey: process.env.SENDGRID_API_KEY,
+      email: process.env.SENDGRID_FROM_EMAIL
+    };
+  }
+
+  // Otherwise use Replit connector
   const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
   const xReplitToken = process.env.REPL_IDENTITY 
     ? 'repl ' + process.env.REPL_IDENTITY 
@@ -11,7 +20,7 @@ async function getCredentials() {
     : null;
 
   if (!xReplitToken) {
-    throw new Error('X_REPLIT_TOKEN not found for repl/depl');
+    throw new Error('SendGrid not configured. Set SENDGRID_API_KEY and SENDGRID_FROM_EMAIL environment variables or use Replit connector.');
   }
 
   connectionSettings = await fetch(

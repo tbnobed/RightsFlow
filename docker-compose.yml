@@ -40,6 +40,8 @@ services:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
       ADMIN_FIRST_NAME: ${ADMIN_FIRST_NAME:-System}
       ADMIN_LAST_NAME: ${ADMIN_LAST_NAME:-Administrator}
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY}
+      SENDGRID_FROM_EMAIL: ${SENDGRID_FROM_EMAIL}
       POSTGRES_USER: ${POSTGRES_USER:-promissio}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-promissio_secure_password}
       POSTGRES_DB: ${POSTGRES_DB:-promissio_db}

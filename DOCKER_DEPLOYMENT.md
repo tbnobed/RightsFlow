@@ -55,6 +55,10 @@ After installation, log out and back in for group permissions to take effect.
    # Optionally customize admin credentials
    ADMIN_EMAIL=admin@yourdomain.com
    ADMIN_PASSWORD=your_secure_admin_password
+   
+   # Configure SendGrid for email invitations (get API key from SendGrid)
+   SENDGRID_API_KEY=SG.your_sendgrid_api_key_here
+   SENDGRID_FROM_EMAIL=noreply@yourdomain.com
    ```
    
    Your complete `.env` file should look like:
@@ -66,6 +70,8 @@ After installation, log out and back in for group permissions to take effect.
    SESSION_SECRET=a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6
    ADMIN_EMAIL=admin@yourdomain.com
    ADMIN_PASSWORD=SecurePassword123!
+   SENDGRID_API_KEY=SG.your_actual_sendgrid_api_key
+   SENDGRID_FROM_EMAIL=noreply@yourdomain.com
    ```
 
 4. **Build and start the services**
@@ -128,6 +134,26 @@ The application requires the following environment variables:
 | `ADMIN_PASSWORD` | Default admin user password | `admin123` |
 | `ADMIN_FIRST_NAME` | Default admin first name | `System` |
 | `ADMIN_LAST_NAME` | Default admin last name | `Administrator` |
+| `SENDGRID_API_KEY` | SendGrid API key for emails | *Required for invites* |
+| `SENDGRID_FROM_EMAIL` | Email address to send from | *Required for invites* |
+
+### SendGrid Email Setup
+
+To enable user invitation emails:
+
+1. **Create a SendGrid account** at https://sendgrid.com
+2. **Generate an API key**:
+   - Go to Settings > API Keys
+   - Create a new API key with "Mail Send" permissions
+   - Copy the API key (starts with `SG.`)
+3. **Verify a sender email**:
+   - Go to Settings > Sender Authentication
+   - Verify your sending domain or email address
+4. **Add to .env file**:
+   ```env
+   SENDGRID_API_KEY=SG.your_api_key_here
+   SENDGRID_FROM_EMAIL=noreply@yourdomain.com
+   ```
 
 ### Generating Secure Secrets
 
