@@ -285,22 +285,50 @@ export function setupAuth(app: Express) {
       
       // Check if user already exists
       const existingUser = await storage.getUserByEmail(inviteData.email);
+      
+      let user;
+      let isResend = false;
+      
       if (existingUser) {
-        return res.status(400).json({ message: "User already exists" });
+        // If user has already accepted, don't allow reinvite
+        if (existingUser.inviteStatus === "accepted") {
+          return res.status(400).json({ message: "User has already accepted the invitation" });
+        }
+        
+        // If user has pending invite, allow resending
+        if (existingUser.inviteStatus === "pending") {
+          isResend = true;
+          
+          // Generate new invite token
+          const inviteToken = nanoid(32);
+          const inviteTokenExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+          
+          // Update existing user with new token and data
+          user = await storage.updateUser(existingUser.id, {
+            firstName: inviteData.firstName,
+            lastName: inviteData.lastName,
+            role: inviteData.role,
+            inviteToken,
+            inviteTokenExpiry,
+            inviteStatus: "pending",
+          });
+        } else {
+          return res.status(400).json({ message: "User already exists" });
+        }
+      } else {
+        // Generate invite token
+        const inviteToken = nanoid(32);
+        const inviteTokenExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+        
+        // Create user with pending status
+        user = await storage.createUser({
+          ...inviteData,
+          password: null,
+          inviteToken,
+          inviteTokenExpiry,
+          inviteStatus: "pending",
+        });
       }
-      
-      // Generate invite token
-      const inviteToken = nanoid(32);
-      const inviteTokenExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
-      
-      // Create user with pending status
-      const user = await storage.createUser({
-        ...inviteData,
-        password: null,
-        inviteToken,
-        inviteTokenExpiry,
-        inviteStatus: "pending",
-      });
       
       // Get inviter info
       const inviter = await storage.getUser(req.session.userId);
@@ -312,11 +340,11 @@ export function setupAuth(app: Express) {
       const baseUrl = `${protocol}://${host}`;
       
       // Send invite email
-      await sendUserInviteEmail(inviteData.email, inviteToken, inviterName, baseUrl);
+      await sendUserInviteEmail(inviteData.email, user.inviteToken!, inviterName, baseUrl);
       
       // Create audit log
       await storage.createAuditLog({
-        action: "User Invited",
+        action: isResend ? "User Invite Resent" : "User Invited",
         entityType: "User",
         entityId: user.id,
         newValues: { email: user.email, role: user.role },
@@ -325,13 +353,14 @@ export function setupAuth(app: Express) {
         userAgent: req.get('User-Agent'),
       });
       
-      res.status(201).json({
+      res.status(isResend ? 200 : 201).json({
         id: user.id,
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role,
         inviteStatus: user.inviteStatus,
+        resent: isResend,
       });
     } catch (error) {
       console.error("Error inviting user:", error);

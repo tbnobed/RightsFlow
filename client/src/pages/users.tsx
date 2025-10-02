@@ -123,13 +123,15 @@ export default function Users() {
       }
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/users"] });
       setIsInviteDialogOpen(false);
       inviteUserForm.reset();
       toast({
         title: "Success",
-        description: "Invitation sent successfully",
+        description: data.resent 
+          ? "Invitation resent successfully" 
+          : "Invitation sent successfully",
       });
     },
     onError: (error: Error) => {
