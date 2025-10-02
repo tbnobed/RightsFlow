@@ -190,6 +190,7 @@ export function setupAuth(app: Express) {
         lastName: user.lastName,
         role: user.role,
         isActive: user.isActive,
+        inviteStatus: user.inviteStatus,
         lastLoginAt: user.lastLoginAt,
         createdAt: user.createdAt,
       })));
