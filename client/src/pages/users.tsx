@@ -486,25 +486,47 @@ export default function Users() {
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleToggleUser(user.id, user.isActive)}
-                        disabled={toggleUserMutation.isPending || user.id === currentUser?.id}
-                        data-testid={`button-toggle-${user.id}`}
-                      >
-                        {user.isActive ? (
-                          <>
-                            <ShieldOff className="h-4 w-4 mr-1" />
-                            Deactivate
-                          </>
+                      <div className="flex justify-end gap-2">
+                        {user.inviteStatus === "pending" ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              inviteUserMutation.mutate({
+                                email: user.email,
+                                firstName: user.firstName || "",
+                                lastName: user.lastName || "",
+                                role: user.role as "Admin" | "Legal" | "Finance" | "Sales",
+                              });
+                            }}
+                            disabled={inviteUserMutation.isPending}
+                            data-testid={`button-resend-${user.id}`}
+                          >
+                            <Mail className="h-4 w-4 mr-1" />
+                            Resend Invite
+                          </Button>
                         ) : (
-                          <>
-                            <Shield className="h-4 w-4 mr-1" />
-                            Activate
-                          </>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleToggleUser(user.id, user.isActive)}
+                            disabled={toggleUserMutation.isPending || user.id === currentUser?.id}
+                            data-testid={`button-toggle-${user.id}`}
+                          >
+                            {user.isActive ? (
+                              <>
+                                <ShieldOff className="h-4 w-4 mr-1" />
+                                Deactivate
+                              </>
+                            ) : (
+                              <>
+                                <Shield className="h-4 w-4 mr-1" />
+                                Activate
+                              </>
+                            )}
+                          </Button>
                         )}
-                      </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
