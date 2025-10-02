@@ -51,18 +51,21 @@ export async function getUncachableSendGridClient() {
   };
 }
 
-export async function sendUserInviteEmail(toEmail: string, inviteToken: string, inviterName: string) {
+export async function sendUserInviteEmail(toEmail: string, inviteToken: string, inviterName: string, baseUrl?: string) {
   try {
     const { client, fromEmail } = await getUncachableSendGridClient();
     
     // Construct the invite URL
-    const baseUrl = process.env.REPLIT_DEV_DOMAIN 
-      ? `https://${process.env.REPLIT_DEV_DOMAIN}`
-      : process.env.REPLIT_DOMAINS
-      ? `https://${process.env.REPLIT_DOMAINS.split(',')[0]}`
-      : `http://localhost:${process.env.PORT || 5000}`;
+    // Use provided baseUrl from request, or fall back to environment detection
+    const finalBaseUrl = baseUrl || (
+      process.env.REPLIT_DEV_DOMAIN 
+        ? `https://${process.env.REPLIT_DEV_DOMAIN}`
+        : process.env.REPLIT_DOMAINS
+        ? `https://${process.env.REPLIT_DOMAINS.split(',')[0]}`
+        : `http://localhost:${process.env.PORT || 5000}`
+    );
     
-    const inviteUrl = `${baseUrl}/accept-invite?token=${inviteToken}`;
+    const inviteUrl = `${finalBaseUrl}/accept-invite?token=${inviteToken}`;
     
     const msg = {
       to: toEmail,

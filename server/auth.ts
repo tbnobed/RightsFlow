@@ -306,8 +306,13 @@ export function setupAuth(app: Express) {
       const inviter = await storage.getUser(req.session.userId);
       const inviterName = inviter ? `${inviter.firstName} ${inviter.lastName}` : "Admin";
       
+      // Get base URL from request
+      const protocol = req.protocol || (req.get('x-forwarded-proto') || 'http');
+      const host = req.get('host');
+      const baseUrl = `${protocol}://${host}`;
+      
       // Send invite email
-      await sendUserInviteEmail(inviteData.email, inviteToken, inviterName);
+      await sendUserInviteEmail(inviteData.email, inviteToken, inviterName, baseUrl);
       
       // Create audit log
       await storage.createAuditLog({
