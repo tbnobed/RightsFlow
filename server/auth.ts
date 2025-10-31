@@ -320,6 +320,11 @@ export function setupAuth(app: Express) {
       const userId = req.params.id;
       const { password } = req.body;
       
+      // Prevent resetting your own password through this endpoint
+      if (userId === req.session.userId) {
+        return res.status(400).json({ message: "Cannot reset your own password. Use the change password feature instead" });
+      }
+      
       if (!password || password.length < 6) {
         return res.status(400).json({ message: "Password must be at least 6 characters" });
       }
