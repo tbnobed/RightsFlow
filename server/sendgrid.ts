@@ -134,3 +134,87 @@ Promissio Team
     throw error;
   }
 }
+
+export async function sendPasswordResetEmail(toEmail: string, resetToken: string, baseUrl?: string) {
+  try {
+    const { client, fromEmail } = await getUncachableSendGridClient();
+    
+    // Construct the reset URL
+    // Use provided baseUrl from request, or fall back to environment detection
+    const finalBaseUrl = baseUrl || (
+      process.env.REPLIT_DEV_DOMAIN 
+        ? `https://${process.env.REPLIT_DEV_DOMAIN}`
+        : process.env.REPLIT_DOMAINS
+        ? `https://${process.env.REPLIT_DOMAINS.split(',')[0]}`
+        : `http://localhost:${process.env.PORT || 5000}`
+    );
+    
+    const resetUrl = `${finalBaseUrl}/reset-password?token=${resetToken}`;
+    
+    const msg = {
+      to: toEmail,
+      from: fromEmail,
+      subject: 'Reset Your Promissio Password',
+      text: `
+Hello,
+
+A password reset has been requested for your Promissio Rights Management account.
+
+Click the link below to reset your password:
+${resetUrl}
+
+This link will expire in 24 hours.
+
+If you didn't request this password reset, you can safely ignore this email.
+
+Best regards,
+Promissio Team
+      `.trim(),
+      html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: linear-gradient(135deg, hsl(215, 25%, 15%) 0%, hsl(215, 25%, 20%) 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
+    .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+    .button { display: inline-block; padding: 12px 30px; background: hsl(195, 100%, 45%); color: white; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+    .button:hover { background: hsl(195, 100%, 40%); }
+    .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Promissio Rights Management</h1>
+    </div>
+    <div class="content">
+      <p>Hello,</p>
+      <p>A password reset has been requested for your Promissio Rights Management account.</p>
+      <p>Click the button below to reset your password:</p>
+      <p style="text-align: center;">
+        <a href="${resetUrl}" class="button">Reset Password</a>
+      </p>
+      <p>Or copy and paste this link into your browser:</p>
+      <p style="word-break: break-all; color: #666;">${resetUrl}</p>
+      <p><em>This link will expire in 24 hours.</em></p>
+      <p>If you didn't request this password reset, you can safely ignore this email.</p>
+    </div>
+    <div class="footer">
+      <p>© ${new Date().getFullYear()} Promissio Rights Management. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>
+      `.trim(),
+    };
+
+    await client.send(msg);
+    console.log(`Password reset email sent to ${toEmail}`);
+    return true;
+  } catch (error) {
+    console.error('Error sending password reset email:', error);
+    throw error;
+  }
+}

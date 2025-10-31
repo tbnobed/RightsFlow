@@ -5,7 +5,7 @@ import connectPg from "connect-pg-simple";
 import { nanoid } from "nanoid";
 import { loginSchema, CreateUserData, InviteUserData, AcceptInviteData, inviteUserSchema, acceptInviteSchema } from "@shared/schema";
 import { storage } from "./storage";
-import { sendUserInviteEmail } from "./sendgrid";
+import { sendUserInviteEmail, sendPasswordResetEmail } from "./sendgrid";
 
 // Session configuration
 export function getSession() {
@@ -357,6 +357,57 @@ export function setupAuth(app: Express) {
     }
   });
 
+  // Send password reset link (admin only)
+  app.post("/api/auth/users/:id/send-reset-link", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const userId = req.params.id;
+      
+      // Prevent sending reset link to yourself
+      if (userId === req.session.userId) {
+        return res.status(400).json({ message: "Cannot send password reset link to yourself" });
+      }
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Generate reset token
+      const resetToken = nanoid(32);
+      const resetTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+      
+      // Update user with reset token
+      await storage.updateUser(userId, {
+        resetToken,
+        resetTokenExpiry,
+      });
+      
+      // Get base URL from request
+      const protocol = req.protocol || (req.get('x-forwarded-proto') || 'http');
+      const host = req.get('host');
+      const baseUrl = `${protocol}://${host}`;
+      
+      // Send password reset email
+      await sendPasswordResetEmail(user.email, resetToken, baseUrl);
+      
+      // Create audit log
+      await storage.createAuditLog({
+        action: "Password Reset Link Sent",
+        entityType: "User",
+        entityId: userId,
+        newValues: { email: user.email },
+        userId: req.session.userId,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
+      });
+      
+      res.json({ message: "Password reset link sent successfully" });
+    } catch (error) {
+      console.error("Error sending password reset link:", error);
+      res.status(500).json({ message: "Failed to send password reset link" });
+    }
+  });
+
   // Invite user (admin only)
   app.post("/api/auth/invite", isAuthenticated, isAdmin, async (req: any, res) => {
     try {
@@ -505,6 +556,83 @@ export function setupAuth(app: Express) {
     } catch (error) {
       console.error("Error accepting invite:", error);
       res.status(500).json({ message: "Failed to accept invitation" });
+    }
+  });
+
+  // Reset password with token (public endpoint)
+  app.post("/api/auth/reset-password", async (req: any, res) => {
+    try {
+      const { token, password } = req.body;
+      
+      if (!token || !password) {
+        return res.status(400).json({ message: "Token and password are required" });
+      }
+      
+      if (password.length < 6) {
+        return res.status(400).json({ message: "Password must be at least 6 characters" });
+      }
+      
+      // Find user by reset token
+      const user = await storage.getUserByResetToken(token);
+      if (!user) {
+        return res.status(404).json({ message: "Invalid or expired reset link" });
+      }
+      
+      // Check if token has expired
+      if (user.resetTokenExpiry && new Date() > user.resetTokenExpiry) {
+        return res.status(400).json({ message: "Reset link has expired" });
+      }
+      
+      // Hash new password
+      const hashedPassword = await hashPassword(password);
+      
+      // Update user with new password and clear reset token
+      await storage.updateUser(user.id, {
+        password: hashedPassword,
+        resetToken: null,
+        resetTokenExpiry: null,
+      });
+      
+      // Create audit log
+      await storage.createAuditLog({
+        action: "Password Reset via Link",
+        entityType: "User",
+        entityId: user.id,
+        newValues: { email: user.email },
+        userId: user.id,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
+      });
+      
+      res.json({ message: "Password reset successfully" });
+    } catch (error) {
+      console.error("Error resetting password:", error);
+      res.status(500).json({ message: "Failed to reset password" });
+    }
+  });
+
+  // Verify reset token
+  app.get("/api/auth/verify-reset-token/:token", async (req: any, res) => {
+    try {
+      const { token } = req.params;
+      
+      const user = await storage.getUserByResetToken(token);
+      if (!user) {
+        return res.status(404).json({ valid: false, message: "Invalid reset link" });
+      }
+      
+      // Check if token has expired
+      if (user.resetTokenExpiry && new Date() > user.resetTokenExpiry) {
+        return res.status(400).json({ valid: false, message: "Reset link has expired" });
+      }
+      
+      res.json({
+        valid: true,
+        email: user.email,
+      });
+    } catch (error) {
+      console.error("Error verifying reset token:", error);
+      res.status(500).json({ valid: false, message: "Error verifying reset link" });
     }
   });
 
