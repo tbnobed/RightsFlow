@@ -39,6 +39,8 @@ export const users = pgTable("users", {
   inviteToken: varchar("invite_token"),
   inviteTokenExpiry: timestamp("invite_token_expiry"),
   inviteStatus: varchar("invite_status", { enum: ["pending", "accepted"] }),
+  resetToken: varchar("reset_token"),
+  resetTokenExpiry: timestamp("reset_token_expiry"),
   lastLoginAt: timestamp("last_login_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
