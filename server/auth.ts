@@ -279,6 +279,79 @@ export function setupAuth(app: Express) {
     }
   });
 
+  // Delete user (admin only)
+  app.delete("/api/auth/users/:id", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const userId = req.params.id;
+      
+      // Prevent deleting yourself
+      if (userId === req.session.userId) {
+        return res.status(400).json({ message: "Cannot delete your own account" });
+      }
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      await storage.deleteUser(userId);
+      
+      // Create audit log
+      await storage.createAuditLog({
+        action: "User Deleted",
+        entityType: "User",
+        entityId: userId,
+        oldValues: { email: user.email, role: user.role },
+        userId: req.session.userId,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
+      });
+      
+      res.json({ message: "User deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
+
+  // Reset user password (admin only)
+  app.post("/api/auth/users/:id/reset-password", isAuthenticated, isAdmin, async (req: any, res) => {
+    try {
+      const userId = req.params.id;
+      const { password } = req.body;
+      
+      if (!password || password.length < 6) {
+        return res.status(400).json({ message: "Password must be at least 6 characters" });
+      }
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Hash new password
+      const hashedPassword = await hashPassword(password);
+      
+      await storage.updateUser(userId, { password: hashedPassword });
+      
+      // Create audit log
+      await storage.createAuditLog({
+        action: "User Password Reset",
+        entityType: "User",
+        entityId: userId,
+        newValues: { email: user.email },
+        userId: req.session.userId,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
+      });
+      
+      res.json({ message: "Password reset successfully" });
+    } catch (error) {
+      console.error("Error resetting password:", error);
+      res.status(500).json({ message: "Failed to reset password" });
+    }
+  });
+
   // Invite user (admin only)
   app.post("/api/auth/invite", isAuthenticated, isAdmin, async (req: any, res) => {
     try {

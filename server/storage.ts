@@ -23,6 +23,7 @@ export interface IStorage {
   createUser(userData: any): Promise<User>;
   updateUser(id: string, userData: any): Promise<User>;
   updateUserLastLogin(id: string): Promise<void>;
+  deleteUser(id: string): Promise<void>;
   getAllUsers(): Promise<User[]>;
   upsertUser(user: UpsertUser): Promise<User>;
 
@@ -108,6 +109,10 @@ export class DatabaseStorage implements IStorage {
       .update(users)
       .set({ lastLoginAt: new Date(), updatedAt: new Date() })
       .where(eq(users.id, id));
+  }
+
+  async deleteUser(id: string): Promise<void> {
+    await db.delete(users).where(eq(users.id, id));
   }
 
   async getAllUsers(): Promise<User[]> {
