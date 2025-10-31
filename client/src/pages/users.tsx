@@ -300,6 +300,33 @@ export default function Users() {
     },
   });
 
+  // Send password reset link mutation
+  const sendResetLinkMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const response = await fetch(`/api/auth/users/${userId}/send-reset-link`, {
+        method: "POST",
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to send reset link");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Password reset link sent to user's email",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const onCreateUser = (data: CreateUserData) => {
     createUserMutation.mutate(data);
   };
@@ -686,10 +713,20 @@ export default function Users() {
                               Edit User
                             </DropdownMenuItem>
                             {user.id !== currentUser?.id && (
-                              <DropdownMenuItem onClick={() => handleResetPassword(user)} data-testid={`action-reset-${user.id}`}>
-                                <Key className="h-4 w-4 mr-2" />
-                                Reset Password
-                              </DropdownMenuItem>
+                              <>
+                                <DropdownMenuItem onClick={() => handleResetPassword(user)} data-testid={`action-reset-${user.id}`}>
+                                  <Key className="h-4 w-4 mr-2" />
+                                  Reset Password
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => sendResetLinkMutation.mutate(user.id)} 
+                                  disabled={sendResetLinkMutation.isPending}
+                                  data-testid={`action-send-reset-link-${user.id}`}
+                                >
+                                  <Mail className="h-4 w-4 mr-2" />
+                                  Send Reset Link
+                                </DropdownMenuItem>
+                              </>
                             )}
                             {user.inviteStatus !== "pending" && (
                               <DropdownMenuItem 
