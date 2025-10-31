@@ -118,6 +118,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteUser(id: string): Promise<void> {
+    // First, nullify the userId in audit logs to preserve the audit trail
+    await db
+      .update(auditLogs)
+      .set({ userId: null })
+      .where(eq(auditLogs.userId, id));
+    
+    // Also nullify any contracts created by this user
+    await db
+      .update(contracts)
+      .set({ createdBy: null })
+      .where(eq(contracts.createdBy, id));
+    
+    // Also nullify any royalties calculated by this user
+    await db
+      .update(royalties)
+      .set({ calculatedBy: null })
+      .where(eq(royalties.calculatedBy, id));
+    
+    // Now delete the user
     await db.delete(users).where(eq(users.id, id));
   }
 
