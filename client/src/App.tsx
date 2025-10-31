@@ -13,6 +13,7 @@ import Reports from "@/pages/reports";
 import Audit from "@/pages/audit";
 import Users from "@/pages/users";
 import AcceptInvite from "@/pages/accept-invite";
+import ResetPassword from "@/pages/reset-password";
 import NotFound from "@/pages/not-found";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
@@ -24,6 +25,11 @@ function Router() {
   // Check if this is the accept invite page
   if (location.startsWith("/accept-invite")) {
     return <AcceptInvite />;
+  }
+
+  // Check if this is the password reset page
+  if (location.startsWith("/reset-password")) {
+    return <ResetPassword />;
   }
 
   if (isLoading) {
