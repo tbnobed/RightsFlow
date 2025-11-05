@@ -110,7 +110,7 @@ export default function Royalties() {
                 {Array.isArray(royalties) && royalties.map((royalty: any) => (
                   <tr key={royalty.id} className="border-b border-border hover:bg-muted/50 transition-all">
                     <td className="py-3 text-foreground font-medium" data-testid={`text-contract-${royalty.id}`}>
-                      {royalty.contract.ipName}
+                      {royalty.contract.partner}
                     </td>
                     <td className="py-3 text-muted-foreground" data-testid={`text-partner-${royalty.id}`}>
                       {royalty.contract.licensee}

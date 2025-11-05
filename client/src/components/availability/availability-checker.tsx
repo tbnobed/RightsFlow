@@ -245,7 +245,7 @@ export default function AvailabilityChecker() {
                 <div className="space-y-2">
                   {result.conflicts.map((conflict: any) => (
                     <div key={conflict.id} className="bg-background p-3 rounded border" data-testid={`conflict-${conflict.id}`}>
-                      <p className="font-medium text-foreground">{conflict.ipName}</p>
+                      <p className="font-medium text-foreground">{conflict.partner}</p>
                       <p className="text-sm text-muted-foreground">
                         {conflict.licensee} • {conflict.startDate} to {conflict.endDate}
                       </p>
