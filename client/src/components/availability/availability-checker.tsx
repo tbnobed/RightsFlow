@@ -132,20 +132,13 @@ export default function AvailabilityChecker() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Platform</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger data-testid="select-platform">
-                          <SelectValue placeholder="Select Platform" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Streaming">Streaming</SelectItem>
-                        <SelectItem value="TV Broadcast">TV Broadcast</SelectItem>
-                        <SelectItem value="Movie Theater">Movie Theater</SelectItem>
-                        <SelectItem value="Digital Download">Digital Download</SelectItem>
-                        <SelectItem value="Music Streaming">Music Streaming</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <Input 
+                        placeholder="Enter platform (optional)" 
+                        data-testid="input-platform"
+                        {...field} 
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
