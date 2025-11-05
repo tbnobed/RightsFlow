@@ -53,7 +53,7 @@ export const contracts = pgTable("contracts", {
   licensor: varchar("licensor").notNull(),
   licensee: varchar("licensee").notNull(),
   territory: varchar("territory").notNull(),
-  platform: varchar("platform").notNull(),
+  platform: varchar("platform"),
   content: varchar("content"),
   startDate: date("start_date").notNull(),
   endDate: date("end_date").notNull(),
@@ -162,7 +162,7 @@ export type AuditLog = typeof auditLogs.$inferSelect;
 export const availabilityRequestSchema = z.object({
   partner: z.string().min(1, "Partner name is required"),
   territory: z.string().min(1, "Territory is required"),
-  platform: z.string().min(1, "Platform is required"),
+  platform: z.string().optional(),
   startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Start date must be in YYYY-MM-DD format"),
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "End date must be in YYYY-MM-DD format"),
 }).refine(
