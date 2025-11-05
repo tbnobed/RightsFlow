@@ -119,6 +119,8 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
       });
       form.reset();
       setDocumentUrl("");
+      setPlatformType("predefined");
+      setCustomPlatform("");
       onSuccess?.();
     },
     onError: (error) => {
@@ -416,10 +418,11 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
             type="button" 
             variant="outline" 
             onClick={() => {
+              form.reset();
+              setPlatformType("predefined");
+              setCustomPlatform("");
               if (onCancel) {
                 onCancel();
-              } else {
-                form.reset();
               }
             }}
             data-testid="button-cancel"
