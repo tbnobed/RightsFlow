@@ -144,10 +144,10 @@ export default function ExpirationCalendar({ contracts }: ExpirationCalendarProp
                       <div
                         key={contract.id}
                         className="text-[10px] leading-tight px-1 py-0.5 bg-primary/10 rounded truncate"
-                        title={contract.ipName}
+                        title={contract.partner}
                         data-testid={`contract-indicator-${contract.id}`}
                       >
-                        {contract.ipName}
+                        {contract.partner}
                       </div>
                     ))}
                     {dayContracts.length > 2 && (

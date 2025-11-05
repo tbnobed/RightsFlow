@@ -42,7 +42,7 @@ export interface IStorage {
 
   // Rights availability
   checkRightsAvailability(params: {
-    ipName: string;
+    partner: string;
     territory: string;
     platform: string;
     startDate: string;
@@ -207,7 +207,7 @@ export class DatabaseStorage implements IStorage {
     if (filters.search) {
       conditions.push(
         or(
-          sql`${contracts.ipName} ILIKE ${`%${filters.search}%`}`,
+          sql`${contracts.partner} ILIKE ${`%${filters.search}%`}`,
           sql`${contracts.licensee} ILIKE ${`%${filters.search}%`}`,
           sql`${contracts.licensor} ILIKE ${`%${filters.search}%`}`
         )
@@ -223,7 +223,7 @@ export class DatabaseStorage implements IStorage {
 
   // Rights availability
   async checkRightsAvailability(params: {
-    ipName: string;
+    partner: string;
     territory: string;
     platform: string;
     startDate: string;
@@ -234,7 +234,7 @@ export class DatabaseStorage implements IStorage {
       .from(contracts)
       .where(
         and(
-          eq(contracts.ipName, params.ipName),
+          eq(contracts.partner, params.partner),
           eq(contracts.territory, params.territory),
           eq(contracts.platform, params.platform),
           or(

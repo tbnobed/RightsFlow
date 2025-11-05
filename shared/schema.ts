@@ -160,7 +160,7 @@ export type AuditLog = typeof auditLogs.$inferSelect;
 
 // Availability request schema
 export const availabilityRequestSchema = z.object({
-  ipName: z.string().min(1, "IP name is required"),
+  partner: z.string().min(1, "Partner name is required"),
   territory: z.string().min(1, "Territory is required"),
   platform: z.string().min(1, "Platform is required"),
   startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Start date must be in YYYY-MM-DD format"),

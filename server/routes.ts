@@ -342,10 +342,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const contracts = await storage.getContracts();
       
       // Create CSV content
-      const csvHeader = "IP Name,Licensee,Licensor,Territory,Platform,Start Date,End Date,Status,Royalty Rate\n";
+      const csvHeader = "Partner,Licensee,Licensor,Territory,Platform,Start Date,End Date,Status,Royalty Rate\n";
       const csvContent = contracts
         .map(contract => 
-          `"${contract.ipName}","${contract.licensee}","${contract.licensor}","${contract.territory}","${contract.platform}","${contract.startDate}","${contract.endDate}","${contract.status}","${contract.royaltyRate || 'N/A'}"`
+          `"${contract.partner}","${contract.licensee}","${contract.licensor}","${contract.territory}","${contract.platform}","${contract.startDate}","${contract.endDate}","${contract.status}","${contract.royaltyRate || 'N/A'}"`
         )
         .join("\n");
       
@@ -363,10 +363,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const royalties = await storage.getRoyalties();
       
       // Create CSV content
-      const csvHeader = "Contract,Partner,Period,Revenue,Royalty,Status\n";
+      const csvHeader = "Partner,Licensee,Period,Revenue,Royalty,Status\n";
       const csvContent = royalties
         .map(royalty => 
-          `"${royalty.contract.ipName}","${royalty.contract.licensee}","${royalty.reportingPeriod}","${royalty.revenue}","${royalty.royaltyAmount}","${royalty.status}"`
+          `"${royalty.contract.partner}","${royalty.contract.licensee}","${royalty.reportingPeriod}","${royalty.revenue}","${royalty.royaltyAmount}","${royalty.status}"`
         )
         .join("\n");
       

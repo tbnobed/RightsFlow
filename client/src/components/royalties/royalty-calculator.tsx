@@ -149,7 +149,7 @@ export default function RoyaltyCalculator({ onCalculated }: RoyaltyCalculatorPro
                       <SelectContent>
                         {contracts?.map((contract: any) => (
                           <SelectItem key={contract.id} value={contract.id}>
-                            {contract.ipName} - {contract.licensee}
+                            {contract.partner} - {contract.licensee}
                           </SelectItem>
                         ))}
                       </SelectContent>

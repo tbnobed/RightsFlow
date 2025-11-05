@@ -14,7 +14,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { Search, CheckCircle, XCircle } from "lucide-react";
 
 const availabilitySchema = z.object({
-  ipName: z.string().min(1, "IP name is required"),
+  partner: z.string().min(1, "Partner name is required"),
   territory: z.string().min(1, "Territory is required"),
   platform: z.string().min(1, "Platform is required"),
   startDate: z.string().min(1, "Start date is required"),
@@ -33,7 +33,7 @@ export default function AvailabilityChecker() {
   const form = useForm<AvailabilityData>({
     resolver: zodResolver(availabilitySchema),
     defaultValues: {
-      ipName: "",
+      partner: "",
       territory: "",
       platform: "",
       startDate: "",
@@ -85,14 +85,14 @@ export default function AvailabilityChecker() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <FormField
                 control={form.control}
-                name="ipName"
+                name="partner"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>IP Name</FormLabel>
+                    <FormLabel>Partner</FormLabel>
                     <FormControl>
                       <Input 
-                        placeholder="Enter IP name..." 
-                        data-testid="input-ip-name"
+                        placeholder="Enter partner name..." 
+                        data-testid="input-partner"
                         {...field} 
                       />
                     </FormControl>

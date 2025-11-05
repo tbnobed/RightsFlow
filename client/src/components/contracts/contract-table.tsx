@@ -88,7 +88,7 @@ export default function ContractTable({ contracts, isLoading, onUpdate }: Contra
         <table className="w-full">
           <thead className="bg-muted">
             <tr>
-              <th className="text-left py-4 px-6 text-sm font-medium text-muted-foreground">IP Name</th>
+              <th className="text-left py-4 px-6 text-sm font-medium text-muted-foreground">Partner</th>
               <th className="text-left py-4 px-6 text-sm font-medium text-muted-foreground">Licensee</th>
               <th className="text-left py-4 px-6 text-sm font-medium text-muted-foreground">Territory</th>
               <th className="text-left py-4 px-6 text-sm font-medium text-muted-foreground">Platform</th>
@@ -105,8 +105,8 @@ export default function ContractTable({ contracts, isLoading, onUpdate }: Contra
                 className="border-b border-border hover:bg-muted/30 transition-all"
                 data-testid={`contract-row-${contract.id}`}
               >
-                <td className="py-4 px-6 font-medium text-foreground" data-testid={`text-ip-name-${contract.id}`}>
-                  {contract.ipName}
+                <td className="py-4 px-6 font-medium text-foreground" data-testid={`text-partner-${contract.id}`}>
+                  {contract.partner}
                 </td>
                 <td className="py-4 px-6 text-muted-foreground" data-testid={`text-licensee-${contract.id}`}>
                   {contract.licensee}
@@ -180,8 +180,8 @@ export default function ContractTable({ contracts, isLoading, onUpdate }: Contra
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">IP Name</label>
-                  <p className="text-sm">{viewContract.ipName}</p>
+                  <label className="text-sm font-medium text-muted-foreground">Partner</label>
+                  <p className="text-sm">{viewContract.partner}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Licensor</label>

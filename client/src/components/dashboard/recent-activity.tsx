@@ -63,7 +63,7 @@ export default function RecentActivity({ contracts }: RecentActivityProps) {
               {contracts.map((contract) => (
                 <div key={contract.id} className="flex items-center justify-between p-3 bg-muted rounded-md" data-testid={`recent-contract-${contract.id}`}>
                   <div className="flex-1">
-                    <p className="font-medium text-foreground">{contract.ipName}</p>
+                    <p className="font-medium text-foreground">{contract.partner}</p>
                     <p className="text-sm text-muted-foreground">{contract.licensee} • {contract.territory}</p>
                   </div>
                   <Badge className={getStatusColor(contract.status || "Pending")}>
