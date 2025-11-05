@@ -25,11 +25,16 @@ export default function Dashboard() {
     }
   }, [isAuthenticated, isLoading, toast]);
 
-  const { data: stats, isLoading: statsLoading } = useQuery({
+  const { data: stats, isLoading: statsLoading } = useQuery<{
+    activeContracts: number;
+    expiringSoon: number;
+    totalRoyalties: string;
+    pendingReviews: number;
+  }>({
     queryKey: ["/api/dashboard/stats"],
   });
 
-  const { data: contracts, isLoading: contractsLoading } = useQuery({
+  const { data: contracts, isLoading: contractsLoading } = useQuery<Contract[]>({
     queryKey: ["/api/contracts"],
   });
 
@@ -59,10 +64,10 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <RecentActivity contracts={Array.isArray(contracts) ? contracts.slice(0, 5) : []} />
+          <RecentActivity contracts={contracts?.slice(0, 5) ?? []} />
         </div>
         <div>
-          <ExpirationCalendar contracts={Array.isArray(contracts) ? contracts as Contract[] : []} />
+          <ExpirationCalendar contracts={contracts ?? []} />
         </div>
       </div>
     </div>

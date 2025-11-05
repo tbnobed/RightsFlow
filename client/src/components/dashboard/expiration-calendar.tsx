@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
+import { Link } from "wouter";
 import { 
   startOfMonth, 
   endOfMonth, 
@@ -184,6 +185,18 @@ export default function ExpirationCalendar({ contracts }: ExpirationCalendarProp
           </div>
         </div>
       </CardContent>
+      <CardFooter className="border-t border-border p-4">
+        <Link href="/contracts" className="w-full">
+          <Button 
+            variant="outline" 
+            className="w-full" 
+            data-testid="button-view-all-contracts"
+          >
+            <ExternalLink className="h-4 w-4 mr-2" />
+            View All Expiring Contracts
+          </Button>
+        </Link>
+      </CardFooter>
     </Card>
   );
 }
