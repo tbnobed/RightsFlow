@@ -49,11 +49,12 @@ export const users = pgTable("users", {
 // Contracts table
 export const contracts = pgTable("contracts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  ipName: varchar("ip_name").notNull(),
+  partner: varchar("partner").notNull(),
   licensor: varchar("licensor").notNull(),
   licensee: varchar("licensee").notNull(),
   territory: varchar("territory").notNull(),
   platform: varchar("platform").notNull(),
+  content: varchar("content"),
   startDate: date("start_date").notNull(),
   endDate: date("end_date").notNull(),
   royaltyRate: decimal("royalty_rate", { precision: 5, scale: 2 }),
