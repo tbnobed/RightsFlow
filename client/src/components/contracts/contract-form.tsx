@@ -238,7 +238,8 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
                   <Input 
                     placeholder="Enter platform (optional)" 
                     data-testid="input-platform"
-                    {...field} 
+                    {...field}
+                    value={field.value ?? ""}
                   />
                 </FormControl>
                 <FormMessage />
@@ -256,7 +257,8 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
                   <Input 
                     placeholder="Enter content details (optional)" 
                     data-testid="input-content"
-                    {...field} 
+                    {...field}
+                    value={field.value ?? ""}
                   />
                 </FormControl>
                 <FormMessage />
@@ -312,7 +314,8 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
                     step="0.01" 
                     placeholder="0.00" 
                     data-testid="input-royalty-rate"
-                    {...field} 
+                    {...field}
+                    value={field.value ?? ""}
                   />
                 </FormControl>
                 <FormMessage />
@@ -326,7 +329,7 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Exclusivity</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} defaultValue={field.value ?? undefined}>
                   <FormControl>
                     <SelectTrigger data-testid="select-exclusivity">
                       <SelectValue />

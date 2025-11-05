@@ -16,7 +16,7 @@ import { Search, CheckCircle, XCircle } from "lucide-react";
 const availabilitySchema = z.object({
   partner: z.string().min(1, "Partner name is required"),
   territory: z.string().min(1, "Territory is required"),
-  platform: z.string().min(1, "Platform is required"),
+  platform: z.string().optional(),
   startDate: z.string().min(1, "Start date is required"),
   endDate: z.string().min(1, "End date is required"),
 });
