@@ -45,11 +45,12 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      ipName: "",
+      partner: "",
       licensor: "",
       licensee: "",
       territory: "",
       platform: "",
+      content: "",
       startDate: "",
       endDate: "",
       royaltyRate: "0",
@@ -62,11 +63,12 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
   useEffect(() => {
     if (existingContract && contractId) {
       form.reset({
-        ipName: existingContract.ipName || "",
+        partner: existingContract.partner || "",
         licensor: existingContract.licensor || "",
         licensee: existingContract.licensee || "",
         territory: existingContract.territory || "",
         platform: existingContract.platform || "",
+        content: existingContract.content || "",
         startDate: existingContract.startDate || "",
         endDate: existingContract.endDate || "",
         royaltyRate: existingContract.royaltyRate || "0",
@@ -148,14 +150,14 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
           <div className="md:col-span-2">
             <FormField
               control={form.control}
-              name="ipName"
+              name="partner"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>IP Name *</FormLabel>
+                  <FormLabel>Partner *</FormLabel>
                   <FormControl>
                     <Input 
-                      placeholder="Enter intellectual property name" 
-                      data-testid="input-ip-name"
+                      placeholder="Enter partner name" 
+                      data-testid="input-partner"
                       {...field} 
                     />
                   </FormControl>
@@ -246,6 +248,24 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
                     <SelectItem value="Music Streaming">Music Streaming</SelectItem>
                   </SelectContent>
                 </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="content"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Content</FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="Enter content details (optional)" 
+                    data-testid="input-content"
+                    {...field} 
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
