@@ -3,7 +3,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import StatsCards from "@/components/dashboard/stats-cards";
 import RecentActivity from "@/components/dashboard/recent-activity";
+import ExpirationCalendar from "@/components/dashboard/expiration-calendar";
 import { useQuery } from "@tanstack/react-query";
+import type { Contract } from "@shared/schema";
 
 export default function Dashboard() {
   const { toast } = useToast();
@@ -54,7 +56,15 @@ export default function Dashboard() {
       </div>
 
       <StatsCards stats={stats} />
-      <RecentActivity contracts={Array.isArray(contracts) ? contracts.slice(0, 5) : []} />
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <RecentActivity contracts={Array.isArray(contracts) ? contracts.slice(0, 5) : []} />
+        </div>
+        <div>
+          <ExpirationCalendar contracts={Array.isArray(contracts) ? contracts as Contract[] : []} />
+        </div>
+      </div>
     </div>
   );
 }
