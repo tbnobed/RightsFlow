@@ -26,9 +26,13 @@ interface ContractFormProps {
   onCancel?: () => void;
 }
 
+const PREDEFINED_PLATFORMS = ["Streaming", "TV Broadcast", "Movie Theater", "Digital Download", "Music Streaming"];
+
 export default function ContractForm({ contractId, onSuccess, onCancel }: ContractFormProps) {
   const { toast } = useToast();
   const [documentUrl, setDocumentUrl] = useState<string>("");
+  const [platformType, setPlatformType] = useState<"predefined" | "custom">("predefined");
+  const [customPlatform, setCustomPlatform] = useState<string>("");
 
   // Fetch existing contract data if editing
   const { data: existingContract } = useQuery({
@@ -62,12 +66,15 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
   // Update form when existing contract data loads
   useEffect(() => {
     if (existingContract && contractId) {
+      const existingPlatform = existingContract.platform || "";
+      const isPredefined = PREDEFINED_PLATFORMS.includes(existingPlatform);
+      
       form.reset({
         partner: existingContract.partner || "",
         licensor: existingContract.licensor || "",
         licensee: existingContract.licensee || "",
         territory: existingContract.territory || "",
-        platform: existingContract.platform || "",
+        platform: isPredefined ? existingPlatform : "",
         content: existingContract.content || "",
         startDate: existingContract.startDate || "",
         endDate: existingContract.endDate || "",
@@ -75,6 +82,15 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
         exclusivity: existingContract.exclusivity || "Non-Exclusive",
         status: existingContract.status || "Pending",
       });
+      
+      if (!isPredefined && existingPlatform) {
+        setPlatformType("custom");
+        setCustomPlatform(existingPlatform);
+      } else {
+        setPlatformType("predefined");
+        setCustomPlatform("");
+      }
+      
       setDocumentUrl(existingContract.contractDocumentUrl || "");
     }
   }, [existingContract, contractId, form]);
@@ -140,7 +156,12 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
   // };
 
   const onSubmit = (data: FormData) => {
-    createContractMutation.mutate(data);
+    // Use custom platform if that's what the user selected
+    const finalData = {
+      ...data,
+      platform: platformType === "custom" ? customPlatform : data.platform,
+    };
+    createContractMutation.mutate(finalData);
   };
 
   return (
@@ -228,24 +249,56 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="platform"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Platform</FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="Enter platform (optional)" 
-                    data-testid="input-platform"
-                    {...field}
-                    value={field.value ?? ""}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+          <div className="space-y-2">
+            <FormField
+              control={form.control}
+              name="platform"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Platform</FormLabel>
+                  <Select 
+                    onValueChange={(value) => {
+                      if (value === "custom") {
+                        setPlatformType("custom");
+                        field.onChange("");
+                      } else {
+                        setPlatformType("predefined");
+                        setCustomPlatform("");
+                        field.onChange(value);
+                      }
+                    }} 
+                    value={platformType === "custom" ? "custom" : field.value ?? undefined}
+                  >
+                    <FormControl>
+                      <SelectTrigger data-testid="select-platform">
+                        <SelectValue placeholder="Select Platform" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {PREDEFINED_PLATFORMS.map((platform) => (
+                        <SelectItem key={platform} value={platform}>
+                          {platform}
+                        </SelectItem>
+                      ))}
+                      <SelectItem value="custom">Custom</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            {platformType === "custom" && (
+              <div className="pt-2">
+                <Input 
+                  placeholder="Enter custom platform" 
+                  data-testid="input-custom-platform"
+                  value={customPlatform}
+                  onChange={(e) => setCustomPlatform(e.target.value)}
+                />
+              </div>
             )}
-          />
+          </div>
 
           <FormField
             control={form.control}
