@@ -13,6 +13,8 @@ import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Search, CheckCircle, XCircle } from "lucide-react";
 
+const PREDEFINED_PLATFORMS = ["Streaming", "TV Broadcast", "Movie Theater", "Digital Download", "Music Streaming"];
+
 const availabilitySchema = z.object({
   partner: z.string().min(1, "Partner name is required"),
   territory: z.string().min(1, "Territory is required"),
@@ -29,6 +31,8 @@ export default function AvailabilityChecker() {
     available: boolean;
     conflicts: any[];
   } | null>(null);
+  const [platformType, setPlatformType] = useState<"predefined" | "custom">("predefined");
+  const [customPlatform, setCustomPlatform] = useState<string>("");
 
   const form = useForm<AvailabilityData>({
     resolver: zodResolver(availabilitySchema),
@@ -70,7 +74,12 @@ export default function AvailabilityChecker() {
   });
 
   const onSubmit = (data: AvailabilityData) => {
-    checkAvailabilityMutation.mutate(data);
+    // Use custom platform if that's what the user selected
+    const finalData = {
+      ...data,
+      platform: platformType === "custom" ? customPlatform : data.platform,
+    };
+    checkAvailabilityMutation.mutate(finalData);
   };
 
   return (
@@ -126,23 +135,56 @@ export default function AvailabilityChecker() {
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="platform"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Platform</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="Enter platform (optional)" 
-                        data-testid="input-platform"
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+              <div className="space-y-2">
+                <FormField
+                  control={form.control}
+                  name="platform"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Platform</FormLabel>
+                      <Select 
+                        onValueChange={(value) => {
+                          if (value === "custom") {
+                            setPlatformType("custom");
+                            field.onChange("");
+                          } else {
+                            setPlatformType("predefined");
+                            setCustomPlatform("");
+                            field.onChange(value);
+                          }
+                        }} 
+                        value={platformType === "custom" ? "custom" : field.value ?? undefined}
+                      >
+                        <FormControl>
+                          <SelectTrigger data-testid="select-platform">
+                            <SelectValue placeholder="Select Platform" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {PREDEFINED_PLATFORMS.map((platform) => (
+                            <SelectItem key={platform} value={platform}>
+                              {platform}
+                            </SelectItem>
+                          ))}
+                          <SelectItem value="custom">Custom</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                {platformType === "custom" && (
+                  <div className="pt-2">
+                    <Input 
+                      placeholder="Enter custom platform" 
+                      data-testid="input-custom-platform"
+                      value={customPlatform}
+                      onChange={(e) => setCustomPlatform(e.target.value)}
+                    />
+                  </div>
                 )}
-              />
+              </div>
 
               <FormField
                 control={form.control}
