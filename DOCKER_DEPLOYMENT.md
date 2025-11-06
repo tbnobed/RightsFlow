@@ -82,9 +82,11 @@ After installation, log out and back in for group permissions to take effect.
    The application will automatically:
    - Wait for PostgreSQL to be ready
    - Create the database if it doesn't exist
-   - Run database migrations
+   - Run database migrations from `migrations/` directory
    - Create the admin user
    - Start the web server
+   
+   **Note**: The `docker-compose.yml` is configured to run `init-db.sh` before starting the application, which handles all database initialization and migrations.
 
 5. **Access the application**
    Open your browser and navigate to: `http://localhost:5000`

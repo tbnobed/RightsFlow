@@ -21,7 +21,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 for migration_file in "$SCRIPT_DIR"/*.sql; do
   if [ -f "$migration_file" ]; then
     echo "Running migration: $(basename "$migration_file")"
-    psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -f "$migration_file"
+    psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=1 -f "$migration_file"
     echo "Completed: $(basename "$migration_file")"
   fi
 done
