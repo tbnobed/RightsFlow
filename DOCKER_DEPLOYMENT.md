@@ -203,10 +203,41 @@ docker-compose down -v
 
 ## Database Management
 
-### Run migrations
+### Database Migrations
+
+The application uses SQL migration files located in the `migrations/` directory. These are automatically run during container startup via the `init-db.sh` script.
+
+#### Migration System
+- **Migration files**: SQL scripts in `migrations/` directory
+- **Execution**: Migrations run automatically on container startup
+- **Naming convention**: `XXXX_description.sql` (e.g., `0001_initial_schema.sql`)
+- **Order**: Files are executed in alphanumeric order
+
+#### Manual Migration Management
+
+Run migrations manually:
 ```bash
-docker-compose exec app npm run db:push
+docker-compose exec app /app/migrations/run-migrations.sh
 ```
+
+Create a new migration (example):
+```bash
+# Create a new migration file
+cat > migrations/0002_add_new_feature.sql << 'EOF'
+-- Add your SQL statements here
+ALTER TABLE users ADD COLUMN new_field VARCHAR;
+EOF
+
+# Run the new migration
+docker-compose exec app /app/migrations/run-migrations.sh
+```
+
+#### Alternative: Drizzle Kit Push (Development Only)
+For quick schema synchronization in development:
+```bash
+docker-compose exec app npx drizzle-kit push
+```
+**Note**: This method is not recommended for production as it doesn't maintain migration history.
 
 ### Access PostgreSQL CLI
 ```bash

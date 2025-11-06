@@ -48,6 +48,10 @@ COPY --from=builder --chown=appuser:nodejs /app/package*.json ./
 COPY --from=builder --chown=appuser:nodejs /app/drizzle.config.ts ./drizzle.config.ts
 COPY --from=builder --chown=appuser:nodejs /app/shared ./shared
 
+# Copy migrations directory
+COPY --from=builder --chown=appuser:nodejs /app/migrations ./migrations
+RUN chmod +x /app/migrations/run-migrations.sh
+
 # Copy init script and make it executable
 COPY --from=builder --chown=appuser:nodejs /app/init-db.sh ./init-db.sh
 RUN chmod +x /app/init-db.sh
