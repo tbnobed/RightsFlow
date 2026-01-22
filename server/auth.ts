@@ -39,7 +39,6 @@ export function getSession() {
 
 // Auth middleware
 export function isAuthenticated(req: any, res: Response, next: NextFunction) {
-  console.log("Auth check - Session ID:", req.sessionID, "userId:", req.session?.userId);
   if (req.session && req.session.userId) {
     return next();
   }
@@ -102,7 +101,6 @@ export function setupAuth(app: Express) {
           console.error("Session save error:", err);
           return res.status(500).json({ message: "Login failed - session error" });
         }
-        console.log("Login success - Session ID:", req.sessionID, "Set-Cookie will be sent");
         res.json({
           id: user.id,
           email: user.email,
