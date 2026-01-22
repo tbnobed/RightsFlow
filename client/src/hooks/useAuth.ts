@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, clearAuthToken, getAuthToken } from "@/lib/queryClient";
 
 export interface User {
   id: string;
@@ -17,9 +17,16 @@ export function useAuth() {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
+      const headers: Record<string, string> = {};
+      const token = getAuthToken();
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+      
       const response = await fetch("/api/auth/logout", {
         method: "POST",
         credentials: "include",
+        headers,
       });
       if (!response.ok) {
         throw new Error("Logout failed");
@@ -27,6 +34,7 @@ export function useAuth() {
       return response.json();
     },
     onSuccess: () => {
+      clearAuthToken();
       queryClient.clear();
       window.location.reload();
     },

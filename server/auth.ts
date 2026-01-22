@@ -7,6 +7,19 @@ import { loginSchema, CreateUserData, InviteUserData, AcceptInviteData, inviteUs
 import { storage } from "./storage";
 import { sendUserInviteEmail, sendPasswordResetEmail } from "./sendgrid";
 
+// In-memory token store for iframe fallback authentication
+const tokenSessionMap = new Map<string, { sessionId: string; userId: string; userRole: string; userEmail: string; expires: Date }>();
+
+// Clean up expired tokens periodically
+setInterval(() => {
+  const now = new Date();
+  for (const [token, data] of tokenSessionMap.entries()) {
+    if (data.expires < now) {
+      tokenSessionMap.delete(token);
+    }
+  }
+}, 60000); // Clean up every minute
+
 // Session configuration
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
@@ -37,11 +50,29 @@ export function getSession() {
   });
 }
 
-// Auth middleware
+// Auth middleware - checks both session cookies and Authorization header (for iframe fallback)
 export function isAuthenticated(req: any, res: Response, next: NextFunction) {
+  // First check session cookie
   if (req.session && req.session.userId) {
     return next();
   }
+  
+  // Fallback: check Authorization header for token-based auth (iframe support)
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    const token = authHeader.substring(7);
+    const tokenData = tokenSessionMap.get(token);
+    
+    if (tokenData && tokenData.expires > new Date()) {
+      // Attach user info to request for downstream use
+      req.session = req.session || {};
+      req.session.userId = tokenData.userId;
+      req.session.userRole = tokenData.userRole;
+      req.session.userEmail = tokenData.userEmail;
+      return next();
+    }
+  }
+  
   return res.status(401).json({ message: "Authentication required" });
 }
 
@@ -95,6 +126,17 @@ export function setupAuth(app: Express) {
       req.session.userRole = user.role;
       req.session.userEmail = user.email;
       
+      // Generate a fallback token for iframe scenarios where cookies don't work
+      const sessionToken = nanoid(32);
+      const tokenExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 1 week
+      tokenSessionMap.set(sessionToken, {
+        sessionId: req.sessionID,
+        userId: user.id,
+        userRole: user.role,
+        userEmail: user.email,
+        expires: tokenExpiry,
+      });
+      
       // Explicitly save session before responding
       req.session.save((err: any) => {
         if (err) {
@@ -107,6 +149,7 @@ export function setupAuth(app: Express) {
           firstName: user.firstName,
           lastName: user.lastName,
           role: user.role,
+          sessionToken, // Include token for iframe fallback
         });
       });
     } catch (error) {
@@ -117,6 +160,13 @@ export function setupAuth(app: Express) {
 
   // Logout endpoint
   app.post("/api/auth/logout", (req: any, res) => {
+    // Clear token from map if provided
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const token = authHeader.substring(7);
+      tokenSessionMap.delete(token);
+    }
+    
     req.session.destroy((err: any) => {
       if (err) {
         return res.status(500).json({ message: "Logout failed" });
@@ -559,6 +609,17 @@ export function setupAuth(app: Express) {
       req.session.userRole = updatedUser.role;
       req.session.userEmail = updatedUser.email;
       
+      // Generate a fallback token for iframe scenarios
+      const sessionToken = nanoid(32);
+      const tokenExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      tokenSessionMap.set(sessionToken, {
+        sessionId: req.sessionID,
+        userId: updatedUser.id,
+        userRole: updatedUser.role,
+        userEmail: updatedUser.email,
+        expires: tokenExpiry,
+      });
+      
       // Explicitly save session before responding
       req.session.save((err: any) => {
         if (err) {
@@ -571,6 +632,7 @@ export function setupAuth(app: Express) {
           firstName: updatedUser.firstName,
           lastName: updatedUser.lastName,
           role: updatedUser.role,
+          sessionToken,
         });
       });
     } catch (error) {

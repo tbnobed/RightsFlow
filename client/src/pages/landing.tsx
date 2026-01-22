@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, setAuthToken } from "@/lib/queryClient";
 import promissioLogo from "@assets/promissio_1758823299279.png";
 
 export default function Landing() {
@@ -25,9 +25,15 @@ export default function Landing() {
 
   const loginMutation = useMutation({
     mutationFn: async (data: LoginData) => {
-      return await apiRequest("POST", "/api/auth/login", data);
+      const response = await apiRequest("POST", "/api/auth/login", data);
+      return response.json();
     },
-    onSuccess: async () => {
+    onSuccess: async (data) => {
+      // Store the session token for iframe fallback
+      if (data.sessionToken) {
+        setAuthToken(data.sessionToken);
+      }
+      
       // Invalidate user query to trigger re-fetch
       await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       
