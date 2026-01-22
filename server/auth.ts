@@ -18,18 +18,20 @@ export function getSession() {
     tableName: "sessions",
   });
   
-  // Check if running behind a proxy (like Replit)
-  const isProduction = process.env.NODE_ENV === "production";
+  // Replit uses HTTPS externally but may use HTTP internally
+  // We need to trust the proxy and set cookie settings appropriately
+  const isSecure = process.env.NODE_ENV === "production" || process.env.REPL_ID !== undefined;
   
   return session({
     secret: process.env.SESSION_SECRET!,
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
+    proxy: true,
     cookie: {
       httpOnly: true,
-      secure: true,
-      sameSite: "lax",
+      secure: isSecure,
+      sameSite: isSecure ? "none" : "lax",
       maxAge: sessionTtl,
     },
   });
@@ -37,6 +39,7 @@ export function getSession() {
 
 // Auth middleware
 export function isAuthenticated(req: any, res: Response, next: NextFunction) {
+  console.log("Auth check - Session ID:", req.sessionID, "userId:", req.session?.userId);
   if (req.session && req.session.userId) {
     return next();
   }
@@ -99,6 +102,7 @@ export function setupAuth(app: Express) {
           console.error("Session save error:", err);
           return res.status(500).json({ message: "Login failed - session error" });
         }
+        console.log("Login success - Session ID:", req.sessionID, "Set-Cookie will be sent");
         res.json({
           id: user.id,
           email: user.email,
