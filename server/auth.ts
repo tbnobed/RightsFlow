@@ -18,6 +18,9 @@ export function getSession() {
     tableName: "sessions",
   });
   
+  // Check if running behind a proxy (like Replit)
+  const isProduction = process.env.NODE_ENV === "production";
+  
   return session({
     secret: process.env.SESSION_SECRET!,
     store: sessionStore,
@@ -26,7 +29,7 @@ export function getSession() {
     cookie: {
       httpOnly: true,
       secure: true,
-      sameSite: "none",
+      sameSite: "lax",
       maxAge: sessionTtl,
     },
   });
@@ -90,12 +93,19 @@ export function setupAuth(app: Express) {
       req.session.userRole = user.role;
       req.session.userEmail = user.email;
       
-      res.json({
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role,
+      // Explicitly save session before responding
+      req.session.save((err: any) => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.status(500).json({ message: "Login failed - session error" });
+        }
+        res.json({
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+        });
       });
     } catch (error) {
       console.error("Login error:", error);
@@ -547,12 +557,19 @@ export function setupAuth(app: Express) {
       req.session.userRole = updatedUser.role;
       req.session.userEmail = updatedUser.email;
       
-      res.json({
-        id: updatedUser.id,
-        email: updatedUser.email,
-        firstName: updatedUser.firstName,
-        lastName: updatedUser.lastName,
-        role: updatedUser.role,
+      // Explicitly save session before responding
+      req.session.save((err: any) => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.status(500).json({ message: "Failed to complete login" });
+        }
+        res.json({
+          id: updatedUser.id,
+          email: updatedUser.email,
+          firstName: updatedUser.firstName,
+          lastName: updatedUser.lastName,
+          role: updatedUser.role,
+        });
       });
     } catch (error) {
       console.error("Error accepting invite:", error);
