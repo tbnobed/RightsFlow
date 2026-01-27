@@ -99,6 +99,31 @@ export const auditLogs = pgTable("audit_logs", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Content catalog table
+export const contentItems = pgTable("content_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: varchar("title").notNull(),
+  type: varchar("type", { enum: ["Film", "TV Series", "TBN FAST", "TBN Linear", "WoF FAST"] }).notNull(),
+  description: text("description"),
+  season: integer("season"),
+  episodeCount: integer("episode_count"),
+  releaseYear: integer("release_year"),
+  genre: varchar("genre"),
+  duration: integer("duration"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  createdBy: varchar("created_by").references(() => users.id),
+});
+
+// Contract-Content junction table (many-to-many)
+export const contractContent = pgTable("contract_content", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  contractId: varchar("contract_id").references(() => contracts.id).notNull(),
+  contentId: varchar("content_id").references(() => contentItems.id).notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Relations
 export const contractsRelations = relations(contracts, ({ one, many }) => ({
   creator: one(users, {
@@ -106,6 +131,26 @@ export const contractsRelations = relations(contracts, ({ one, many }) => ({
     references: [users.id],
   }),
   royalties: many(royalties),
+  contractContents: many(contractContent),
+}));
+
+export const contentItemsRelations = relations(contentItems, ({ one, many }) => ({
+  creator: one(users, {
+    fields: [contentItems.createdBy],
+    references: [users.id],
+  }),
+  contractContents: many(contractContent),
+}));
+
+export const contractContentRelations = relations(contractContent, ({ one }) => ({
+  contract: one(contracts, {
+    fields: [contractContent.contractId],
+    references: [contracts.id],
+  }),
+  content: one(contentItems, {
+    fields: [contractContent.contentId],
+    references: [contentItems.id],
+  }),
 }));
 
 export const royaltiesRelations = relations(royalties, ({ one }) => ({
@@ -130,6 +175,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   createdContracts: many(contracts),
   calculatedRoyalties: many(royalties),
   auditLogs: many(auditLogs),
+  createdContentItems: many(contentItems),
 }));
 
 // Insert schemas
@@ -155,6 +201,17 @@ export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({
   createdAt: true,
 });
 
+export const insertContentItemSchema = createInsertSchema(contentItems).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertContractContentSchema = createInsertSchema(contractContent).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -164,6 +221,10 @@ export type InsertRoyalty = z.infer<typeof insertRoyaltySchema>;
 export type Royalty = typeof royalties.$inferSelect;
 export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
 export type AuditLog = typeof auditLogs.$inferSelect;
+export type InsertContentItem = z.infer<typeof insertContentItemSchema>;
+export type ContentItem = typeof contentItems.$inferSelect;
+export type InsertContractContent = z.infer<typeof insertContractContentSchema>;
+export type ContractContent = typeof contractContent.$inferSelect;
 
 // Availability request schema
 export const availabilityRequestSchema = z.object({
