@@ -7,13 +7,15 @@ import {
   Calendar, 
   DollarSign, 
   FileText,
-  ChartBar
+  ChartBar,
+  Library
 } from "lucide-react";
 import promissioLogo from "@assets/promissio_1758823299279.png";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: BarChart3 },
   { name: "Contracts", href: "/contracts", icon: File },
+  { name: "Content", href: "/content", icon: Library },
   { name: "Rights Availability", href: "/availability", icon: Calendar },
   { name: "Royalties", href: "/royalties", icon: DollarSign },
   { name: "Statements", href: "/statements", icon: FileText },

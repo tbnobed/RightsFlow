@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import Contracts from "@/pages/contracts";
+import Content from "@/pages/content";
 import Availability from "@/pages/availability";
 import Royalties from "@/pages/royalties";
 import Reports from "@/pages/reports";
@@ -59,6 +60,7 @@ function Router() {
           <Switch>
             <Route path="/" component={Dashboard} />
             <Route path="/contracts" component={Contracts} />
+            <Route path="/content" component={Content} />
             <Route path="/availability" component={Availability} />
             <Route path="/royalties" component={Royalties} />
             <Route path="/statements" component={Statements} />
