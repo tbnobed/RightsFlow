@@ -95,6 +95,11 @@ export default function AuditLog({ filters }: AuditLogProps) {
                     {log.entityId && ` (ID: ${log.entityId.slice(0, 8)}...)`}
                   </p>
                   <div className="flex items-center space-x-4 mt-2 text-sm">
+                    {log.ipAddress && (
+                      <span className="text-muted-foreground" data-testid={`audit-ip-${log.id}`}>
+                        IP: {log.ipAddress}
+                      </span>
+                    )}
                     <span className="text-primary cursor-pointer hover:underline">
                       View Details
                     </span>

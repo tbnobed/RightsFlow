@@ -94,6 +94,7 @@ export const auditLogs = pgTable("audit_logs", {
   oldValues: jsonb("old_values"),
   newValues: jsonb("new_values"),
   userId: varchar("user_id").references(() => users.id),
+  ipAddress: varchar("ip_address"),
   userAgent: varchar("user_agent"),
   createdAt: timestamp("created_at").defaultNow(),
 });

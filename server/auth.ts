@@ -224,6 +224,7 @@ export function setupAuth(app: Express) {
         entityId: user.id,
         newValues: { email: user.email, role: user.role },
         userId: req.session.userId,
+        ipAddress: req.ip,
         userAgent: req.get('User-Agent'),
       });
       
@@ -284,6 +285,7 @@ export function setupAuth(app: Express) {
         oldValues: oldUser,
         newValues: updatedUser,
         userId: req.session.userId,
+        ipAddress: req.ip,
         userAgent: req.get('User-Agent'),
       });
       
@@ -322,6 +324,7 @@ export function setupAuth(app: Express) {
         oldValues: { isActive: oldUser.isActive },
         newValues: { isActive },
         userId: req.session.userId,
+        ipAddress: req.ip,
         userAgent: req.get('User-Agent'),
       });
       
@@ -363,6 +366,7 @@ export function setupAuth(app: Express) {
         entityId: userId,
         oldValues: { email: user.email, role: user.role },
         userId: req.session.userId,
+        ipAddress: req.ip,
         userAgent: req.get('User-Agent'),
       });
       
@@ -405,6 +409,7 @@ export function setupAuth(app: Express) {
         entityId: userId,
         newValues: { email: user.email },
         userId: req.session.userId,
+        ipAddress: req.ip,
         userAgent: req.get('User-Agent'),
       });
       
@@ -455,6 +460,7 @@ export function setupAuth(app: Express) {
         entityId: userId,
         newValues: { email: user.email },
         userId: req.session.userId,
+        ipAddress: req.ip,
         userAgent: req.get('User-Agent'),
       });
       
@@ -536,6 +542,7 @@ export function setupAuth(app: Express) {
         entityId: user.id,
         newValues: { email: user.email, role: user.role },
         userId: req.session.userId,
+        ipAddress: req.ip,
         userAgent: req.get('User-Agent'),
       });
       
@@ -593,6 +600,7 @@ export function setupAuth(app: Express) {
         entityId: user.id,
         newValues: { inviteStatus: "accepted" },
         userId: user.id,
+        ipAddress: req.ip,
         userAgent: req.get('User-Agent'),
       });
       
@@ -674,6 +682,7 @@ export function setupAuth(app: Express) {
         entityId: user.id,
         newValues: { email: user.email },
         userId: user.id,
+        ipAddress: req.ip,
         userAgent: req.get('User-Agent'),
       });
       
