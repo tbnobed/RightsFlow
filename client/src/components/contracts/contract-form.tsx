@@ -66,6 +66,7 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
   const [selectedTerritories, setSelectedTerritories] = useState<string[]>([]);
   const [otherTerritory, setOtherTerritory] = useState<string>("");
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
+  const [otherPlatform, setOtherPlatform] = useState<string>("");
 
   const TERRITORY_OPTIONS = ["Global", "US", "Canada", "UK"];
 
@@ -137,7 +138,10 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
       // Parse existing platforms for multi-select
       if (existingContract.platform) {
         const platforms = existingContract.platform.split(",").map((p: string) => p.trim());
-        setSelectedPlatforms(platforms.filter((p: string) => PREDEFINED_PLATFORMS.includes(p)));
+        const predefined = platforms.filter((p: string) => PREDEFINED_PLATFORMS.includes(p));
+        const other = platforms.filter((p: string) => !PREDEFINED_PLATFORMS.includes(p)).join(", ");
+        setSelectedPlatforms(predefined);
+        setOtherPlatform(other);
       }
     }
   }, [existingContract, contractId, form]);
@@ -153,8 +157,12 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
 
   // Sync selected platforms with form field
   useEffect(() => {
-    form.setValue("platform", selectedPlatforms.join(", "));
-  }, [selectedPlatforms, form]);
+    const allPlatforms = [...selectedPlatforms];
+    if (otherPlatform.trim()) {
+      allPlatforms.push(otherPlatform.trim());
+    }
+    form.setValue("platform", allPlatforms.join(", "));
+  }, [selectedPlatforms, otherPlatform, form]);
 
   const createContractMutation = useMutation({
     mutationFn: async (data: FormData) => {
@@ -185,6 +193,7 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
       setSelectedTerritories([]);
       setOtherTerritory("");
       setSelectedPlatforms([]);
+      setOtherPlatform("");
       onSuccess?.();
     },
     onError: (error) => {
@@ -365,8 +374,8 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
                       className="w-full justify-between font-normal"
                       data-testid="select-platform"
                     >
-                      {selectedPlatforms.length > 0
-                        ? selectedPlatforms.join(", ")
+                      {selectedPlatforms.length > 0 || otherPlatform
+                        ? [...selectedPlatforms, otherPlatform].filter(Boolean).join(", ")
                         : "Select platforms..."}
                       <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
@@ -392,6 +401,16 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
                           </Label>
                         </div>
                       ))}
+                      <div className="border-t pt-2 mt-2">
+                        <Label className="text-xs text-muted-foreground">Other platform</Label>
+                        <Input
+                          placeholder="e.g., Cable, Satellite"
+                          value={otherPlatform}
+                          onChange={(e) => setOtherPlatform(e.target.value)}
+                          className="mt-1"
+                          data-testid="input-other-platform"
+                        />
+                      </div>
                     </div>
                   </PopoverContent>
                 </Popover>
@@ -743,6 +762,7 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
             onClick={() => {
               form.reset();
               setSelectedPlatforms([]);
+              setOtherPlatform("");
               setSelectedTerritories([]);
               setOtherTerritory("");
               setIsAmendment(false);
