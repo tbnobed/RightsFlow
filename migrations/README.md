@@ -25,6 +25,15 @@ Creates the initial database schema including:
 - `audit_logs` table for audit trail
 - All necessary indexes and constraints
 
+### 0002_add_content_catalog_and_contract_updates.sql
+Adds content catalog functionality and updates contracts table:
+- `content_items` table for catalog of Films, TV Series, TBN FAST, TBN Linear, WoF FAST
+- `contract_content` junction table for many-to-many contract-content linking
+- New contract columns: `auto_renew`, `royalty_type`, `flat_fee_amount`, `reporting_frequency`, `payment_terms`, `minimum_payment`, `parent_contract_id`
+- Makes `end_date` nullable for auto-renew contracts
+- Updates status constraint to include "In Perpetuity"
+- Adds performance indexes on commonly queried columns
+
 ## Running Migrations
 
 ### Automatic (Docker)
