@@ -78,7 +78,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         entityId: contract.id,
         newValues: contract,
         userId,
-        ipAddress: req.ip,
         userAgent: req.get('User-Agent'),
       });
       
@@ -113,7 +112,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         oldValues: oldContract,
         newValues: updatedContract,
         userId,
-        ipAddress: req.ip,
         userAgent: req.get('User-Agent'),
       });
       
@@ -146,7 +144,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         entityId: contractId,
         oldValues: contract,
         userId,
-        ipAddress: req.ip,
         userAgent: req.get('User-Agent'),
       });
       
@@ -205,7 +202,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         entityId: royalty.id,
         newValues: royalty,
         userId,
-        ipAddress: req.ip,
         userAgent: req.get('User-Agent'),
       });
       
@@ -240,7 +236,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         oldValues: oldRoyalty,
         newValues: updatedRoyalty,
         userId,
-        ipAddress: req.ip,
         userAgent: req.get('User-Agent'),
       });
       
@@ -280,7 +275,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         entityId: partner,
         newValues: { partner, recipientEmail, periodStart, periodEnd },
         userId,
-        ipAddress: req.ip,
         userAgent: req.get('User-Agent'),
       });
       
