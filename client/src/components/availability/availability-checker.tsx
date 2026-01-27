@@ -242,47 +242,50 @@ export default function AvailabilityChecker() {
       {result && (
         <Card>
           <CardHeader>
-            <CardTitle>Availability Results</CardTitle>
+            <CardTitle>Rights Overview</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className={`border rounded-lg p-4 ${
-              result.available 
+              result.conflicts.length === 0 
                 ? 'border-green-200 bg-green-50' 
-                : 'border-red-200 bg-red-50'
+                : 'border-blue-200 bg-blue-50'
             }`}>
               <div className="flex items-center justify-between">
                 <div>
                   <h4 className={`font-semibold ${
-                    result.available ? 'text-green-800' : 'text-red-800'
+                    result.conflicts.length === 0 ? 'text-green-800' : 'text-blue-800'
                   }`} data-testid="availability-status">
-                    {result.available ? 'Available' : 'Not Available'}
+                    {result.conflicts.length === 0 ? 'No Existing Contracts' : 'Existing Contracts Found'}
                   </h4>
                   <p className={`${
-                    result.available ? 'text-green-700' : 'text-red-700'
+                    result.conflicts.length === 0 ? 'text-green-700' : 'text-blue-700'
                   }`}>
-                    {result.available 
-                      ? 'The requested rights are available for the specified period and territory.'
-                      : `Found ${result.conflicts.length} conflicting contract(s).`
+                    {result.conflicts.length === 0 
+                      ? 'No existing contracts found for this partner, territory, and time period.'
+                      : `Found ${result.conflicts.length} existing contract(s) for this combination. Rights can overlap with multiple partners.`
                     }
                   </p>
                 </div>
-                {result.available ? (
-                  <CheckCircle className="text-green-600 h-8 w-8" />
-                ) : (
-                  <XCircle className="text-red-600 h-8 w-8" />
-                )}
+                <CheckCircle className={`h-8 w-8 ${
+                  result.conflicts.length === 0 ? 'text-green-600' : 'text-blue-600'
+                }`} />
               </div>
             </div>
 
             {result.conflicts.length > 0 && (
               <div className="bg-muted rounded-lg p-4">
-                <h4 className="font-semibold text-foreground mb-3">Conflicting Contracts</h4>
+                <h4 className="font-semibold text-foreground mb-3">Existing Contracts</h4>
                 <div className="space-y-2">
-                  {result.conflicts.map((conflict: any) => (
-                    <div key={conflict.id} className="bg-background p-3 rounded border" data-testid={`conflict-${conflict.id}`}>
-                      <p className="font-medium text-foreground">{conflict.partner}</p>
+                  {result.conflicts.map((contract: any) => (
+                    <div key={contract.id} className="bg-background p-3 rounded border" data-testid={`existing-contract-${contract.id}`}>
+                      <div className="flex items-center justify-between">
+                        <p className="font-medium text-foreground">{contract.partner}</p>
+                        {contract.exclusivity === "Exclusive" && (
+                          <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded">Exclusive</span>
+                        )}
+                      </div>
                       <p className="text-sm text-muted-foreground">
-                        {conflict.licensee} • {conflict.startDate} to {conflict.endDate}
+                        {contract.licensee} • {contract.startDate} to {contract.autoRenew ? 'Auto-renew' : contract.endDate}
                       </p>
                     </div>
                   ))}
@@ -291,24 +294,24 @@ export default function AvailabilityChecker() {
             )}
 
             <div className="bg-muted rounded-lg p-4">
-              <h4 className="font-semibold text-foreground mb-3">Analysis Summary</h4>
+              <h4 className="font-semibold text-foreground mb-3">Search Summary</h4>
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Territory Coverage:</span>
+                  <span className="text-muted-foreground">Existing Contracts:</span>
                   <span className="text-foreground font-medium" data-testid="territory-coverage">
-                    {result.available ? '100% Available' : 'Conflict Detected'}
+                    {result.conflicts.length} found
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Date Range Coverage:</span>
+                  <span className="text-muted-foreground">Exclusive Deals:</span>
                   <span className="text-foreground font-medium" data-testid="date-coverage">
-                    {result.available ? '100% Available' : 'Overlap Detected'}
+                    {result.conflicts.filter((c: any) => c.exclusivity === "Exclusive").length} found
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Platform Rights:</span>
+                  <span className="text-muted-foreground">Non-Exclusive Deals:</span>
                   <span className="text-foreground font-medium" data-testid="platform-rights">
-                    {result.available ? 'Available' : 'Unavailable'}
+                    {result.conflicts.filter((c: any) => c.exclusivity !== "Exclusive").length} found
                   </span>
                 </div>
               </div>
