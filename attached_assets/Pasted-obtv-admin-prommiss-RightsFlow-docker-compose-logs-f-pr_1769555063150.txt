@@ -1,0 +1,450 @@
+obtv-admin@prommiss:~/RightsFlow$ docker compose logs -f
+promissio-postgres  |
+promissio-postgres  | PostgreSQL Database directory appears to contain a database; Skipping initialization
+promissio-postgres  |
+promissio-postgres  | 2026-01-27 23:03:30.676 UTC [1] LOG:  starting PostgreSQL 16.10 on x86_64-pc-linux-musl, compiled by gcc (Alpine 14.2.0) 14.2.0, 64-bit
+promissio-app       | Waiting for PostgreSQL to be ready...
+promissio-postgres  | 2026-01-27 23:03:30.676 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+promissio-postgres  | 2026-01-27 23:03:30.676 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+promissio-postgres  | 2026-01-27 23:03:30.678 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+promissio-postgres  | 2026-01-27 23:03:30.683 UTC [29] LOG:  database system was shut down at 2026-01-27 23:01:12 UTC
+promissio-postgres  | 2026-01-27 23:03:30.713 UTC [1] LOG:  database system is ready to accept connections
+promissio-postgres  | 2026-01-27 23:03:41.694 UTC [43] ERROR:  column "partner" does not exist
+promissio-postgres  | 2026-01-27 23:03:41.694 UTC [43] STATEMENT:  CREATE INDEX IF NOT EXISTS idx_contracts_partner ON contracts(partner);
+promissio-postgres  | 2026-01-27 23:03:42.495 UTC [47] ERROR:  column "partner" does not exist
+promissio-postgres  | 2026-01-27 23:03:42.495 UTC [47] STATEMENT:  CREATE INDEX IF NOT EXISTS idx_contracts_partner ON contracts(partner);
+promissio-postgres  | 2026-01-27 23:03:43.585 UTC [51] ERROR:  column "partner" does not exist
+promissio-postgres  | 2026-01-27 23:03:43.585 UTC [51] STATEMENT:  CREATE INDEX IF NOT EXISTS idx_contracts_partner ON contracts(partner);
+promissio-postgres  | 2026-01-27 23:03:44.508 UTC [55] ERROR:  column "partner" does not exist
+promissio-postgres  | 2026-01-27 23:03:44.508 UTC [55] STATEMENT:  CREATE INDEX IF NOT EXISTS idx_contracts_partner ON contracts(partner);
+promissio-postgres  | 2026-01-27 23:03:45.826 UTC [59] ERROR:  column "partner" does not exist
+promissio-postgres  | 2026-01-27 23:03:45.826 UTC [59] STATEMENT:  CREATE INDEX IF NOT EXISTS idx_contracts_partner ON contracts(partner);
+promissio-postgres  | 2026-01-27 23:03:47.940 UTC [63] ERROR:  column "partner" does not exist
+promissio-app       | PostgreSQL is up - checking if database exists
+promissio-postgres  | 2026-01-27 23:03:47.940 UTC [63] STATEMENT:  CREATE INDEX IF NOT EXISTS idx_contracts_partner ON contracts(partner);
+promissio-postgres  | 2026-01-27 23:03:51.633 UTC [75] ERROR:  column "partner" does not exist
+promissio-postgres  | 2026-01-27 23:03:51.633 UTC [75] STATEMENT:  CREATE INDEX IF NOT EXISTS idx_contracts_partner ON contracts(partner);
+promissio-app       | Database ready - running migrations
+promissio-app       | Running SQL migrations...
+promissio-app       | Running database migrations...
+promissio-app       | Running migration: 0001_initial_schema.sql
+promissio-app       | CREATE EXTENSION
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:12: NOTICE:  relation "sessions" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:14: NOTICE:  relation "IDX_session_expire" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:34: NOTICE:  relation "users" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:54: NOTICE:  relation "contracts" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:66: NOTICE:  relation "royalties" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:80: NOTICE:  relation "audit_logs" already exists, skipping
+promissio-app       | Completed: 0001_initial_schema.sql
+promissio-app       | Running migration: 0002_add_content_catalog_and_contract_updates.sql
+promissio-app       | ALTER TABLE
+promissio-app       | ALTER TABLE
+promissio-app       | ALTER TABLE
+promissio-app       | ALTER TABLE
+promissio-app       | ALTER TABLE
+promissio-app       | ALTER TABLE
+promissio-app       | ALTER TABLE
+promissio-app       | ALTER TABLE
+promissio-app       | DO
+promissio-app       | CREATE TABLE
+promissio-app       | CREATE INDEX
+promissio-app       | CREATE INDEX
+promissio-app       | CREATE TABLE
+promissio-app       | CREATE INDEX
+promissio-app       | CREATE INDEX
+promissio-app       | CREATE INDEX
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:106: ERROR:  column "partner" does not exist
+promissio-app       | Waiting for PostgreSQL to be ready...
+promissio-app       | PostgreSQL is up - checking if database exists
+promissio-app       | Database ready - running migrations
+promissio-app       | Running SQL migrations...
+promissio-app       | Running database migrations...
+promissio-app       | Running migration: 0001_initial_schema.sql
+promissio-app       | CREATE EXTENSION
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:5: NOTICE:  extension "pgcrypto" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:12: NOTICE:  relation "sessions" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:14: NOTICE:  relation "IDX_session_expire" already exists, skipping
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:34: NOTICE:  relation "users" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:54: NOTICE:  relation "contracts" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:66: NOTICE:  relation "royalties" already exists, skipping
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:80: NOTICE:  relation "audit_logs" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | Completed: 0001_initial_schema.sql
+promissio-app       | Running migration: 0002_add_content_catalog_and_contract_updates.sql
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:10: NOTICE:  column "auto_renew" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:13: NOTICE:  column "royalty_type" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:16: NOTICE:  column "flat_fee_amount" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:19: NOTICE:  column "reporting_frequency" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:22: NOTICE:  column "payment_terms" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:25: NOTICE:  column "minimum_payment" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:28: NOTICE:  column "parent_contract_id" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | ALTER TABLE
+promissio-app       | DO
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:72: NOTICE:  relation "content_items" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:75: NOTICE:  relation "idx_content_items_type" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:78: NOTICE:  relation "idx_content_items_title" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:90: NOTICE:  relation "contract_content" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:93: NOTICE:  relation "idx_contract_content_contract_id" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:94: NOTICE:  relation "idx_contract_content_content_id" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:98: NOTICE:  relation "idx_contract_content_unique" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:105: NOTICE:  relation "idx_contracts_status" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:106: ERROR:  column "partner" does not exist
+promissio-app       | Waiting for PostgreSQL to be ready...
+promissio-app       | PostgreSQL is up - checking if database exists
+promissio-app       | Database ready - running migrations
+promissio-app       | Running SQL migrations...
+promissio-app       | Running database migrations...
+promissio-app       | Running migration: 0001_initial_schema.sql
+promissio-app       | CREATE EXTENSION
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:5: NOTICE:  extension "pgcrypto" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:12: NOTICE:  relation "sessions" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:14: NOTICE:  relation "IDX_session_expire" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:34: NOTICE:  relation "users" already exists, skipping
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:54: NOTICE:  relation "contracts" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:66: NOTICE:  relation "royalties" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:80: NOTICE:  relation "audit_logs" already exists, skipping
+promissio-app       | Completed: 0001_initial_schema.sql
+promissio-app       | Running migration: 0002_add_content_catalog_and_contract_updates.sql
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:10: NOTICE:  column "auto_renew" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:13: NOTICE:  column "royalty_type" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:16: NOTICE:  column "flat_fee_amount" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:19: NOTICE:  column "reporting_frequency" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:22: NOTICE:  column "payment_terms" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:25: NOTICE:  column "minimum_payment" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:28: NOTICE:  column "parent_contract_id" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | ALTER TABLE
+promissio-app       | DO
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:72: NOTICE:  relation "content_items" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:75: NOTICE:  relation "idx_content_items_type" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:78: NOTICE:  relation "idx_content_items_title" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:90: NOTICE:  relation "contract_content" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:93: NOTICE:  relation "idx_contract_content_contract_id" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:94: NOTICE:  relation "idx_contract_content_content_id" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:98: NOTICE:  relation "idx_contract_content_unique" already exists, skipping
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:105: NOTICE:  relation "idx_contracts_status" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:106: ERROR:  column "partner" does not exist
+promissio-app       | Waiting for PostgreSQL to be ready...
+promissio-app       | PostgreSQL is up - checking if database exists
+promissio-app       | Database ready - running migrations
+promissio-app       | Running SQL migrations...
+promissio-app       | Running database migrations...
+promissio-app       | Running migration: 0001_initial_schema.sql
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:5: NOTICE:  extension "pgcrypto" already exists, skipping
+promissio-app       | CREATE EXTENSION
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:12: NOTICE:  relation "sessions" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:14: NOTICE:  relation "IDX_session_expire" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:34: NOTICE:  relation "users" already exists, skipping
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:54: NOTICE:  relation "contracts" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:66: NOTICE:  relation "royalties" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:80: NOTICE:  relation "audit_logs" already exists, skipping
+promissio-app       | Completed: 0001_initial_schema.sql
+promissio-app       | Running migration: 0002_add_content_catalog_and_contract_updates.sql
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:10: NOTICE:  column "auto_renew" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:13: NOTICE:  column "royalty_type" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:16: NOTICE:  column "flat_fee_amount" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:19: NOTICE:  column "reporting_frequency" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:22: NOTICE:  column "payment_terms" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:25: NOTICE:  column "minimum_payment" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:28: NOTICE:  column "parent_contract_id" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | ALTER TABLE
+promissio-app       | DO
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:72: NOTICE:  relation "content_items" already exists, skipping
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:75: NOTICE:  relation "idx_content_items_type" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:78: NOTICE:  relation "idx_content_items_title" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:90: NOTICE:  relation "contract_content" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:93: NOTICE:  relation "idx_contract_content_contract_id" already exists, skipping
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:94: NOTICE:  relation "idx_contract_content_content_id" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:98: NOTICE:  relation "idx_contract_content_unique" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:105: NOTICE:  relation "idx_contracts_status" already exists, skipping
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:106: ERROR:  column "partner" does not exist
+promissio-app       | Waiting for PostgreSQL to be ready...
+promissio-app       | PostgreSQL is up - checking if database exists
+promissio-app       | Database ready - running migrations
+promissio-app       | Running SQL migrations...
+promissio-app       | Running database migrations...
+promissio-app       | Running migration: 0001_initial_schema.sql
+promissio-app       | CREATE EXTENSION
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:5: NOTICE:  extension "pgcrypto" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:12: NOTICE:  relation "sessions" already exists, skipping
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:14: NOTICE:  relation "IDX_session_expire" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:34: NOTICE:  relation "users" already exists, skipping
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:54: NOTICE:  relation "contracts" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:66: NOTICE:  relation "royalties" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:80: NOTICE:  relation "audit_logs" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | Completed: 0001_initial_schema.sql
+promissio-app       | Running migration: 0002_add_content_catalog_and_contract_updates.sql
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:10: NOTICE:  column "auto_renew" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:13: NOTICE:  column "royalty_type" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:16: NOTICE:  column "flat_fee_amount" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:19: NOTICE:  column "reporting_frequency" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:22: NOTICE:  column "payment_terms" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:25: NOTICE:  column "minimum_payment" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:28: NOTICE:  column "parent_contract_id" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | ALTER TABLE
+promissio-app       | DO
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:72: NOTICE:  relation "content_items" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:75: NOTICE:  relation "idx_content_items_type" already exists, skipping
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:78: NOTICE:  relation "idx_content_items_title" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:90: NOTICE:  relation "contract_content" already exists, skipping
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:93: NOTICE:  relation "idx_contract_content_contract_id" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:94: NOTICE:  relation "idx_contract_content_content_id" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:98: NOTICE:  relation "idx_contract_content_unique" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:105: NOTICE:  relation "idx_contracts_status" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:106: ERROR:  column "partner" does not exist
+promissio-app       | Waiting for PostgreSQL to be ready...
+promissio-app       | PostgreSQL is up - checking if database exists
+promissio-app       | Database ready - running migrations
+promissio-app       | Running SQL migrations...
+promissio-app       | Running database migrations...
+promissio-app       | Running migration: 0001_initial_schema.sql
+promissio-app       | CREATE EXTENSION
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:5: NOTICE:  extension "pgcrypto" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:12: NOTICE:  relation "sessions" already exists, skipping
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:14: NOTICE:  relation "IDX_session_expire" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:34: NOTICE:  relation "users" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:54: NOTICE:  relation "contracts" already exists, skipping
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:66: NOTICE:  relation "royalties" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:80: NOTICE:  relation "audit_logs" already exists, skipping
+promissio-app       | Completed: 0001_initial_schema.sql
+promissio-app       | Running migration: 0002_add_content_catalog_and_contract_updates.sql
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:10: NOTICE:  column "auto_renew" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:13: NOTICE:  column "royalty_type" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:16: NOTICE:  column "flat_fee_amount" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:19: NOTICE:  column "reporting_frequency" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:22: NOTICE:  column "payment_terms" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:25: NOTICE:  column "minimum_payment" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:28: NOTICE:  column "parent_contract_id" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | ALTER TABLE
+promissio-app       | DO
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:72: NOTICE:  relation "content_items" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:75: NOTICE:  relation "idx_content_items_type" already exists, skipping
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:78: NOTICE:  relation "idx_content_items_title" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:90: NOTICE:  relation "contract_content" already exists, skipping
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:93: NOTICE:  relation "idx_contract_content_contract_id" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:94: NOTICE:  relation "idx_contract_content_content_id" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:98: NOTICE:  relation "idx_contract_content_unique" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:105: NOTICE:  relation "idx_contracts_status" already exists, skipping
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:106: ERROR:  column "partner" does not exist
+promissio-app       | Waiting for PostgreSQL to be ready...
+promissio-app       | PostgreSQL is up - checking if database exists
+promissio-app       | Database ready - running migrations
+promissio-app       | Running SQL migrations...
+promissio-app       | Running database migrations...
+promissio-app       | Running migration: 0001_initial_schema.sql
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:5: NOTICE:  extension "pgcrypto" already exists, skipping
+promissio-app       | CREATE EXTENSION
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:12: NOTICE:  relation "sessions" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:14: NOTICE:  relation "IDX_session_expire" already exists, skipping
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:34: NOTICE:  relation "users" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:54: NOTICE:  relation "contracts" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:66: NOTICE:  relation "royalties" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:80: NOTICE:  relation "audit_logs" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | Completed: 0001_initial_schema.sql
+promissio-app       | Running migration: 0002_add_content_catalog_and_contract_updates.sql
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:10: NOTICE:  column "auto_renew" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:13: NOTICE:  column "royalty_type" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:16: NOTICE:  column "flat_fee_amount" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:19: NOTICE:  column "reporting_frequency" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:22: NOTICE:  column "payment_terms" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:25: NOTICE:  column "minimum_payment" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:28: NOTICE:  column "parent_contract_id" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | ALTER TABLE
+promissio-app       | DO
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:72: NOTICE:  relation "content_items" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:75: NOTICE:  relation "idx_content_items_type" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:78: NOTICE:  relation "idx_content_items_title" already exists, skipping
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:90: NOTICE:  relation "contract_content" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:93: NOTICE:  relation "idx_contract_content_contract_id" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:94: NOTICE:  relation "idx_contract_content_content_id" already exists, skipping
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:98: NOTICE:  relation "idx_contract_content_unique" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:105: NOTICE:  relation "idx_contracts_status" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:106: ERROR:  column "partner" does not exist
+promissio-app       | Waiting for PostgreSQL to be ready...
+promissio-app       | PostgreSQL is up - checking if database exists
+promissio-app       | Database ready - running migrations
+promissio-app       | Running SQL migrations...
+promissio-app       | Running database migrations...
+promissio-app       | Running migration: 0001_initial_schema.sql
+promissio-app       | CREATE EXTENSION
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:5: NOTICE:  extension "pgcrypto" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:12: NOTICE:  relation "sessions" already exists, skipping
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:14: NOTICE:  relation "IDX_session_expire" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:34: NOTICE:  relation "users" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:54: NOTICE:  relation "contracts" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:66: NOTICE:  relation "royalties" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0001_initial_schema.sql:80: NOTICE:  relation "audit_logs" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | Completed: 0001_initial_schema.sql
+promissio-app       | Running migration: 0002_add_content_catalog_and_contract_updates.sql
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:10: NOTICE:  column "auto_renew" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:13: NOTICE:  column "royalty_type" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:16: NOTICE:  column "flat_fee_amount" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:19: NOTICE:  column "reporting_frequency" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:22: NOTICE:  column "payment_terms" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:25: NOTICE:  column "minimum_payment" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:28: NOTICE:  column "parent_contract_id" of relation "contracts" already exists, skipping
+promissio-app       | ALTER TABLE
+promissio-app       | ALTER TABLE
+promissio-app       | DO
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:72: NOTICE:  relation "content_items" already exists, skipping
+promissio-app       | CREATE TABLE
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:75: NOTICE:  relation "idx_content_items_type" already exists, skipping
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:78: NOTICE:  relation "idx_content_items_title" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | CREATE TABLE
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:90: NOTICE:  relation "contract_content" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:93: NOTICE:  relation "idx_contract_content_contract_id" already exists, skipping
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:94: NOTICE:  relation "idx_contract_content_content_id" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:98: NOTICE:  relation "idx_contract_content_unique" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:105: NOTICE:  relation "idx_contracts_status" already exists, skipping
+promissio-app       | CREATE INDEX
+promissio-app       | psql:/app/migrations/0002_add_content_catalog_and_contract_updates.sql:106: ERROR:  column "partner" does not exist
+promissio-postgres  | 2026-01-27 23:03:58.496 UTC [79] ERROR:  column "partner" does not exist
+promissio-postgres  | 2026-01-27 23:03:58.496 UTC [79] STATEMENT:  CREATE INDEX IF NOT EXISTS idx_contracts_partner ON contracts(partner);

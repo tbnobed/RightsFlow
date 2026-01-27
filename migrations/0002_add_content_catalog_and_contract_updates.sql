@@ -3,35 +3,47 @@
 -- This migration adds missing columns and new tables to match the current schema
 
 -- ============================================
--- Update contracts table with missing columns
+-- Ensure all core contracts columns exist
+-- (These may be missing if table was created by drizzle-kit before schema was complete)
 -- ============================================
 
--- Add auto_renew column
+ALTER TABLE contracts ADD COLUMN IF NOT EXISTS partner VARCHAR;
+ALTER TABLE contracts ADD COLUMN IF NOT EXISTS licensor VARCHAR;
+ALTER TABLE contracts ADD COLUMN IF NOT EXISTS licensee VARCHAR;
+ALTER TABLE contracts ADD COLUMN IF NOT EXISTS territory VARCHAR;
+ALTER TABLE contracts ADD COLUMN IF NOT EXISTS platform VARCHAR;
+ALTER TABLE contracts ADD COLUMN IF NOT EXISTS content VARCHAR;
+ALTER TABLE contracts ADD COLUMN IF NOT EXISTS start_date DATE;
+ALTER TABLE contracts ADD COLUMN IF NOT EXISTS end_date DATE;
+ALTER TABLE contracts ADD COLUMN IF NOT EXISTS royalty_rate DECIMAL(5,2);
+ALTER TABLE contracts ADD COLUMN IF NOT EXISTS exclusivity VARCHAR DEFAULT 'Non-Exclusive';
+ALTER TABLE contracts ADD COLUMN IF NOT EXISTS status VARCHAR DEFAULT 'Active';
+ALTER TABLE contracts ADD COLUMN IF NOT EXISTS contract_document_url VARCHAR;
+ALTER TABLE contracts ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE contracts ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE contracts ADD COLUMN IF NOT EXISTS created_by VARCHAR;
+
+-- ============================================
+-- Add new contracts columns (from enhanced schema)
+-- ============================================
+
 ALTER TABLE contracts ADD COLUMN IF NOT EXISTS auto_renew BOOLEAN DEFAULT false;
-
--- Add royalty_type column
 ALTER TABLE contracts ADD COLUMN IF NOT EXISTS royalty_type VARCHAR DEFAULT 'Revenue Share';
-
--- Add flat_fee_amount column
 ALTER TABLE contracts ADD COLUMN IF NOT EXISTS flat_fee_amount DECIMAL(15,2);
-
--- Add reporting_frequency column
 ALTER TABLE contracts ADD COLUMN IF NOT EXISTS reporting_frequency VARCHAR DEFAULT 'None';
-
--- Add payment_terms column
 ALTER TABLE contracts ADD COLUMN IF NOT EXISTS payment_terms VARCHAR DEFAULT 'Net 30';
-
--- Add minimum_payment column
 ALTER TABLE contracts ADD COLUMN IF NOT EXISTS minimum_payment DECIMAL(15,2);
-
--- Add parent_contract_id for amendments
 ALTER TABLE contracts ADD COLUMN IF NOT EXISTS parent_contract_id VARCHAR;
 
--- Make end_date nullable (for auto-renew contracts)
-ALTER TABLE contracts ALTER COLUMN end_date DROP NOT NULL;
+-- Make end_date nullable (for auto-renew contracts) - safe to run even if already nullable
+DO $$
+BEGIN
+  ALTER TABLE contracts ALTER COLUMN end_date DROP NOT NULL;
+EXCEPTION
+  WHEN others THEN NULL;
+END $$;
 
--- Update status check constraint to include 'In Perpetuity' and remove 'Pending'
--- First drop the existing constraint if it exists, then add the new one
+-- Update status check constraint to include 'In Perpetuity'
 DO $$
 BEGIN
   -- Drop existing constraint if it exists
@@ -47,9 +59,7 @@ BEGIN
   ALTER TABLE contracts ADD CONSTRAINT contracts_status_check 
     CHECK (status IN ('Active', 'Expired', 'In Perpetuity', 'Terminated'));
 EXCEPTION
-  WHEN others THEN
-    -- Constraint might not exist or have different name, ignore error
-    NULL;
+  WHEN others THEN NULL;
 END $$;
 
 -- ============================================
@@ -71,10 +81,7 @@ CREATE TABLE IF NOT EXISTS content_items (
   created_by VARCHAR REFERENCES users(id)
 );
 
--- Create index on content_items type for filtering
 CREATE INDEX IF NOT EXISTS idx_content_items_type ON content_items(type);
-
--- Create index on content_items title for searching
 CREATE INDEX IF NOT EXISTS idx_content_items_title ON content_items(title);
 
 -- ============================================
@@ -89,29 +96,52 @@ CREATE TABLE IF NOT EXISTS contract_content (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create indexes for efficient lookups
 CREATE INDEX IF NOT EXISTS idx_contract_content_contract_id ON contract_content(contract_id);
 CREATE INDEX IF NOT EXISTS idx_contract_content_content_id ON contract_content(content_id);
-
--- Create unique constraint to prevent duplicate links
-CREATE UNIQUE INDEX IF NOT EXISTS idx_contract_content_unique 
-  ON contract_content(contract_id, content_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_contract_content_unique ON contract_content(contract_id, content_id);
 
 -- ============================================
--- Add any missing indexes
+-- Add indexes (only if columns exist)
 -- ============================================
 
--- Index on contracts for common queries
-CREATE INDEX IF NOT EXISTS idx_contracts_status ON contracts(status);
-CREATE INDEX IF NOT EXISTS idx_contracts_partner ON contracts(partner);
-CREATE INDEX IF NOT EXISTS idx_contracts_start_date ON contracts(start_date);
-CREATE INDEX IF NOT EXISTS idx_contracts_end_date ON contracts(end_date);
-
--- Index on royalties
-CREATE INDEX IF NOT EXISTS idx_royalties_contract_id ON royalties(contract_id);
-CREATE INDEX IF NOT EXISTS idx_royalties_status ON royalties(status);
-
--- Index on audit_logs
-CREATE INDEX IF NOT EXISTS idx_audit_logs_entity_type ON audit_logs(entity_type);
-CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);
-CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
+DO $$
+BEGIN
+  -- Contracts indexes
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'contracts' AND column_name = 'status') THEN
+    CREATE INDEX IF NOT EXISTS idx_contracts_status ON contracts(status);
+  END IF;
+  
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'contracts' AND column_name = 'partner') THEN
+    CREATE INDEX IF NOT EXISTS idx_contracts_partner ON contracts(partner);
+  END IF;
+  
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'contracts' AND column_name = 'start_date') THEN
+    CREATE INDEX IF NOT EXISTS idx_contracts_start_date ON contracts(start_date);
+  END IF;
+  
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'contracts' AND column_name = 'end_date') THEN
+    CREATE INDEX IF NOT EXISTS idx_contracts_end_date ON contracts(end_date);
+  END IF;
+  
+  -- Royalties indexes
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'royalties' AND column_name = 'contract_id') THEN
+    CREATE INDEX IF NOT EXISTS idx_royalties_contract_id ON royalties(contract_id);
+  END IF;
+  
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'royalties' AND column_name = 'status') THEN
+    CREATE INDEX IF NOT EXISTS idx_royalties_status ON royalties(status);
+  END IF;
+  
+  -- Audit logs indexes
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'audit_logs' AND column_name = 'entity_type') THEN
+    CREATE INDEX IF NOT EXISTS idx_audit_logs_entity_type ON audit_logs(entity_type);
+  END IF;
+  
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'audit_logs' AND column_name = 'user_id') THEN
+    CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);
+  END IF;
+  
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'audit_logs' AND column_name = 'created_at') THEN
+    CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
+  END IF;
+END $$;
