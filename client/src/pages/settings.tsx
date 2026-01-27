@@ -82,7 +82,7 @@ export default function Settings() {
   }, [user]);
 
   const { data: users = [], isLoading: usersLoading } = useQuery<User[]>({
-    queryKey: ["/api/users"],
+    queryKey: ["/api/auth/users"],
     enabled: user?.role === "Admin",
   });
 
@@ -93,7 +93,7 @@ export default function Settings() {
 
   const inviteMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/users/invite", {
+      const res = await apiRequest("POST", "/api/auth/users/invite", {
         email: inviteEmail,
         role: inviteRole,
       });
@@ -103,7 +103,7 @@ export default function Settings() {
       toast({ title: "Invite Sent", description: `Invitation sent to ${inviteEmail}` });
       setInviteEmail("");
       setInviteDialogOpen(false);
-      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/users"] });
     },
     onError: (error: any) => {
       toast({ title: "Error", description: error.message || "Failed to send invite", variant: "destructive" });
@@ -112,12 +112,12 @@ export default function Settings() {
 
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: string) => {
-      const res = await apiRequest("DELETE", `/api/users/${userId}`);
+      const res = await apiRequest("DELETE", `/api/auth/users/${userId}`);
       return res.json();
     },
     onSuccess: () => {
       toast({ title: "User Deleted", description: "User has been removed" });
-      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/users"] });
     },
     onError: (error: any) => {
       toast({ title: "Error", description: error.message || "Failed to delete user", variant: "destructive" });
