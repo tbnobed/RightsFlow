@@ -215,8 +215,14 @@ export default function ContractTable({ contracts, isLoading, onUpdate }: Contra
                   <p className="text-sm">{viewContract.platform}</p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Royalty Rate</label>
-                  <p className="text-sm">{viewContract.royaltyRate}%</p>
+                  <label className="text-sm font-medium text-muted-foreground">Royalty Terms</label>
+                  <p className="text-sm">
+                    {viewContract.royaltyType === "Flat Fee" ? (
+                      `Flat Fee: $${viewContract.flatFeeAmount || 0}`
+                    ) : (
+                      `Revenue Share: ${viewContract.royaltyRate || 0}%`
+                    )}
+                  </p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Start Date</label>

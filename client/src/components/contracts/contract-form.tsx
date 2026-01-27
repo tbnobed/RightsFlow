@@ -62,6 +62,7 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
   });
 
   const [autoRenew, setAutoRenew] = useState<boolean>(false);
+  const [royaltyType, setRoyaltyType] = useState<"Revenue Share" | "Flat Fee">("Revenue Share");
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -74,7 +75,9 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
       content: "",
       startDate: "",
       endDate: "",
+      royaltyType: "Revenue Share",
       royaltyRate: "0",
+      flatFeeAmount: "",
       exclusivity: "Non-Exclusive",
       status: "Active",
       reportingFrequency: "None",
@@ -98,13 +101,16 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
         content: existingContract.content || "",
         startDate: existingContract.startDate || "",
         endDate: existingContract.endDate || "",
+        royaltyType: existingContract.royaltyType || "Revenue Share",
         royaltyRate: existingContract.royaltyRate || "0",
+        flatFeeAmount: existingContract.flatFeeAmount || "",
         exclusivity: existingContract.exclusivity || "Non-Exclusive",
         status: existingContract.status || "Active",
         reportingFrequency: existingContract.reportingFrequency || "None",
         parentContractId: existingContract.parentContractId || null,
         autoRenew: existingContract.autoRenew || false,
       });
+      setRoyaltyType(existingContract.royaltyType || "Revenue Share");
       
       if (!isPredefined && existingPlatform) {
         setPlatformType("custom");
@@ -147,6 +153,7 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
       setPlatformType("predefined");
       setCustomPlatform("");
       setAutoRenew(false);
+      setRoyaltyType("Revenue Share");
       onSuccess?.();
     },
     onError: (error) => {
@@ -409,26 +416,80 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
             )}
           </div>
 
-          <FormField
-            control={form.control}
-            name="royaltyRate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Royalty Rate (%)</FormLabel>
-                <FormControl>
-                  <Input 
-                    type="number" 
-                    step="0.01" 
-                    placeholder="0.00" 
-                    data-testid="input-royalty-rate"
-                    {...field}
-                    value={field.value ?? ""}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+          <div className="space-y-3">
+            <FormField
+              control={form.control}
+              name="royaltyType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Royalty Type</FormLabel>
+                  <Select 
+                    onValueChange={(value: "Revenue Share" | "Flat Fee") => {
+                      field.onChange(value);
+                      setRoyaltyType(value);
+                    }} 
+                    value={field.value ?? "Revenue Share"}
+                  >
+                    <FormControl>
+                      <SelectTrigger data-testid="select-royalty-type">
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Revenue Share">Revenue Share</SelectItem>
+                      <SelectItem value="Flat Fee">Flat Fee</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            {royaltyType === "Revenue Share" ? (
+              <FormField
+                control={form.control}
+                name="royaltyRate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Revenue Share (%)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        step="0.01" 
+                        placeholder="e.g., 50 for 50/50 split" 
+                        data-testid="input-royalty-rate"
+                        {...field}
+                        value={field.value ?? ""}
+                      />
+                    </FormControl>
+                    <p className="text-xs text-muted-foreground">Partner's share of revenue (e.g., 50 = 50/50, 70 = 70/30)</p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ) : (
+              <FormField
+                control={form.control}
+                name="flatFeeAmount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Flat Fee Amount ($)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        step="0.01" 
+                        placeholder="0.00" 
+                        data-testid="input-flat-fee"
+                        {...field}
+                        value={field.value ?? ""}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             )}
-          />
+          </div>
 
           <FormField
             control={form.control}
