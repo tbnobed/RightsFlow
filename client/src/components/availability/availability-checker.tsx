@@ -30,6 +30,7 @@ export default function AvailabilityChecker() {
   const [result, setResult] = useState<{
     available: boolean;
     conflicts: any[];
+    suggestions?: { territories: string[]; platforms: string[] };
   } | null>(null);
   const [platformType, setPlatformType] = useState<"predefined" | "custom">("predefined");
   const [customPlatform, setCustomPlatform] = useState<string>("");
@@ -316,6 +317,48 @@ export default function AvailabilityChecker() {
                 </div>
               </div>
             </div>
+
+            {/* Alternative Suggestions - only shown when exclusive rights are found */}
+            {result.suggestions && (
+              <div className="border border-amber-200 bg-amber-50 rounded-lg p-4">
+                <h4 className="font-semibold text-amber-800 mb-3">Alternative Options Available</h4>
+                <p className="text-sm text-amber-700 mb-3">
+                  Exclusive rights exist for the searched combination. Consider these alternatives:
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {result.suggestions.territories.length > 0 && (
+                    <div>
+                      <p className="text-sm font-medium text-amber-800 mb-2">Available Territories:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {result.suggestions.territories.map((territory) => (
+                          <span 
+                            key={territory} 
+                            className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded"
+                          >
+                            {territory}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {result.suggestions.platforms.length > 0 && (
+                    <div>
+                      <p className="text-sm font-medium text-amber-800 mb-2">Available Platforms:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {result.suggestions.platforms.map((platform) => (
+                          <span 
+                            key={platform} 
+                            className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded"
+                          >
+                            {platform}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

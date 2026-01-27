@@ -229,7 +229,7 @@ export class DatabaseStorage implements IStorage {
     platform: string;
     startDate: string;
     endDate: string;
-  }): Promise<{ available: boolean; conflicts: Contract[] }> {
+  }): Promise<{ available: boolean; conflicts: Contract[]; suggestions?: { territories: string[]; platforms: string[] } }> {
     const conflicts = await db
       .select()
       .from(contracts)
@@ -250,9 +250,47 @@ export class DatabaseStorage implements IStorage {
         )
       );
 
+    // Check if any conflicts are exclusive - if so, suggest alternatives
+    const hasExclusive = conflicts.some((c: Contract) => c.exclusivity === "Exclusive");
+    let suggestions: { territories: string[]; platforms: string[] } | undefined;
+
+    if (hasExclusive) {
+      // Find territories and platforms where this partner's content is NOT exclusively licensed
+      const allTerritories = ["North America", "Europe", "Asia Pacific", "Latin America", "Global"];
+      const allPlatforms = ["SVOD", "TVOD", "AVOD", "FAST", "Linear"];
+
+      // Get all exclusive contracts for this partner in the date range
+      const exclusiveContracts = await db
+        .select()
+        .from(contracts)
+        .where(
+          and(
+            eq(contracts.partner, params.partner),
+            eq(contracts.exclusivity, "Exclusive"),
+            or(
+              eq(contracts.status, "Active"),
+              eq(contracts.status, "In Perpetuity")
+            ),
+            and(
+              lte(contracts.startDate, params.endDate),
+              gte(contracts.endDate, params.startDate)
+            )
+          )
+        );
+
+      const exclusiveTerritories = new Set(exclusiveContracts.map((c: Contract) => c.territory));
+      const exclusivePlatforms = new Set(exclusiveContracts.map((c: Contract) => c.platform));
+
+      suggestions = {
+        territories: allTerritories.filter(t => !exclusiveTerritories.has(t)),
+        platforms: allPlatforms.filter(p => !exclusivePlatforms.has(p)),
+      };
+    }
+
     return {
       available: conflicts.length === 0,
       conflicts,
+      suggestions,
     };
   }
 
