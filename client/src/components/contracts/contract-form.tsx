@@ -60,6 +60,7 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
       royaltyRate: "0",
       exclusivity: "Non-Exclusive",
       status: "Pending",
+      reportingFrequency: "None",
     },
   });
 
@@ -81,6 +82,7 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
         royaltyRate: existingContract.royaltyRate || "0",
         exclusivity: existingContract.exclusivity || "Non-Exclusive",
         status: existingContract.status || "Pending",
+        reportingFrequency: existingContract.reportingFrequency || "None",
       });
       
       if (!isPredefined && existingPlatform) {
@@ -394,6 +396,30 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
                     <SelectItem value="Non-Exclusive">Non-Exclusive</SelectItem>
                     <SelectItem value="Exclusive">Exclusive</SelectItem>
                     <SelectItem value="Limited Exclusive">Limited Exclusive</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="reportingFrequency"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Revenue Reporting Frequency</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value ?? "None"}>
+                  <FormControl>
+                    <SelectTrigger data-testid="select-reporting-frequency">
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="None">None</SelectItem>
+                    <SelectItem value="Monthly">Monthly</SelectItem>
+                    <SelectItem value="Quarterly">Quarterly</SelectItem>
+                    <SelectItem value="Annually">Annually</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
