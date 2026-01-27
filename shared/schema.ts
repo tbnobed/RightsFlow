@@ -60,6 +60,7 @@ export const contracts = pgTable("contracts", {
   royaltyRate: decimal("royalty_rate", { precision: 5, scale: 2 }),
   exclusivity: varchar("exclusivity", { enum: ["Exclusive", "Non-Exclusive", "Limited Exclusive"] }).default("Non-Exclusive"),
   status: varchar("status", { enum: ["Active", "Expired", "Pending", "Terminated"] }).default("Pending"),
+  reportingFrequency: varchar("reporting_frequency", { enum: ["Monthly", "Quarterly", "Annually", "None"] }).default("None"),
   contractDocumentUrl: varchar("contract_document_url"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
