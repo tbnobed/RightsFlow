@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 // import { ObjectUploader } from "@/components/ObjectUploader"; // Temporarily disabled
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -15,8 +17,15 @@ import { apiRequest } from "@/lib/queryClient";
 
 const formSchema = insertContractSchema.extend({
   startDate: z.string().min(1, "Start date is required"),
-  endDate: z.string().min(1, "End date is required"),
-});
+  endDate: z.string().optional(),
+  autoRenew: z.boolean().optional().default(false),
+}).refine(
+  (data) => data.autoRenew || (data.endDate && data.endDate.length > 0),
+  {
+    message: "End date is required when auto-renew is not enabled",
+    path: ["endDate"],
+  }
+);
 
 type FormData = z.infer<typeof formSchema>;
 
@@ -52,6 +61,8 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
     queryKey: ["/api/contracts"],
   });
 
+  const [autoRenew, setAutoRenew] = useState<boolean>(false);
+
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -68,6 +79,7 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
       status: "Active",
       reportingFrequency: "None",
       parentContractId: null,
+      autoRenew: false,
     },
   });
 
@@ -91,6 +103,7 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
         status: existingContract.status || "Active",
         reportingFrequency: existingContract.reportingFrequency || "None",
         parentContractId: existingContract.parentContractId || null,
+        autoRenew: existingContract.autoRenew || false,
       });
       
       if (!isPredefined && existingPlatform) {
@@ -103,6 +116,7 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
       
       setDocumentUrl(existingContract.contractDocumentUrl || "");
       setIsAmendment(!!existingContract.parentContractId);
+      setAutoRenew(existingContract.autoRenew || false);
     }
   }, [existingContract, contractId, form]);
 
@@ -132,6 +146,7 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
       setDocumentUrl("");
       setPlatformType("predefined");
       setCustomPlatform("");
+      setAutoRenew(false);
       onSuccess?.();
     },
     onError: (error) => {
@@ -173,6 +188,8 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
     const finalData = {
       ...data,
       platform: platformType === "custom" ? customPlatform : data.platform,
+      autoRenew: autoRenew,
+      endDate: autoRenew ? undefined : data.endDate,
     };
     createContractMutation.mutate(finalData);
   };
@@ -350,23 +367,47 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="endDate"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>End Date *</FormLabel>
-                <FormControl>
-                  <Input 
-                    type="date" 
-                    data-testid="input-end-date"
-                    {...field} 
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+          <div className="space-y-3">
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="autoRenew"
+                checked={autoRenew}
+                onCheckedChange={(checked) => {
+                  const isChecked = checked === true;
+                  setAutoRenew(isChecked);
+                  form.setValue("autoRenew", isChecked);
+                  if (isChecked) {
+                    form.setValue("endDate", "");
+                    form.clearErrors("endDate");
+                  }
+                }}
+                data-testid="checkbox-auto-renew"
+              />
+              <Label htmlFor="autoRenew" className="text-sm font-medium cursor-pointer">
+                Auto-renew (no fixed end date)
+              </Label>
+            </div>
+            
+            {!autoRenew && (
+              <FormField
+                control={form.control}
+                name="endDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>End Date *</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="date" 
+                        data-testid="input-end-date"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             )}
-          />
+          </div>
 
           <FormField
             control={form.control}

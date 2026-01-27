@@ -128,7 +128,15 @@ export default function ContractTable({ contracts, isLoading, onUpdate }: Contra
                   {new Date(contract.startDate).toLocaleDateString()}
                 </td>
                 <td className="py-4 px-6 text-muted-foreground" data-testid={`text-end-date-${contract.id}`}>
-                  {new Date(contract.endDate).toLocaleDateString()}
+                  <div className="flex items-center gap-1">
+                    {contract.autoRenew ? (
+                      <Badge className="bg-cyan-100 text-cyan-800">Auto-renew</Badge>
+                    ) : contract.endDate ? (
+                      new Date(contract.endDate).toLocaleDateString()
+                    ) : (
+                      "-"
+                    )}
+                  </div>
                 </td>
                 <td className="py-4 px-6" data-testid={`status-${contract.id}`}>
                   <Badge className={getStatusColor(contract.status || "Active")}>
@@ -216,7 +224,15 @@ export default function ContractTable({ contracts, isLoading, onUpdate }: Contra
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">End Date</label>
-                  <p className="text-sm">{new Date(viewContract.endDate).toLocaleDateString()}</p>
+                  <p className="text-sm">
+                    {viewContract.autoRenew ? (
+                      <Badge className="bg-cyan-100 text-cyan-800">Auto-renew</Badge>
+                    ) : viewContract.endDate ? (
+                      new Date(viewContract.endDate).toLocaleDateString()
+                    ) : (
+                      "-"
+                    )}
+                  </p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Exclusivity</label>

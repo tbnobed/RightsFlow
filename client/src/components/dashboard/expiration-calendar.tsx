@@ -67,9 +67,13 @@ export default function ExpirationCalendar({ contracts }: ExpirationCalendarProp
       const contractStart = typeof contract.startDate === 'string' 
         ? parseISO(contract.startDate) 
         : new Date(contract.startDate);
-      const contractEnd = typeof contract.endDate === 'string' 
-        ? parseISO(contract.endDate) 
-        : new Date(contract.endDate);
+      
+      // For auto-renewing contracts, use far future date for report checks
+      const contractEnd = contract.autoRenew || !contract.endDate
+        ? new Date(2099, 11, 31) 
+        : typeof contract.endDate === 'string' 
+          ? parseISO(contract.endDate) 
+          : new Date(contract.endDate);
       
       monthsInRange.forEach(monthKey => {
         const [yearStr, monthStr] = monthKey.split('-');
