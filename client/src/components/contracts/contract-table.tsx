@@ -245,6 +245,16 @@ export default function ContractTable({ contracts, isLoading, onUpdate }: Contra
                   <p className="text-sm">{viewContract.exclusivity}</p>
                 </div>
                 <div>
+                  <label className="text-sm font-medium text-muted-foreground">Payment Terms</label>
+                  <p className="text-sm">{viewContract.paymentTerms || "Net 30"}</p>
+                </div>
+                {viewContract.minimumPayment && (
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Minimum Threshold</label>
+                    <p className="text-sm">${viewContract.minimumPayment}</p>
+                  </div>
+                )}
+                <div>
                   <label className="text-sm font-medium text-muted-foreground">Status</label>
                   <Badge className={getStatusColor(viewContract.status || "Active")}>
                     {viewContract.status || "Active"}

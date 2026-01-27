@@ -64,6 +64,8 @@ export const contracts = pgTable("contracts", {
   exclusivity: varchar("exclusivity", { enum: ["Exclusive", "Non-Exclusive", "Limited Exclusive"] }).default("Non-Exclusive"),
   status: varchar("status", { enum: ["Active", "Expired", "In Perpetuity", "Terminated"] }).default("Active"),
   reportingFrequency: varchar("reporting_frequency", { enum: ["Monthly", "Quarterly", "Annually", "None"] }).default("None"),
+  paymentTerms: varchar("payment_terms", { enum: ["Net 30", "Net 60", "Net 90"] }).default("Net 30"),
+  minimumPayment: decimal("minimum_payment", { precision: 15, scale: 2 }),
   contractDocumentUrl: varchar("contract_document_url"),
   parentContractId: varchar("parent_contract_id"),
   createdAt: timestamp("created_at").defaultNow(),

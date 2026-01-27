@@ -81,6 +81,8 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
       exclusivity: "Non-Exclusive",
       status: "Active",
       reportingFrequency: "None",
+      paymentTerms: "Net 30",
+      minimumPayment: "",
       parentContractId: null,
       autoRenew: false,
     },
@@ -107,6 +109,8 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
         exclusivity: existingContract.exclusivity || "Non-Exclusive",
         status: existingContract.status || "Active",
         reportingFrequency: existingContract.reportingFrequency || "None",
+        paymentTerms: existingContract.paymentTerms || "Net 30",
+        minimumPayment: existingContract.minimumPayment || "",
         parentContractId: existingContract.parentContractId || null,
         autoRenew: existingContract.autoRenew || false,
       });
@@ -557,6 +561,51 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
                     <SelectItem value="Annually">Annually</SelectItem>
                   </SelectContent>
                 </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="paymentTerms"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Payment Terms</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value ?? "Net 30"}>
+                  <FormControl>
+                    <SelectTrigger data-testid="select-payment-terms">
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Net 30">Net 30</SelectItem>
+                    <SelectItem value="Net 60">Net 60</SelectItem>
+                    <SelectItem value="Net 90">Net 90</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="minimumPayment"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Minimum Payment Threshold ($)</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    step="0.01" 
+                    placeholder="Leave empty if none" 
+                    data-testid="input-minimum-payment"
+                    {...field}
+                    value={field.value ?? ""}
+                  />
+                </FormControl>
+                <p className="text-xs text-muted-foreground">Partner can withhold payment until this threshold is met</p>
                 <FormMessage />
               </FormItem>
             )}
