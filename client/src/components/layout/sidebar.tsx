@@ -21,10 +21,10 @@ const getNavigation = (isAdmin: boolean) => {
     { name: "Royalties", href: "/royalties", icon: DollarSign },
     { name: "Statements", href: "/statements", icon: FileText },
     { name: "Reports", href: "/reports", icon: ChartBar },
-    { name: "Audit Trail", href: "/audit", icon: History },
   ];
 
   if (isAdmin) {
+    baseNavigation.push({ name: "Audit Trail", href: "/audit", icon: History });
     baseNavigation.push({ name: "Users", href: "/users", icon: Users });
   }
 

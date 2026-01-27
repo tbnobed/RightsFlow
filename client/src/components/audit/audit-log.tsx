@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { format } from "date-fns";
 
 interface AuditLogProps {
@@ -12,6 +14,8 @@ interface AuditLogProps {
 }
 
 export default function AuditLog({ filters }: AuditLogProps) {
+  const [selectedLog, setSelectedLog] = useState<any>(null);
+  
   const { data: auditLogs, isLoading } = useQuery({
     queryKey: ["/api/audit", filters],
     queryFn: async () => {
@@ -100,7 +104,11 @@ export default function AuditLog({ filters }: AuditLogProps) {
                         IP: {log.ipAddress}
                       </span>
                     )}
-                    <span className="text-primary cursor-pointer hover:underline">
+                    <span 
+                      className="text-primary cursor-pointer hover:underline"
+                      onClick={() => setSelectedLog(log)}
+                      data-testid={`audit-view-details-${log.id}`}
+                    >
                       View Details
                     </span>
                   </div>
@@ -115,6 +123,73 @@ export default function AuditLog({ filters }: AuditLogProps) {
           )}
         </div>
       </CardContent>
+
+      <Dialog open={!!selectedLog} onOpenChange={() => setSelectedLog(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Audit Log Details</DialogTitle>
+          </DialogHeader>
+          {selectedLog && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Action</p>
+                  <p className="font-medium">{selectedLog.action}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Date & Time</p>
+                  <p className="font-medium">{format(new Date(selectedLog.createdAt), 'MMM dd, yyyy HH:mm:ss')}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">User</p>
+                  <p className="font-medium">
+                    {selectedLog.user 
+                      ? `${selectedLog.user.firstName || ''} ${selectedLog.user.lastName || ''}`.trim() || selectedLog.user.email 
+                      : 'System'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Entity Type</p>
+                  <p className="font-medium">{selectedLog.entityType || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Entity ID</p>
+                  <p className="font-medium font-mono text-xs">{selectedLog.entityId || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">IP Address</p>
+                  <p className="font-medium">{selectedLog.ipAddress || '-'}</p>
+                </div>
+              </div>
+              
+              {selectedLog.previousValues && Object.keys(selectedLog.previousValues).length > 0 && (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">Previous Values</p>
+                  <pre className="bg-muted p-3 rounded-md text-xs overflow-auto max-h-40">
+                    {JSON.stringify(selectedLog.previousValues, null, 2)}
+                  </pre>
+                </div>
+              )}
+              
+              {selectedLog.newValues && Object.keys(selectedLog.newValues).length > 0 && (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">New Values</p>
+                  <pre className="bg-muted p-3 rounded-md text-xs overflow-auto max-h-40">
+                    {JSON.stringify(selectedLog.newValues, null, 2)}
+                  </pre>
+                </div>
+              )}
+              
+              {selectedLog.userAgent && (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">User Agent</p>
+                  <p className="text-xs text-muted-foreground">{selectedLog.userAgent}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
