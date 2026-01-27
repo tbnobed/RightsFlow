@@ -3,13 +3,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { BarChart3, FileSpreadsheet, FileText, Download, Calendar, DollarSign, AlertTriangle } from "lucide-react";
+import { FileSpreadsheet, FileText, Download, DollarSign, AlertTriangle } from "lucide-react";
 import { format, addDays, differenceInDays } from "date-fns";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 type Contract = {
   id: string;
@@ -254,6 +255,110 @@ export default function Reports() {
     });
   };
 
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    const reportTitles: Record<string, string> = {
+      "contract-summary": "Contract Summary Report",
+      "royalty-statements": "Royalty Statements Report",
+      "expiring-contracts": `Expiring Contracts (Next ${expiringDays} Days)`,
+      "partner-performance": "Partner Performance Report",
+      "platform-performance": "Platform Performance Report",
+      "payments-due": "Payments Due Report",
+    };
+
+    doc.setFontSize(18);
+    doc.setTextColor(40, 60, 80);
+    doc.text(reportTitles[reportType] || "Report", 14, 22);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Generated: ${format(new Date(), 'MMMM dd, yyyy')}`, 14, 30);
+    doc.text("Promissio Rights Management", 14, 35);
+
+    let tableData: string[][] = [];
+    let columns: string[] = [];
+
+    if (reportType === "contract-summary") {
+      columns = ["Partner", "Content", "Status", "Platforms", "Royalty Type", "End Date"];
+      tableData = contracts.map(c => [
+        c.partner,
+        c.content?.substring(0, 30) + (c.content?.length > 30 ? "..." : ""),
+        c.status,
+        c.platforms?.join(", ") || "",
+        c.royaltyType === "revenue_share" ? `${c.royaltyPercentage}%` : formatCurrency(parseFloat(c.flatFeeAmount || "0")),
+        c.endDate ? format(new Date(c.endDate), 'MMM dd, yyyy') : "N/A",
+      ]);
+    } else if (reportType === "royalty-statements") {
+      columns = ["Period", "Partner", "Revenue", "Royalty", "Status"];
+      tableData = royalties.map(r => [
+        r.period,
+        r.contract?.partner || "N/A",
+        formatCurrency(parseFloat(r.revenue || "0")),
+        formatCurrency(parseFloat(r.royaltyAmount || "0")),
+        r.status,
+      ]);
+    } else if (reportType === "expiring-contracts") {
+      columns = ["Partner", "Content", "End Date", "Days Left", "Auto-Renewal"];
+      tableData = getExpiringContracts().map(c => {
+        const daysRemaining = differenceInDays(new Date(c.endDate!), new Date());
+        return [
+          c.partner,
+          c.content?.substring(0, 30) + (c.content?.length > 30 ? "..." : ""),
+          format(new Date(c.endDate!), 'MMM dd, yyyy'),
+          `${daysRemaining} days`,
+          c.autoRenewal ? "Yes" : "No",
+        ];
+      });
+    } else if (reportType === "partner-performance") {
+      columns = ["Partner", "Contracts", "Revenue", "Royalties"];
+      tableData = getPartnerPerformance().map(p => [
+        p.partner,
+        p.contracts.toString(),
+        formatCurrency(p.revenue),
+        formatCurrency(p.royalties),
+      ]);
+    } else if (reportType === "platform-performance") {
+      columns = ["Platform", "Contracts", "Revenue"];
+      tableData = getPlatformPerformance().map(p => [
+        p.platform,
+        p.contracts.toString(),
+        formatCurrency(p.revenue),
+      ]);
+    } else if (reportType === "payments-due") {
+      columns = ["Partner", "Period", "Amount", "Terms", "Due Date", "Status"];
+      tableData = getPaymentsDue().map(p => [
+        p.contract?.partner || "N/A",
+        p.period,
+        formatCurrency(parseFloat(p.royaltyAmount || "0")),
+        p.paymentTerms,
+        format(p.dueDate, 'MMM dd, yyyy'),
+        p.isOverdue ? "Overdue" : "Due",
+      ]);
+    }
+
+    if (tableData.length === 0) {
+      toast({ title: "Error", description: "No data to export", variant: "destructive" });
+      return;
+    }
+
+    autoTable(doc, {
+      head: [columns],
+      body: tableData,
+      startY: 42,
+      styles: { fontSize: 9, cellPadding: 3 },
+      headStyles: { fillColor: [40, 60, 80], textColor: 255 },
+      alternateRowStyles: { fillColor: [245, 245, 245] },
+    });
+
+    const filename = `${reportType}-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+    doc.save(filename);
+
+    toast({
+      title: "Export Complete",
+      description: `${filename} has been downloaded`,
+    });
+  };
+
   const isLoading = contractsLoading || royaltiesLoading;
   const summary = getContractSummary();
   const royaltySummary = getRoyaltySummary();
@@ -302,8 +407,12 @@ export default function Reports() {
             )}
 
             <Button onClick={handleExportCSV} variant="outline" data-testid="button-export-csv">
-              <Download className="h-4 w-4 mr-2" />
+              <FileSpreadsheet className="h-4 w-4 mr-2" />
               Export CSV
+            </Button>
+            <Button onClick={handleExportPDF} variant="outline" data-testid="button-export-pdf">
+              <FileText className="h-4 w-4 mr-2" />
+              Export PDF
             </Button>
           </div>
         </CardContent>
