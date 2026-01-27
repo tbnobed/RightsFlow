@@ -56,7 +56,7 @@ export default function ContractTable({ contracts, isLoading, onUpdate }: Contra
     switch (status) {
       case 'Active': return 'bg-green-100 text-green-800';
       case 'Expired': return 'bg-red-100 text-red-800';
-      case 'Pending': return 'bg-amber-100 text-amber-800';
+      case 'In Perpetuity': return 'bg-blue-100 text-blue-800';
       case 'Terminated': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
@@ -106,7 +106,14 @@ export default function ContractTable({ contracts, isLoading, onUpdate }: Contra
                 data-testid={`contract-row-${contract.id}`}
               >
                 <td className="py-4 px-6 font-medium text-foreground" data-testid={`text-partner-${contract.id}`}>
-                  {contract.partner}
+                  <div className="flex items-center gap-2">
+                    {contract.parentContractId && (
+                      <span className="text-xs bg-purple-100 text-purple-800 px-1.5 py-0.5 rounded" data-testid={`badge-amendment-${contract.id}`}>
+                        Amendment
+                      </span>
+                    )}
+                    {contract.partner}
+                  </div>
                 </td>
                 <td className="py-4 px-6 text-muted-foreground" data-testid={`text-licensee-${contract.id}`}>
                   {contract.licensee}
@@ -124,8 +131,8 @@ export default function ContractTable({ contracts, isLoading, onUpdate }: Contra
                   {new Date(contract.endDate).toLocaleDateString()}
                 </td>
                 <td className="py-4 px-6" data-testid={`status-${contract.id}`}>
-                  <Badge className={getStatusColor(contract.status || "Pending")}>
-                    {contract.status || "Pending"}
+                  <Badge className={getStatusColor(contract.status || "Active")}>
+                    {contract.status || "Active"}
                   </Badge>
                 </td>
                 <td className="py-4 px-6">
@@ -217,10 +224,16 @@ export default function ContractTable({ contracts, isLoading, onUpdate }: Contra
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Status</label>
-                  <Badge className={getStatusColor(viewContract.status || "Pending")}>
-                    {viewContract.status || "Pending"}
+                  <Badge className={getStatusColor(viewContract.status || "Active")}>
+                    {viewContract.status || "Active"}
                   </Badge>
                 </div>
+                {viewContract.parentContractId && (
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Type</label>
+                    <Badge className="bg-purple-100 text-purple-800">Amendment</Badge>
+                  </div>
+                )}
               </div>
               {viewContract.contractDocumentUrl && (
                 <div>

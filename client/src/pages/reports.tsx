@@ -115,7 +115,7 @@ export default function Reports() {
           </CardHeader>
           <CardContent>
             <div className="h-64 bg-muted rounded-lg flex items-center justify-center">
-              <p className="text-muted-foreground">Chart: Active vs Expired vs Pending contracts</p>
+              <p className="text-muted-foreground">Chart: Active vs Expired vs In Perpetuity contracts</p>
             </div>
           </CardContent>
         </Card>

@@ -133,7 +133,7 @@ export default function Contracts() {
               <SelectItem value="all">All Statuses</SelectItem>
               <SelectItem value="Active">Active</SelectItem>
               <SelectItem value="Expired">Expired</SelectItem>
-              <SelectItem value="Pending">Pending</SelectItem>
+              <SelectItem value="In Perpetuity">In Perpetuity</SelectItem>
               <SelectItem value="Terminated">Terminated</SelectItem>
             </SelectContent>
           </Select>

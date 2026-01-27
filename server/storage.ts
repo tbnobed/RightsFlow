@@ -240,7 +240,7 @@ export class DatabaseStorage implements IStorage {
           eq(contracts.platform, params.platform),
           or(
             eq(contracts.status, "Active"),
-            eq(contracts.status, "Pending")
+            eq(contracts.status, "In Perpetuity")
           ),
           // Date overlap: contract overlaps if contract.start <= check.end AND contract.end >= check.start
           and(

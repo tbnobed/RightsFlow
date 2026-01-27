@@ -46,7 +46,7 @@ export default function RoyaltyCalculator({ onCalculated }: RoyaltyCalculatorPro
   const { data: contracts } = useQuery({
     queryKey: ["/api/contracts"],
     select: (data) => Array.isArray(data) ? data.filter((contract: any) => 
-      contract.status === "Active" || contract.status === "Pending"
+      contract.status === "Active" || contract.status === "In Perpetuity"
     ) : [],
   });
 

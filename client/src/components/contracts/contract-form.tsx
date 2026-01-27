@@ -33,6 +33,7 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
   const [documentUrl, setDocumentUrl] = useState<string>("");
   const [platformType, setPlatformType] = useState<"predefined" | "custom">("predefined");
   const [customPlatform, setCustomPlatform] = useState<string>("");
+  const [isAmendment, setIsAmendment] = useState<boolean>(false);
 
   // Fetch existing contract data if editing
   const { data: existingContract } = useQuery({
@@ -44,6 +45,11 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
       return response.json();
     },
     enabled: !!contractId,
+  });
+
+  // Fetch all contracts for parent contract selector (amendments)
+  const { data: allContracts } = useQuery<{ id: string; partner: string; content: string }[]>({
+    queryKey: ["/api/contracts"],
   });
 
   const form = useForm<FormData>({
@@ -59,8 +65,9 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
       endDate: "",
       royaltyRate: "0",
       exclusivity: "Non-Exclusive",
-      status: "Pending",
+      status: "Active",
       reportingFrequency: "None",
+      parentContractId: null,
     },
   });
 
@@ -81,8 +88,9 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
         endDate: existingContract.endDate || "",
         royaltyRate: existingContract.royaltyRate || "0",
         exclusivity: existingContract.exclusivity || "Non-Exclusive",
-        status: existingContract.status || "Pending",
+        status: existingContract.status || "Active",
         reportingFrequency: existingContract.reportingFrequency || "None",
+        parentContractId: existingContract.parentContractId || null,
       });
       
       if (!isPredefined && existingPlatform) {
@@ -94,6 +102,7 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
       }
       
       setDocumentUrl(existingContract.contractDocumentUrl || "");
+      setIsAmendment(!!existingContract.parentContractId);
     }
   }, [existingContract, contractId, form]);
 
@@ -405,6 +414,30 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
 
           <FormField
             control={form.control}
+            name="status"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Status</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value ?? "Active"}>
+                  <FormControl>
+                    <SelectTrigger data-testid="select-status">
+                      <SelectValue />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Active">Active</SelectItem>
+                    <SelectItem value="Expired">Expired</SelectItem>
+                    <SelectItem value="In Perpetuity">In Perpetuity</SelectItem>
+                    <SelectItem value="Terminated">Terminated</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
             name="reportingFrequency"
             render={({ field }) => (
               <FormItem>
@@ -427,6 +460,60 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
             )}
           />
 
+          <div className="md:col-span-2 space-y-4">
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="isAmendment"
+                checked={isAmendment}
+                onChange={(e) => {
+                  setIsAmendment(e.target.checked);
+                  if (!e.target.checked) {
+                    form.setValue("parentContractId", null);
+                  }
+                }}
+                className="h-4 w-4 rounded border-gray-300"
+                data-testid="checkbox-is-amendment"
+              />
+              <label htmlFor="isAmendment" className="text-sm font-medium">
+                This is an amendment to an existing contract
+              </label>
+            </div>
+
+            {isAmendment && (
+              <FormField
+                control={form.control}
+                name="parentContractId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Parent Contract</FormLabel>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value ?? undefined}
+                      value={field.value ?? undefined}
+                    >
+                      <FormControl>
+                        <SelectTrigger data-testid="select-parent-contract">
+                          <SelectValue placeholder="Select parent contract" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {allContracts
+                          ?.filter(c => c.id !== contractId)
+                          .map((contract) => (
+                            <SelectItem key={contract.id} value={contract.id}>
+                              {contract.partner} - {contract.content || "No content specified"}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+          </div>
+
           <div className="md:col-span-2">
             <FormLabel>Contract Document</FormLabel>
             <div className="mt-2">
@@ -447,6 +534,7 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
               form.reset();
               setPlatformType("predefined");
               setCustomPlatform("");
+              setIsAmendment(false);
               if (onCancel) {
                 onCancel();
               }

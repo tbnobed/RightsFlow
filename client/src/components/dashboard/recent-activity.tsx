@@ -13,7 +13,7 @@ export default function RecentActivity({ contracts }: RecentActivityProps) {
     switch (status) {
       case 'Active': return 'bg-green-100 text-green-800';
       case 'Expired': return 'bg-red-100 text-red-800';
-      case 'Pending': return 'bg-amber-100 text-amber-800';
+      case 'In Perpetuity': return 'bg-blue-100 text-blue-800';
       case 'Terminated': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
@@ -66,8 +66,8 @@ export default function RecentActivity({ contracts }: RecentActivityProps) {
                     <p className="font-medium text-foreground">{contract.partner}</p>
                     <p className="text-sm text-muted-foreground">{contract.licensee} • {contract.territory}</p>
                   </div>
-                  <Badge className={getStatusColor(contract.status || "Pending")}>
-                    {contract.status || "Pending"}
+                  <Badge className={getStatusColor(contract.status || "Active")}>
+                    {contract.status || "Active"}
                   </Badge>
                 </div>
               ))}
