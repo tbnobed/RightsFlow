@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
+import { ChevronLeft, ChevronRight, ExternalLink, FileText, Calendar } from "lucide-react";
 import { Link } from "wouter";
 import { 
   startOfMonth, 
@@ -13,7 +13,9 @@ import {
   addMonths,
   startOfWeek,
   endOfWeek,
-  parseISO
+  parseISO,
+  getMonth,
+  getYear
 } from "date-fns";
 import type { Contract } from "@shared/schema";
 
@@ -21,8 +23,27 @@ interface ExpirationCalendarProps {
   contracts: Contract[];
 }
 
+type CalendarEvent = {
+  type: "expiration" | "report";
+  contract: Contract;
+  label: string;
+};
+
 export default function ExpirationCalendar({ contracts }: ExpirationCalendarProps) {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const today = new Date();
+  const [currentMonth, setCurrentMonth] = useState(today);
+  
+  const todayMonth = getMonth(today);
+  const todayYear = getYear(today);
+  const viewMonth = getMonth(currentMonth);
+  const viewYear = getYear(currentMonth);
+
+  const canGoBack = viewYear > todayYear || (viewYear === todayYear && viewMonth > todayMonth);
+  
+  const nextMonthDate = addMonths(today, 1);
+  const nextMonth = getMonth(nextMonthDate);
+  const nextYear = getYear(nextMonthDate);
+  const canGoForward = viewYear < nextYear || (viewYear === nextYear && viewMonth < nextMonth);
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -31,46 +52,145 @@ export default function ExpirationCalendar({ contracts }: ExpirationCalendarProp
   
   const calendarDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
-  const getContractsForDay = (day: Date) => {
-    return contracts.filter((contract) => {
-      if (!contract.endDate) return false;
+  const getReportDueDates = useMemo(() => {
+    const reportDates: Map<string, CalendarEvent[]> = new Map();
+    
+    const monthsInRange = new Set<string>();
+    calendarDays.forEach(day => {
+      monthsInRange.add(`${getYear(day)}-${getMonth(day)}`);
+    });
+    
+    contracts.forEach((contract) => {
+      if (!contract.reportingFrequency || contract.reportingFrequency === "None") return;
+      if (contract.status === "Expired" || contract.status === "Terminated") return;
+      
+      const contractStart = typeof contract.startDate === 'string' 
+        ? parseISO(contract.startDate) 
+        : new Date(contract.startDate);
+      const contractEnd = typeof contract.endDate === 'string' 
+        ? parseISO(contract.endDate) 
+        : new Date(contract.endDate);
+      
+      monthsInRange.forEach(monthKey => {
+        const [yearStr, monthStr] = monthKey.split('-');
+        const year = parseInt(yearStr);
+        const month = parseInt(monthStr);
+        const monthDate = new Date(year, month, 1);
+        const monthEndDate = endOfMonth(monthDate);
+        
+        if (contract.reportingFrequency === "Monthly") {
+          if (monthEndDate >= contractStart && monthEndDate <= contractEnd) {
+            const dateKey = format(monthEndDate, "yyyy-MM-dd");
+            const events = reportDates.get(dateKey) || [];
+            events.push({
+              type: "report",
+              contract,
+              label: `${contract.partner} (Monthly)`
+            });
+            reportDates.set(dateKey, events);
+          }
+        } else if (contract.reportingFrequency === "Quarterly") {
+          const quarterEndMonths = [2, 5, 8, 11];
+          if (quarterEndMonths.includes(month)) {
+            if (monthEndDate >= contractStart && monthEndDate <= contractEnd) {
+              const quarterNum = Math.floor(month / 3) + 1;
+              const dateKey = format(monthEndDate, "yyyy-MM-dd");
+              const events = reportDates.get(dateKey) || [];
+              events.push({
+                type: "report",
+                contract,
+                label: `${contract.partner} (Q${quarterNum})`
+              });
+              reportDates.set(dateKey, events);
+            }
+          }
+        } else if (contract.reportingFrequency === "Annually") {
+          if (month === 11) {
+            const yearEndDate = new Date(year, 11, 31);
+            if (yearEndDate >= contractStart && yearEndDate <= contractEnd) {
+              const dateKey = format(yearEndDate, "yyyy-MM-dd");
+              const events = reportDates.get(dateKey) || [];
+              events.push({
+                type: "report",
+                contract,
+                label: `${contract.partner} (Annual)`
+              });
+              reportDates.set(dateKey, events);
+            }
+          }
+        }
+      });
+    });
+    
+    return reportDates;
+  }, [contracts, calendarDays]);
+
+  const getEventsForDay = (day: Date): CalendarEvent[] => {
+    const events: CalendarEvent[] = [];
+    
+    contracts.forEach((contract) => {
+      if (!contract.endDate) return;
       const endDate = typeof contract.endDate === 'string' 
         ? parseISO(contract.endDate) 
         : new Date(contract.endDate);
-      return isSameDay(endDate, day);
+      if (isSameDay(endDate, day)) {
+        events.push({
+          type: "expiration",
+          contract,
+          label: contract.partner
+        });
+      }
     });
+    
+    const dateKey = format(day, "yyyy-MM-dd");
+    const reportEvents = getReportDueDates.get(dateKey) || [];
+    events.push(...reportEvents);
+    
+    return events;
   };
 
-  const getUrgencyClass = (day: Date) => {
-    const dayContracts = getContractsForDay(day);
-    if (dayContracts.length === 0) return "";
+  const getDayClasses = (day: Date, events: CalendarEvent[]) => {
+    const hasExpiration = events.some(e => e.type === "expiration");
+    const hasReport = events.some(e => e.type === "report");
     
-    const today = new Date();
-    const daysUntilExpiry = Math.floor((day.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    if (!hasExpiration && !hasReport) return "";
     
-    if (daysUntilExpiry < 0) return "bg-red-500/20 border-red-500";
-    if (daysUntilExpiry <= 7) return "bg-orange-500/20 border-orange-500";
-    if (daysUntilExpiry <= 30) return "bg-yellow-500/20 border-yellow-500";
-    return "bg-blue-500/20 border-blue-500";
+    if (hasExpiration) {
+      const daysUntilExpiry = Math.floor((day.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      if (daysUntilExpiry < 0) return "bg-red-500/20 border-red-500";
+      if (daysUntilExpiry <= 7) return "bg-orange-500/20 border-orange-500";
+      if (daysUntilExpiry <= 30) return "bg-yellow-500/20 border-yellow-500";
+      return "bg-blue-500/20 border-blue-500";
+    }
+    
+    if (hasReport) {
+      return "bg-purple-500/20 border-purple-500";
+    }
+    
+    return "";
   };
 
   const goToPreviousMonth = () => {
-    setCurrentMonth(addMonths(currentMonth, -1));
+    if (canGoBack) {
+      setCurrentMonth(addMonths(currentMonth, -1));
+    }
   };
 
   const goToNextMonth = () => {
-    setCurrentMonth(addMonths(currentMonth, 1));
+    if (canGoForward) {
+      setCurrentMonth(addMonths(currentMonth, 1));
+    }
   };
 
   const goToToday = () => {
-    setCurrentMonth(new Date());
+    setCurrentMonth(today);
   };
 
   return (
     <Card className="bg-card border-border" data-testid="calendar-expiration">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold">Contract Expirations</CardTitle>
+          <CardTitle className="text-lg font-semibold">Contract Calendar</CardTitle>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
@@ -84,6 +204,7 @@ export default function ExpirationCalendar({ contracts }: ExpirationCalendarProp
               variant="ghost"
               size="icon"
               onClick={goToPreviousMonth}
+              disabled={!canGoBack}
               data-testid="button-calendar-prev"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -95,6 +216,7 @@ export default function ExpirationCalendar({ contracts }: ExpirationCalendarProp
               variant="ghost"
               size="icon"
               onClick={goToNextMonth}
+              disabled={!canGoForward}
               data-testid="button-calendar-next"
             >
               <ChevronRight className="h-4 w-4" />
@@ -103,7 +225,6 @@ export default function ExpirationCalendar({ contracts }: ExpirationCalendarProp
         </div>
       </CardHeader>
       <CardContent>
-        {/* Week day headers */}
         <div className="grid grid-cols-7 gap-1 mb-2">
           {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
             <div
@@ -115,13 +236,12 @@ export default function ExpirationCalendar({ contracts }: ExpirationCalendarProp
           ))}
         </div>
 
-        {/* Calendar days */}
         <div className="grid grid-cols-7 gap-1">
           {calendarDays.map((day, index) => {
-            const dayContracts = getContractsForDay(day);
+            const events = getEventsForDay(day);
             const isCurrentMonth = isSameMonth(day, currentMonth);
-            const isToday = isSameDay(day, new Date());
-            const urgencyClass = getUrgencyClass(day);
+            const isToday = isSameDay(day, today);
+            const dayClasses = getDayClasses(day, events);
 
             return (
               <div
@@ -129,8 +249,8 @@ export default function ExpirationCalendar({ contracts }: ExpirationCalendarProp
                 className={`
                   relative min-h-[60px] p-2 border rounded-md text-sm
                   ${isCurrentMonth ? "bg-background" : "bg-muted/30"}
-                  ${isToday ? "border-primary" : "border-border"}
-                  ${urgencyClass}
+                  ${isToday ? "border-primary border-2" : "border-border"}
+                  ${dayClasses}
                   transition-colors hover:bg-accent/50
                 `}
                 data-testid={`calendar-day-${format(day, "yyyy-MM-dd")}`}
@@ -138,21 +258,30 @@ export default function ExpirationCalendar({ contracts }: ExpirationCalendarProp
                 <div className={`text-xs mb-1 ${isCurrentMonth ? "text-foreground" : "text-muted-foreground"}`}>
                   {format(day, "d")}
                 </div>
-                {dayContracts.length > 0 && (
+                {events.length > 0 && (
                   <div className="space-y-1">
-                    {dayContracts.slice(0, 2).map((contract) => (
+                    {events.slice(0, 2).map((event, idx) => (
                       <div
-                        key={contract.id}
-                        className="text-[10px] leading-tight px-1 py-0.5 bg-primary/10 rounded truncate"
-                        title={contract.partner}
-                        data-testid={`contract-indicator-${contract.id}`}
+                        key={`${event.contract.id}-${event.type}-${idx}`}
+                        className={`text-[10px] leading-tight px-1 py-0.5 rounded truncate flex items-center gap-1 ${
+                          event.type === "expiration" 
+                            ? "bg-primary/10" 
+                            : "bg-purple-500/20"
+                        }`}
+                        title={`${event.type === "expiration" ? "Expires: " : "Report Due: "}${event.label}`}
+                        data-testid={`event-${event.type}-${event.contract.id}`}
                       >
-                        {contract.partner}
+                        {event.type === "expiration" ? (
+                          <Calendar className="h-2 w-2 flex-shrink-0" />
+                        ) : (
+                          <FileText className="h-2 w-2 flex-shrink-0" />
+                        )}
+                        <span className="truncate">{event.label}</span>
                       </div>
                     ))}
-                    {dayContracts.length > 2 && (
+                    {events.length > 2 && (
                       <div className="text-[10px] text-muted-foreground px-1">
-                        +{dayContracts.length - 2} more
+                        +{events.length - 2} more
                       </div>
                     )}
                   </div>
@@ -162,7 +291,6 @@ export default function ExpirationCalendar({ contracts }: ExpirationCalendarProp
           })}
         </div>
 
-        {/* Legend */}
         <div className="mt-4 pt-4 border-t border-border">
           <div className="text-xs font-medium text-muted-foreground mb-2">Legend:</div>
           <div className="grid grid-cols-2 gap-2 text-xs">
@@ -172,15 +300,19 @@ export default function ExpirationCalendar({ contracts }: ExpirationCalendarProp
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded border border-orange-500 bg-orange-500/20"></div>
-              <span className="text-muted-foreground">≤ 7 days</span>
+              <span className="text-muted-foreground">Expiring ≤ 7 days</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded border border-yellow-500 bg-yellow-500/20"></div>
-              <span className="text-muted-foreground">≤ 30 days</span>
+              <span className="text-muted-foreground">Expiring ≤ 30 days</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded border border-blue-500 bg-blue-500/20"></div>
-              <span className="text-muted-foreground">&gt; 30 days</span>
+              <span className="text-muted-foreground">Expiring &gt; 30 days</span>
+            </div>
+            <div className="flex items-center gap-2 col-span-2">
+              <div className="w-3 h-3 rounded border border-purple-500 bg-purple-500/20"></div>
+              <span className="text-muted-foreground">Revenue Report Due</span>
             </div>
           </div>
         </div>
@@ -193,7 +325,7 @@ export default function ExpirationCalendar({ contracts }: ExpirationCalendarProp
             data-testid="button-view-all-contracts"
           >
             <ExternalLink className="h-4 w-4 mr-2" />
-            View All Expiring Contracts
+            View All Contracts
           </Button>
         </Link>
       </CardFooter>
