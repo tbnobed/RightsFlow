@@ -2,14 +2,24 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isAdmin } from "./auth";
-import {
-  ObjectStorageService,
-  ObjectNotFoundError,
-} from "./objectStorage";
-import { ObjectPermission } from "./objectAcl";
+import { fileStorageService, FileNotFoundError } from "./fileStorage";
+import multer from "multer";
 import { insertContractSchema, insertRoyaltySchema, availabilityRequestSchema, insertContentItemSchema, insertContractContentSchema } from "@shared/schema";
 import { z } from "zod";
 import { sendRoyaltyStatement, sendContractExpiringNotification, sendRevenueReportDueNotification } from "./sendgrid";
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 50 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF and Word documents are allowed'));
+    }
+  }
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication system
@@ -438,69 +448,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // File upload routes
-  app.post("/api/objects/upload", isAuthenticated, async (req, res) => {
+  app.post("/api/contracts/:id/upload", isAuthenticated, upload.single('file'), async (req: any, res) => {
     try {
-      const objectStorageService = new ObjectStorageService();
-      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
-      res.json({ uploadURL });
-    } catch (error) {
-      console.error("Error getting upload URL:", error);
-      res.status(500).json({ message: "Failed to get upload URL" });
-    }
-  });
-
-  app.put("/api/contracts/:id/document", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.session.userId;
       const contractId = req.params.id;
+      const userId = req.session.userId;
       
-      if (!req.body.documentURL) {
-        return res.status(400).json({ error: "documentURL is required" });
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
       }
 
-      const objectStorageService = new ObjectStorageService();
-      const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
-        req.body.documentURL,
-        {
-          owner: userId,
-          visibility: "private",
-        }
+      const contract = await storage.getContract(contractId);
+      if (!contract) {
+        return res.status(404).json({ message: "Contract not found" });
+      }
+
+      const { relativePath } = await fileStorageService.saveContractFile(
+        req.file.buffer,
+        req.file.originalname
       );
 
       const updatedContract = await storage.updateContract(contractId, {
-        contractDocumentUrl: objectPath,
+        contractDocumentUrl: relativePath,
       });
 
-      res.json({ objectPath, contract: updatedContract });
+      await storage.createAuditLog({
+        action: "Contract Document Uploaded",
+        entityType: "Contract",
+        entityId: contractId,
+        newValues: { documentUrl: relativePath, originalFilename: req.file.originalname },
+        userId,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
+      });
+
+      res.json({ filePath: relativePath, contract: updatedContract });
     } catch (error) {
-      console.error("Error setting contract document:", error);
-      res.status(500).json({ error: "Internal server error" });
+      console.error("Error uploading contract document:", error);
+      res.status(500).json({ message: "Failed to upload document" });
     }
   });
 
-  // Serve private objects
-  app.get("/objects/:objectPath(*)", isAuthenticated, async (req: any, res) => {
-    const userId = req.user?.claims?.sub;
-    const objectStorageService = new ObjectStorageService();
+  // Serve contract files
+  app.get("/files/contracts/:filename", isAuthenticated, async (req: any, res) => {
     try {
-      const objectFile = await objectStorageService.getObjectEntityFile(
-        req.path,
-      );
-      const canAccess = await objectStorageService.canAccessObjectEntity({
-        objectFile,
-        userId: userId,
-        requestedPermission: ObjectPermission.READ,
-      });
-      if (!canAccess) {
-        return res.sendStatus(401);
-      }
-      objectStorageService.downloadObject(objectFile, res);
+      const filename = req.params.filename;
+      const fileId = filename.split('.')[0];
+      
+      await fileStorageService.downloadContractFile(fileId, res);
     } catch (error) {
-      console.error("Error checking object access:", error);
-      if (error instanceof ObjectNotFoundError) {
-        return res.sendStatus(404);
+      console.error("Error serving contract file:", error);
+      if (error instanceof FileNotFoundError) {
+        return res.status(404).json({ message: "File not found" });
       }
-      return res.sendStatus(500);
+      res.status(500).json({ message: "Failed to serve file" });
     }
   });
 

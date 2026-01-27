@@ -45,6 +45,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-promissio}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-promissio_secure_password}
       POSTGRES_DB: ${POSTGRES_DB:-promissio_db}
+    volumes:
+      - file_storage:/app/storage
     depends_on:
       postgres:
         condition: service_healthy
@@ -60,6 +62,8 @@ services:
 
 volumes:
   postgres_data:
+    driver: local
+  file_storage:
     driver: local
 
 networks:

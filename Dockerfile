@@ -42,6 +42,10 @@ RUN apk add --no-cache postgresql-client bash
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 appuser
 
+# Create storage directory for contract files
+RUN mkdir -p /app/storage/contracts && \
+    chown -R appuser:nodejs /app/storage
+
 # Copy built application from builder
 COPY --from=builder --chown=appuser:nodejs /app/dist ./dist
 COPY --from=builder --chown=appuser:nodejs /app/package*.json ./
