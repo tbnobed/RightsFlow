@@ -1,11 +1,14 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, ExternalLink, FileText, Calendar } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ChevronLeft, ChevronRight, ExternalLink, FileText, Calendar, AlertTriangle } from "lucide-react";
 import { Link } from "wouter";
 import { 
   startOfMonth, 
   endOfMonth, 
+  endOfQuarter,
+  endOfYear,
   eachDayOfInterval, 
   format, 
   isSameMonth, 
@@ -15,12 +18,16 @@ import {
   endOfWeek,
   parseISO,
   getMonth,
-  getYear
+  getYear,
+  differenceInDays
 } from "date-fns";
 import type { Contract } from "@shared/schema";
 
+type TimePeriod = "month" | "quarter" | "year";
+
 interface ExpirationCalendarProps {
   contracts: Contract[];
+  timePeriod?: TimePeriod;
 }
 
 type CalendarEvent = {
@@ -29,7 +36,7 @@ type CalendarEvent = {
   label: string;
 };
 
-export default function ExpirationCalendar({ contracts }: ExpirationCalendarProps) {
+export default function ExpirationCalendar({ contracts, timePeriod = "month" }: ExpirationCalendarProps) {
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today);
   
@@ -190,8 +197,102 @@ export default function ExpirationCalendar({ contracts }: ExpirationCalendarProp
     setCurrentMonth(today);
   };
 
+  const getPeriodEndDate = () => {
+    switch (timePeriod) {
+      case "month": return endOfMonth(today);
+      case "quarter": return endOfQuarter(today);
+      case "year": return endOfYear(today);
+      default: return endOfMonth(today);
+    }
+  };
+
+  const getPeriodLabel = () => {
+    switch (timePeriod) {
+      case "month": return "This Month";
+      case "quarter": return "This Quarter";
+      case "year": return "This Year";
+      default: return "This Month";
+    }
+  };
+
+  const expiringContracts = useMemo(() => {
+    const periodEnd = getPeriodEndDate();
+    return contracts
+      .filter((contract) => {
+        if (!contract.endDate || contract.autoRenew) return false;
+        if (contract.status === "Expired" || contract.status === "Terminated") return false;
+        const endDate = typeof contract.endDate === 'string' 
+          ? parseISO(contract.endDate) 
+          : new Date(contract.endDate);
+        return endDate >= today && endDate <= periodEnd;
+      })
+      .sort((a, b) => {
+        const dateA = typeof a.endDate === 'string' ? parseISO(a.endDate) : new Date(a.endDate!);
+        const dateB = typeof b.endDate === 'string' ? parseISO(b.endDate) : new Date(b.endDate!);
+        return dateA.getTime() - dateB.getTime();
+      });
+  }, [contracts, timePeriod]);
+
+  const getUrgencyBadge = (endDate: Date) => {
+    const daysLeft = differenceInDays(endDate, today);
+    if (daysLeft <= 7) return <Badge className="bg-red-500 text-white">Expires in {daysLeft} days</Badge>;
+    if (daysLeft <= 30) return <Badge className="bg-orange-500 text-white">Expires in {daysLeft} days</Badge>;
+    if (daysLeft <= 60) return <Badge className="bg-yellow-500 text-black">Expires in {daysLeft} days</Badge>;
+    return <Badge className="bg-blue-500 text-white">Expires in {daysLeft} days</Badge>;
+  };
+
   return (
-    <Card className="bg-card border-border" data-testid="calendar-expiration">
+    <div className="space-y-6">
+      <Card className="bg-card border-border" data-testid="expiring-contracts-cards">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg font-semibold flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-orange-500" />
+              Expiring Contracts - {getPeriodLabel()}
+            </CardTitle>
+            <Badge variant="outline">{expiringContracts.length} contract{expiringContracts.length !== 1 ? 's' : ''}</Badge>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {expiringContracts.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {expiringContracts.map((contract) => {
+                const endDate = typeof contract.endDate === 'string' 
+                  ? parseISO(contract.endDate) 
+                  : new Date(contract.endDate!);
+                return (
+                  <div 
+                    key={contract.id} 
+                    className="p-4 border rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                    data-testid={`expiring-contract-card-${contract.id}`}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="font-semibold text-foreground">{contract.partner}</h4>
+                      {getUrgencyBadge(endDate)}
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-1">{contract.licensee}</p>
+                    <p className="text-sm text-muted-foreground mb-2">{contract.territory}</p>
+                    <div className="flex justify-between items-center text-xs text-muted-foreground">
+                      <span>Expires: {format(endDate, "MMM d, yyyy")}</span>
+                      <Link href={`/contracts?edit=${contract.id}`}>
+                        <Button variant="ghost" size="sm" className="h-6 px-2 text-xs">
+                          View
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-center text-muted-foreground py-6">
+              No contracts expiring {getPeriodLabel().toLowerCase()}
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="bg-card border-border" data-testid="calendar-expiration">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-semibold">Contract Calendar</CardTitle>
@@ -334,5 +435,6 @@ export default function ExpirationCalendar({ contracts }: ExpirationCalendarProp
         </Link>
       </CardFooter>
     </Card>
+    </div>
   );
 }

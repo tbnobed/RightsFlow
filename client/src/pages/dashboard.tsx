@@ -85,7 +85,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <RecentActivity contracts={contracts?.slice(0, 5) ?? []} />
         <div className="lg:col-span-2">
-          <ExpirationCalendar contracts={contracts ?? []} />
+          <ExpirationCalendar contracts={contracts ?? []} timePeriod={timePeriod} />
         </div>
       </div>
     </div>
