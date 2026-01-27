@@ -63,6 +63,10 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
 
   const [autoRenew, setAutoRenew] = useState<boolean>(false);
   const [royaltyType, setRoyaltyType] = useState<"Revenue Share" | "Flat Fee">("Revenue Share");
+  const [selectedTerritories, setSelectedTerritories] = useState<string[]>([]);
+  const [otherTerritory, setOtherTerritory] = useState<string>("");
+
+  const TERRITORY_OPTIONS = ["Global", "US", "Canada", "UK"];
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -127,8 +131,26 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
       setDocumentUrl(existingContract.contractDocumentUrl || "");
       setIsAmendment(!!existingContract.parentContractId);
       setAutoRenew(existingContract.autoRenew || false);
+      
+      // Parse existing territory for multi-select
+      if (existingContract.territory) {
+        const territories = existingContract.territory.split(",").map((t: string) => t.trim());
+        const predefined = territories.filter((t: string) => TERRITORY_OPTIONS.includes(t));
+        const other = territories.filter((t: string) => !TERRITORY_OPTIONS.includes(t)).join(", ");
+        setSelectedTerritories(predefined);
+        setOtherTerritory(other);
+      }
     }
   }, [existingContract, contractId, form]);
+
+  // Sync selected territories with form field
+  useEffect(() => {
+    const allTerritories = [...selectedTerritories];
+    if (otherTerritory.trim()) {
+      allTerritories.push(otherTerritory.trim());
+    }
+    form.setValue("territory", allTerritories.join(", "));
+  }, [selectedTerritories, otherTerritory, form]);
 
   const createContractMutation = useMutation({
     mutationFn: async (data: FormData) => {
@@ -158,6 +180,8 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
       setCustomPlatform("");
       setAutoRenew(false);
       setRoyaltyType("Revenue Share");
+      setSelectedTerritories([]);
+      setOtherTerritory("");
       onSuccess?.();
     },
     onError: (error) => {
@@ -268,23 +292,41 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
           <FormField
             control={form.control}
             name="territory"
-            render={({ field }) => (
+            render={() => (
               <FormItem>
                 <FormLabel>Territory *</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger data-testid="select-territory">
-                      <SelectValue placeholder="Select Territory" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="North America">North America</SelectItem>
-                    <SelectItem value="Europe">Europe</SelectItem>
-                    <SelectItem value="Asia Pacific">Asia Pacific</SelectItem>
-                    <SelectItem value="Latin America">Latin America</SelectItem>
-                    <SelectItem value="Global">Global</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="space-y-3">
+                  <div className="flex flex-wrap gap-4">
+                    {TERRITORY_OPTIONS.map((territory) => (
+                      <div key={territory} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`territory-${territory}`}
+                          checked={selectedTerritories.includes(territory)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedTerritories([...selectedTerritories, territory]);
+                            } else {
+                              setSelectedTerritories(selectedTerritories.filter(t => t !== territory));
+                            }
+                          }}
+                          data-testid={`checkbox-territory-${territory.toLowerCase()}`}
+                        />
+                        <Label htmlFor={`territory-${territory}`} className="text-sm cursor-pointer">
+                          {territory}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground">Other territories</Label>
+                    <Input
+                      placeholder="e.g., Australia, Germany, Japan"
+                      value={otherTerritory}
+                      onChange={(e) => setOtherTerritory(e.target.value)}
+                      data-testid="input-other-territory"
+                    />
+                  </div>
+                </div>
                 <FormMessage />
               </FormItem>
             )}
