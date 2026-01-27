@@ -82,9 +82,11 @@ export default function Dashboard() {
 
       <StatsCards stats={stats} periodLabel={stats?.periodLabel} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <RecentActivity contracts={contracts?.slice(0, 5) ?? []} />
-        <ExpirationCalendar contracts={contracts ?? []} />
+        <div className="lg:col-span-2">
+          <ExpirationCalendar contracts={contracts ?? []} />
+        </div>
       </div>
     </div>
   );
