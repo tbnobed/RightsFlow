@@ -11,6 +11,7 @@ import Availability from "@/pages/availability";
 import Royalties from "@/pages/royalties";
 import Reports from "@/pages/reports";
 import Statements from "@/pages/statements";
+import Notifications from "@/pages/notifications";
 import Audit from "@/pages/audit";
 import Users from "@/pages/users";
 import AcceptInvite from "@/pages/accept-invite";
@@ -60,6 +61,7 @@ function Router() {
             <Route path="/availability" component={Availability} />
             <Route path="/royalties" component={Royalties} />
             <Route path="/statements" component={Statements} />
+            <Route path="/notifications" component={Notifications} />
             <Route path="/reports" component={Reports} />
             <Route path="/audit" component={Audit} />
             <Route path="/users" component={Users} />

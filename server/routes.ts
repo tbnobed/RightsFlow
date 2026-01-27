@@ -9,7 +9,7 @@ import {
 import { ObjectPermission } from "./objectAcl";
 import { insertContractSchema, insertRoyaltySchema, availabilityRequestSchema } from "@shared/schema";
 import { z } from "zod";
-import { sendRoyaltyStatement } from "./sendgrid";
+import { sendRoyaltyStatement, sendContractExpiringNotification, sendRevenueReportDueNotification } from "./sendgrid";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication system
@@ -288,6 +288,135 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error sending statement:", error);
       res.status(500).json({ message: "Failed to send statement" });
+    }
+  });
+
+  // Notification routes
+  app.post("/api/notifications/expiring-contracts", isAuthenticated, async (req: any, res) => {
+    try {
+      const { recipientEmail, recipientName, daysThreshold } = req.body;
+      
+      if (!recipientEmail) {
+        return res.status(400).json({ message: "Recipient email is required" });
+      }
+      
+      const contracts = await storage.getContracts();
+      const today = new Date();
+      const threshold = parseInt(daysThreshold) || 30;
+      
+      const expiringContracts = contracts.filter(contract => {
+        if (!contract.endDate || contract.status === "Terminated" || contract.status === "In Perpetuity") {
+          return false;
+        }
+        const endDate = new Date(contract.endDate);
+        const daysRemaining = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        return daysRemaining >= 0 && daysRemaining <= threshold;
+      }).map(contract => {
+        const endDate = new Date(contract.endDate!);
+        const daysRemaining = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        return {
+          partner: contract.partner,
+          content: contract.content || '',
+          endDate: endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          daysRemaining,
+          autoRenewal: contract.autoRenew || false,
+        };
+      }).sort((a, b) => a.daysRemaining - b.daysRemaining);
+
+      if (expiringContracts.length === 0) {
+        return res.json({ success: true, message: "No expiring contracts found within the threshold" });
+      }
+
+      await sendContractExpiringNotification({
+        recipientEmail,
+        recipientName: recipientName || 'Team',
+        contracts: expiringContracts,
+      });
+
+      const userId = req.session.userId;
+      await storage.createAuditLog({
+        action: "Notification Sent",
+        entityType: "Contract Expiration",
+        entityId: `${expiringContracts.length} contracts`,
+        newValues: { recipientEmail, daysThreshold: threshold, contractCount: expiringContracts.length },
+        userId,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
+      });
+
+      res.json({ success: true, message: `Notification sent for ${expiringContracts.length} expiring contract(s)` });
+    } catch (error) {
+      console.error("Error sending expiring contracts notification:", error);
+      res.status(500).json({ message: "Failed to send notification" });
+    }
+  });
+
+  app.post("/api/notifications/revenue-reports-due", isAuthenticated, async (req: any, res) => {
+    try {
+      const { recipientEmail, recipientName } = req.body;
+      
+      if (!recipientEmail) {
+        return res.status(400).json({ message: "Recipient email is required" });
+      }
+      
+      const contracts = await storage.getContracts();
+      const today = new Date();
+      const currentMonth = today.getMonth();
+      const currentYear = today.getFullYear();
+      
+      const contractsWithReporting = contracts.filter(contract => {
+        return contract.status === "Active" && 
+               contract.reportingFrequency && 
+               contract.reportingFrequency !== "None";
+      }).map(contract => {
+        let nextReportDue = "";
+        const freq = contract.reportingFrequency;
+        
+        if (freq === "Monthly") {
+          const nextMonth = new Date(currentYear, currentMonth + 1, 15);
+          nextReportDue = nextMonth.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        } else if (freq === "Quarterly") {
+          const quarterEnd = Math.floor(currentMonth / 3) * 3 + 3;
+          const nextQuarter = new Date(currentYear, quarterEnd, 15);
+          nextReportDue = nextQuarter.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        } else if (freq === "Annually") {
+          const nextYear = new Date(currentYear + 1, 0, 31);
+          nextReportDue = nextYear.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+        
+        return {
+          partner: contract.partner,
+          content: contract.content || '',
+          reportingFrequency: freq || '',
+          nextReportDue,
+        };
+      });
+
+      if (contractsWithReporting.length === 0) {
+        return res.json({ success: true, message: "No contracts with reporting requirements found" });
+      }
+
+      await sendRevenueReportDueNotification({
+        recipientEmail,
+        recipientName: recipientName || 'Team',
+        contracts: contractsWithReporting,
+      });
+
+      const userId = req.session.userId;
+      await storage.createAuditLog({
+        action: "Notification Sent",
+        entityType: "Revenue Report Due",
+        entityId: `${contractsWithReporting.length} contracts`,
+        newValues: { recipientEmail, contractCount: contractsWithReporting.length },
+        userId,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
+      });
+
+      res.json({ success: true, message: `Notification sent for ${contractsWithReporting.length} contract(s) with reporting requirements` });
+    } catch (error) {
+      console.error("Error sending revenue reports due notification:", error);
+      res.status(500).json({ message: "Failed to send notification" });
     }
   });
 
