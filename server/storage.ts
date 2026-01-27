@@ -3,6 +3,8 @@ import {
   contracts,
   royalties,
   auditLogs,
+  contentItems,
+  contractContent,
   type User,
   type UpsertUser,
   type Contract,
@@ -11,9 +13,13 @@ import {
   type InsertRoyalty,
   type AuditLog,
   type InsertAuditLog,
+  type ContentItem,
+  type InsertContentItem,
+  type ContractContent,
+  type InsertContractContent,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, or, gte, lte, desc, sql } from "drizzle-orm";
+import { eq, and, or, gte, lte, desc, sql, inArray } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -73,6 +79,19 @@ export interface IStorage {
     pendingReviews: number;
     periodLabel: string;
   }>;
+
+  // Content catalog operations
+  getContentItems(): Promise<ContentItem[]>;
+  getContentItem(id: string): Promise<ContentItem | undefined>;
+  createContentItem(item: InsertContentItem): Promise<ContentItem>;
+  updateContentItem(id: string, item: Partial<InsertContentItem>): Promise<ContentItem>;
+  deleteContentItem(id: string): Promise<void>;
+
+  // Contract-Content linking
+  getContractContent(contractId: string): Promise<(ContractContent & { content: ContentItem })[]>;
+  getContentContracts(contentId: string): Promise<(ContractContent & { contract: Contract })[]>;
+  linkContentToContract(link: InsertContractContent): Promise<ContractContent>;
+  unlinkContentFromContract(contractId: string, contentId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -455,6 +474,78 @@ export class DatabaseStorage implements IStorage {
       pendingReviews: pendingReviewsResult.count,
       periodLabel,
     };
+  }
+
+  // Content catalog operations
+  async getContentItems(): Promise<ContentItem[]> {
+    return await db.select().from(contentItems).orderBy(desc(contentItems.createdAt));
+  }
+
+  async getContentItem(id: string): Promise<ContentItem | undefined> {
+    const [item] = await db.select().from(contentItems).where(eq(contentItems.id, id));
+    return item;
+  }
+
+  async createContentItem(item: InsertContentItem): Promise<ContentItem> {
+    const [created] = await db.insert(contentItems).values(item).returning();
+    return created;
+  }
+
+  async updateContentItem(id: string, item: Partial<InsertContentItem>): Promise<ContentItem> {
+    const [updated] = await db
+      .update(contentItems)
+      .set({ ...item, updatedAt: new Date() })
+      .where(eq(contentItems.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteContentItem(id: string): Promise<void> {
+    await db.delete(contractContent).where(eq(contractContent.contentId, id));
+    await db.delete(contentItems).where(eq(contentItems.id, id));
+  }
+
+  // Contract-Content linking
+  async getContractContent(contractId: string): Promise<(ContractContent & { content: ContentItem })[]> {
+    const links = await db
+      .select()
+      .from(contractContent)
+      .innerJoin(contentItems, eq(contractContent.contentId, contentItems.id))
+      .where(eq(contractContent.contractId, contractId));
+    
+    return links.map(row => ({
+      ...row.contract_content,
+      content: row.content_items,
+    }));
+  }
+
+  async getContentContracts(contentId: string): Promise<(ContractContent & { contract: Contract })[]> {
+    const links = await db
+      .select()
+      .from(contractContent)
+      .innerJoin(contracts, eq(contractContent.contractId, contracts.id))
+      .where(eq(contractContent.contentId, contentId));
+    
+    return links.map(row => ({
+      ...row.contract_content,
+      contract: row.contracts,
+    }));
+  }
+
+  async linkContentToContract(link: InsertContractContent): Promise<ContractContent> {
+    const [created] = await db.insert(contractContent).values(link).returning();
+    return created;
+  }
+
+  async unlinkContentFromContract(contractId: string, contentId: string): Promise<void> {
+    await db
+      .delete(contractContent)
+      .where(
+        and(
+          eq(contractContent.contractId, contractId),
+          eq(contractContent.contentId, contentId)
+        )
+      );
   }
 }
 

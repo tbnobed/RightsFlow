@@ -7,7 +7,7 @@ import {
   ObjectNotFoundError,
 } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
-import { insertContractSchema, insertRoyaltySchema, availabilityRequestSchema } from "@shared/schema";
+import { insertContractSchema, insertRoyaltySchema, availabilityRequestSchema, insertContentItemSchema, insertContractContentSchema } from "@shared/schema";
 import { z } from "zod";
 import { sendRoyaltyStatement, sendContractExpiringNotification, sendRevenueReportDueNotification } from "./sendgrid";
 
@@ -544,6 +544,179 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error exporting royalties:", error);
       res.status(500).json({ message: "Failed to export royalties" });
+    }
+  });
+
+  // Content catalog routes
+  app.get("/api/content", isAuthenticated, async (req, res) => {
+    try {
+      const items = await storage.getContentItems();
+      res.json(items);
+    } catch (error) {
+      console.error("Error fetching content items:", error);
+      res.status(500).json({ message: "Failed to fetch content items" });
+    }
+  });
+
+  app.get("/api/content/:id", isAuthenticated, async (req, res) => {
+    try {
+      const item = await storage.getContentItem(req.params.id);
+      if (!item) {
+        return res.status(404).json({ message: "Content item not found" });
+      }
+      res.json(item);
+    } catch (error) {
+      console.error("Error fetching content item:", error);
+      res.status(500).json({ message: "Failed to fetch content item" });
+    }
+  });
+
+  app.post("/api/content", isAuthenticated, async (req: any, res) => {
+    try {
+      const validatedData = insertContentItemSchema.parse({
+        ...req.body,
+        createdBy: req.session.userId,
+      });
+      const item = await storage.createContentItem(validatedData);
+      
+      await storage.createAuditLog({
+        action: "Content Created",
+        entityType: "Content",
+        entityId: item.id,
+        newValues: item,
+        userId: req.session.userId,
+        ipAddress: req.ip,
+        userAgent: req.headers["user-agent"],
+      });
+      
+      res.status(201).json(item);
+    } catch (error) {
+      console.error("Error creating content item:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create content item" });
+    }
+  });
+
+  app.put("/api/content/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const existingItem = await storage.getContentItem(req.params.id);
+      if (!existingItem) {
+        return res.status(404).json({ message: "Content item not found" });
+      }
+      
+      const item = await storage.updateContentItem(req.params.id, req.body);
+      
+      await storage.createAuditLog({
+        action: "Content Updated",
+        entityType: "Content",
+        entityId: item.id,
+        oldValues: existingItem,
+        newValues: item,
+        userId: req.session.userId,
+        ipAddress: req.ip,
+        userAgent: req.headers["user-agent"],
+      });
+      
+      res.json(item);
+    } catch (error) {
+      console.error("Error updating content item:", error);
+      res.status(500).json({ message: "Failed to update content item" });
+    }
+  });
+
+  app.delete("/api/content/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const existingItem = await storage.getContentItem(req.params.id);
+      if (!existingItem) {
+        return res.status(404).json({ message: "Content item not found" });
+      }
+      
+      await storage.deleteContentItem(req.params.id);
+      
+      await storage.createAuditLog({
+        action: "Content Deleted",
+        entityType: "Content",
+        entityId: req.params.id,
+        oldValues: existingItem,
+        userId: req.session.userId,
+        ipAddress: req.ip,
+        userAgent: req.headers["user-agent"],
+      });
+      
+      res.json({ message: "Content item deleted" });
+    } catch (error) {
+      console.error("Error deleting content item:", error);
+      res.status(500).json({ message: "Failed to delete content item" });
+    }
+  });
+
+  // Contract-Content linking routes
+  app.get("/api/contracts/:id/content", isAuthenticated, async (req, res) => {
+    try {
+      const links = await storage.getContractContent(req.params.id);
+      res.json(links);
+    } catch (error) {
+      console.error("Error fetching contract content:", error);
+      res.status(500).json({ message: "Failed to fetch contract content" });
+    }
+  });
+
+  app.get("/api/content/:id/contracts", isAuthenticated, async (req, res) => {
+    try {
+      const links = await storage.getContentContracts(req.params.id);
+      res.json(links);
+    } catch (error) {
+      console.error("Error fetching content contracts:", error);
+      res.status(500).json({ message: "Failed to fetch content contracts" });
+    }
+  });
+
+  app.post("/api/contracts/:id/content", isAuthenticated, async (req: any, res) => {
+    try {
+      const { contentId, notes } = req.body;
+      
+      const link = await storage.linkContentToContract({
+        contractId: req.params.id,
+        contentId,
+        notes,
+      });
+      
+      await storage.createAuditLog({
+        action: "Content Linked to Contract",
+        entityType: "ContractContent",
+        entityId: link.id,
+        newValues: link,
+        userId: req.session.userId,
+        ipAddress: req.ip,
+        userAgent: req.headers["user-agent"],
+      });
+      
+      res.status(201).json(link);
+    } catch (error) {
+      console.error("Error linking content to contract:", error);
+      res.status(500).json({ message: "Failed to link content to contract" });
+    }
+  });
+
+  app.delete("/api/contracts/:contractId/content/:contentId", isAuthenticated, async (req: any, res) => {
+    try {
+      await storage.unlinkContentFromContract(req.params.contractId, req.params.contentId);
+      
+      await storage.createAuditLog({
+        action: "Content Unlinked from Contract",
+        entityType: "ContractContent",
+        entityId: `${req.params.contractId}-${req.params.contentId}`,
+        userId: req.session.userId,
+        ipAddress: req.ip,
+        userAgent: req.headers["user-agent"],
+      });
+      
+      res.json({ message: "Content unlinked from contract" });
+    } catch (error) {
+      console.error("Error unlinking content from contract:", error);
+      res.status(500).json({ message: "Failed to unlink content from contract" });
     }
   });
 
