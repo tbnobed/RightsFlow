@@ -10,6 +10,7 @@ import Contracts from "@/pages/contracts";
 import Availability from "@/pages/availability";
 import Royalties from "@/pages/royalties";
 import Reports from "@/pages/reports";
+import Statements from "@/pages/statements";
 import Audit from "@/pages/audit";
 import Users from "@/pages/users";
 import AcceptInvite from "@/pages/accept-invite";
@@ -58,6 +59,7 @@ function Router() {
             <Route path="/contracts" component={Contracts} />
             <Route path="/availability" component={Availability} />
             <Route path="/royalties" component={Royalties} />
+            <Route path="/statements" component={Statements} />
             <Route path="/reports" component={Reports} />
             <Route path="/audit" component={Audit} />
             <Route path="/users" component={Users} />

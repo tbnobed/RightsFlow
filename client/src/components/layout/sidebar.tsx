@@ -6,6 +6,7 @@ import {
   File, 
   Calendar, 
   DollarSign, 
+  FileText,
   ChartBar, 
   History,
   Users
@@ -18,6 +19,7 @@ const getNavigation = (isAdmin: boolean) => {
     { name: "Contracts", href: "/contracts", icon: File },
     { name: "Rights Availability", href: "/availability", icon: Calendar },
     { name: "Royalties", href: "/royalties", icon: DollarSign },
+    { name: "Statements", href: "/statements", icon: FileText },
     { name: "Reports", href: "/reports", icon: ChartBar },
     { name: "Audit Trail", href: "/audit", icon: History },
   ];

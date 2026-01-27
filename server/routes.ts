@@ -9,6 +9,7 @@ import {
 import { ObjectPermission } from "./objectAcl";
 import { insertContractSchema, insertRoyaltySchema, availabilityRequestSchema } from "@shared/schema";
 import { z } from "zod";
+import { sendRoyaltyStatement } from "./sendgrid";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication system
@@ -250,6 +251,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Validation error", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to update royalty" });
+    }
+  });
+
+  // Statement routes
+  app.post("/api/statements/send", isAuthenticated, async (req: any, res) => {
+    try {
+      const { partner, recipientEmail, periodStart, periodEnd, summary, royalties } = req.body;
+      
+      if (!partner || !recipientEmail) {
+        return res.status(400).json({ message: "Partner and recipient email are required" });
+      }
+      
+      await sendRoyaltyStatement({
+        partner,
+        recipientEmail,
+        periodStart: periodStart || "",
+        periodEnd: periodEnd || "",
+        summary: summary || { totalRevenue: 0, totalRoyalties: 0, paidRoyalties: 0, pendingRoyalties: 0, transactionCount: 0 },
+        royalties: royalties || [],
+      });
+      
+      // Create audit log
+      const userId = req.session.userId;
+      await storage.createAuditLog({
+        action: "Statement Sent",
+        entityType: "Statement",
+        entityId: partner,
+        newValues: { partner, recipientEmail, periodStart, periodEnd },
+        userId,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
+      });
+      
+      res.json({ success: true, message: `Statement sent to ${recipientEmail}` });
+    } catch (error) {
+      console.error("Error sending statement:", error);
+      res.status(500).json({ message: "Failed to send statement" });
     }
   });
 
