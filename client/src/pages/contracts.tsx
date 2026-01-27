@@ -1,24 +1,35 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 import ContractTable from "@/components/contracts/contract-table";
 import ContractForm from "@/components/contracts/contract-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Filter, Download } from "lucide-react";
+import { Plus, Filter, Download, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 
 export default function Contracts() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading } = useAuth();
+  const [location, setLocation] = useLocation();
+  
+  const urlParams = useMemo(() => new URLSearchParams(window.location.search), [location]);
+  const urlFilter = urlParams.get('filter');
+  
   const [filters, setFilters] = useState({
     search: "",
     status: "",
     territory: "",
   });
   const [showForm, setShowForm] = useState(false);
+  
+  const clearUrlFilter = () => {
+    setLocation('/contracts');
+  };
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -35,18 +46,27 @@ export default function Contracts() {
   }, [isAuthenticated, isLoading, toast]);
 
   const { data: contracts, isLoading: contractsLoading, refetch } = useQuery({
-    queryKey: ["/api/contracts", filters],
+    queryKey: ["/api/contracts", filters, urlFilter],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (filters.search) params.append('search', filters.search);
       if (filters.status && filters.status !== 'all') params.append('status', filters.status);
       if (filters.territory && filters.territory !== 'all') params.append('territory', filters.territory);
+      if (urlFilter) params.append('filter', urlFilter);
       
       const response = await fetch(`/api/contracts?${params}`);
       if (!response.ok) throw new Error('Failed to fetch contracts');
       return response.json();
     },
   });
+  
+  const getFilterLabel = () => {
+    switch (urlFilter) {
+      case 'expiring': return 'Expiring in 60 days';
+      case 'active': return 'Active contracts';
+      default: return null;
+    }
+  };
 
   const handleExport = async () => {
     try {
@@ -82,6 +102,16 @@ export default function Contracts() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Contract Management</h1>
           <p className="text-muted-foreground">Manage intellectual property licensing contracts</p>
+          {urlFilter && getFilterLabel() && (
+            <div className="mt-2">
+              <Badge variant="secondary" className="gap-1">
+                Showing: {getFilterLabel()}
+                <button onClick={clearUrlFilter} className="ml-1 hover:bg-muted rounded-full p-0.5">
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            </div>
+          )}
         </div>
         <div className="flex gap-2">
           <Button onClick={handleExport} variant="outline" data-testid="button-export">

@@ -44,6 +44,7 @@ export interface IStorage {
     status?: string;
     territory?: string;
     search?: string;
+    filter?: string;
   }): Promise<Contract[]>;
 
   // Rights availability
@@ -211,6 +212,7 @@ export class DatabaseStorage implements IStorage {
     status?: string;
     territory?: string;
     search?: string;
+    filter?: string;
   }): Promise<Contract[]> {
     let query = db.select().from(contracts);
     
@@ -232,6 +234,21 @@ export class DatabaseStorage implements IStorage {
           sql`${contracts.licensor} ILIKE ${`%${filters.search}%`}`
         )
       );
+    }
+    
+    if (filters.filter === 'expiring') {
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
+      const expiringDate = new Date();
+      expiringDate.setDate(expiringDate.getDate() + 60);
+      const expiringDateStr = expiringDate.toISOString().split('T')[0];
+      
+      conditions.push(eq(contracts.status, 'Active'));
+      conditions.push(sql`${contracts.endDate} IS NOT NULL`);
+      conditions.push(sql`${contracts.endDate}::date >= ${todayStr}::date`);
+      conditions.push(sql`${contracts.endDate}::date <= ${expiringDateStr}::date`);
+    } else if (filters.filter === 'active') {
+      conditions.push(eq(contracts.status, 'Active'));
     }
     
     if (conditions.length > 0) {
