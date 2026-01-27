@@ -112,6 +112,83 @@ export default function Reports() {
     return { totalRevenue, totalRoyalties, paidRoyalties, pendingRoyalties, count: royalties.length };
   };
 
+  const getPartnerPerformance = () => {
+    const partnerData: Record<string, { revenue: number; royalties: number; contracts: number }> = {};
+    
+    royalties.forEach(r => {
+      const partner = r.contract?.partner || 'Unknown';
+      if (!partnerData[partner]) {
+        partnerData[partner] = { revenue: 0, royalties: 0, contracts: 0 };
+      }
+      partnerData[partner].revenue += parseFloat(r.revenue || "0");
+      partnerData[partner].royalties += parseFloat(r.royaltyAmount || "0");
+    });
+
+    contracts.forEach(c => {
+      if (!partnerData[c.partner]) {
+        partnerData[c.partner] = { revenue: 0, royalties: 0, contracts: 0 };
+      }
+      partnerData[c.partner].contracts += 1;
+    });
+
+    return Object.entries(partnerData)
+      .map(([partner, data]) => ({ partner, ...data }))
+      .sort((a, b) => b.revenue - a.revenue);
+  };
+
+  const getPlatformPerformance = () => {
+    const platformData: Record<string, { contracts: number; revenue: number }> = {};
+    
+    contracts.forEach(c => {
+      c.platforms?.forEach(platform => {
+        if (!platformData[platform]) {
+          platformData[platform] = { contracts: 0, revenue: 0 };
+        }
+        platformData[platform].contracts += 1;
+      });
+    });
+
+    royalties.forEach(r => {
+      r.contract?.platforms?.forEach(platform => {
+        if (!platformData[platform]) {
+          platformData[platform] = { contracts: 0, revenue: 0 };
+        }
+        platformData[platform].revenue += parseFloat(r.revenue || "0") / (r.contract?.platforms?.length || 1);
+      });
+    });
+
+    return Object.entries(platformData)
+      .map(([platform, data]) => ({ platform, ...data }))
+      .sort((a, b) => b.revenue - a.revenue);
+  };
+
+  const getPaymentsDue = () => {
+    const pendingRoyalties = royalties.filter(r => r.status === "Pending" || r.status === "Calculated");
+    
+    return pendingRoyalties.map(r => {
+      const contract = r.contract;
+      const paymentTerms = contract?.paymentTerms || "Net 30";
+      const daysToAdd = paymentTerms === "Net 60" ? 60 : paymentTerms === "Net 90" ? 90 : 30;
+      
+      const periodParts = r.period?.split(' ') || [];
+      let dueDate = new Date();
+      if (periodParts.length >= 2) {
+        const monthYear = periodParts.slice(-2).join(' ');
+        const parsedDate = new Date(monthYear + " 1");
+        if (!isNaN(parsedDate.getTime())) {
+          dueDate = addDays(new Date(parsedDate.getFullYear(), parsedDate.getMonth() + 1, 0), daysToAdd);
+        }
+      }
+
+      return {
+        ...r,
+        dueDate,
+        paymentTerms,
+        isOverdue: dueDate < new Date(),
+      };
+    }).sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime());
+  };
+
   const formatCurrency = (amount: number) => 
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 
@@ -138,6 +215,29 @@ export default function Reports() {
         csvContent += `"${c.partner}","${c.content}","${c.endDate}","${daysRemaining}","${c.platforms?.join('; ')}","${c.autoRenewal}"\n`;
       });
       filename = "expiring-contracts.csv";
+    } else if (reportType === "partner-performance") {
+      csvContent = "Partner,Contracts,Revenue,Royalties\n";
+      getPartnerPerformance().forEach(p => {
+        csvContent += `"${p.partner}","${p.contracts}","${p.revenue}","${p.royalties}"\n`;
+      });
+      filename = "partner-performance.csv";
+    } else if (reportType === "platform-performance") {
+      csvContent = "Platform,Contracts,Revenue\n";
+      getPlatformPerformance().forEach(p => {
+        csvContent += `"${p.platform}","${p.contracts}","${p.revenue}"\n`;
+      });
+      filename = "platform-performance.csv";
+    } else if (reportType === "payments-due") {
+      csvContent = "Partner,Period,Amount,Payment Terms,Due Date,Status\n";
+      getPaymentsDue().forEach(p => {
+        csvContent += `"${p.contract?.partner || 'N/A'}","${p.period}","${p.royaltyAmount}","${p.paymentTerms}","${format(p.dueDate, 'yyyy-MM-dd')}","${p.isOverdue ? 'Overdue' : 'Pending'}"\n`;
+      });
+      filename = "payments-due.csv";
+    }
+
+    if (!csvContent) {
+      toast({ title: "Error", description: "No data to export", variant: "destructive" });
+      return;
     }
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -180,6 +280,9 @@ export default function Reports() {
                 <SelectItem value="contract-summary">Contract Summary</SelectItem>
                 <SelectItem value="royalty-statements">Royalty Statements</SelectItem>
                 <SelectItem value="expiring-contracts">Expiring Contracts</SelectItem>
+                <SelectItem value="partner-performance">Partner Performance</SelectItem>
+                <SelectItem value="platform-performance">Platform Performance</SelectItem>
+                <SelectItem value="payments-due">Payments Due</SelectItem>
               </SelectContent>
             </Select>
 
@@ -488,6 +591,132 @@ export default function Reports() {
                       </TableBody>
                     </Table>
                   )}
+                </CardContent>
+              </Card>
+            </>
+          )}
+
+          {reportType === "partner-performance" && (
+            <>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Partner Performance</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Partner</TableHead>
+                        <TableHead className="text-right">Contracts</TableHead>
+                        <TableHead className="text-right">Total Revenue</TableHead>
+                        <TableHead className="text-right">Total Royalties</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {getPartnerPerformance().map(p => (
+                        <TableRow key={p.partner} data-testid={`partner-row-${p.partner}`}>
+                          <TableCell className="font-medium">{p.partner}</TableCell>
+                          <TableCell className="text-right">{p.contracts}</TableCell>
+                          <TableCell className="text-right">{formatCurrency(p.revenue)}</TableCell>
+                          <TableCell className="text-right">{formatCurrency(p.royalties)}</TableCell>
+                        </TableRow>
+                      ))}
+                      {getPartnerPerformance().length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                            No partner data available
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </>
+          )}
+
+          {reportType === "platform-performance" && (
+            <>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Platform Performance</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Platform</TableHead>
+                        <TableHead className="text-right">Contracts</TableHead>
+                        <TableHead className="text-right">Revenue</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {getPlatformPerformance().map(p => (
+                        <TableRow key={p.platform} data-testid={`platform-row-${p.platform}`}>
+                          <TableCell className="font-medium">{p.platform}</TableCell>
+                          <TableCell className="text-right">{p.contracts}</TableCell>
+                          <TableCell className="text-right">{formatCurrency(p.revenue)}</TableCell>
+                        </TableRow>
+                      ))}
+                      {getPlatformPerformance().length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
+                            No platform data available
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </>
+          )}
+
+          {reportType === "payments-due" && (
+            <>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <DollarSign className="h-5 w-5 text-green-500" />
+                    Payments Due
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Partner</TableHead>
+                        <TableHead>Period</TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
+                        <TableHead>Payment Terms</TableHead>
+                        <TableHead>Due Date</TableHead>
+                        <TableHead>Status</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {getPaymentsDue().map(p => (
+                        <TableRow key={p.id} data-testid={`payment-row-${p.id}`}>
+                          <TableCell className="font-medium">{p.contract?.partner || 'N/A'}</TableCell>
+                          <TableCell>{p.period}</TableCell>
+                          <TableCell className="text-right">{formatCurrency(parseFloat(p.royaltyAmount || "0"))}</TableCell>
+                          <TableCell>{p.paymentTerms}</TableCell>
+                          <TableCell>{format(p.dueDate, 'MMM dd, yyyy')}</TableCell>
+                          <TableCell>
+                            <Badge variant={p.isOverdue ? "destructive" : "secondary"}>
+                              {p.isOverdue ? "Overdue" : "Due"}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {getPaymentsDue().length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                            No pending payments
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
                 </CardContent>
               </Card>
             </>
