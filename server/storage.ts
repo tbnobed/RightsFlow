@@ -66,11 +66,12 @@ export interface IStorage {
   createAuditLog(auditLog: InsertAuditLog): Promise<AuditLog>;
 
   // Dashboard stats
-  getDashboardStats(): Promise<{
+  getDashboardStats(period?: string): Promise<{
     activeContracts: number;
     expiringSoon: number;
     totalRoyalties: string;
     pendingReviews: number;
+    periodLabel: string;
   }>;
 }
 
@@ -347,11 +348,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Dashboard stats
-  async getDashboardStats(): Promise<{
+  async getDashboardStats(period: string = "month"): Promise<{
     activeContracts: number;
     expiringSoon: number;
     totalRoyalties: string;
     pendingReviews: number;
+    periodLabel: string;
   }> {
     const [activeContractsResult] = await db
       .select({ count: sql<number>`count(*)` })
@@ -371,10 +373,37 @@ export class DatabaseStorage implements IStorage {
         )
       );
 
+    // Calculate date range based on period
+    const now = new Date();
+    let periodStart: Date;
+    let periodLabel: string;
+    
+    switch (period) {
+      case "quarter":
+        const quarterMonth = Math.floor(now.getMonth() / 3) * 3;
+        periodStart = new Date(now.getFullYear(), quarterMonth, 1);
+        periodLabel = `Q${Math.floor(now.getMonth() / 3) + 1} ${now.getFullYear()}`;
+        break;
+      case "year":
+        periodStart = new Date(now.getFullYear(), 0, 1);
+        periodLabel = `${now.getFullYear()}`;
+        break;
+      case "month":
+      default:
+        periodStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        periodLabel = now.toLocaleString('default', { month: 'long', year: 'numeric' });
+        break;
+    }
+
     const [totalRoyaltiesResult] = await db
       .select({ total: sql<string>`COALESCE(SUM(royalty_amount), 0)` })
       .from(royalties)
-      .where(eq(royalties.status, "Paid"));
+      .where(
+        and(
+          eq(royalties.status, "Paid"),
+          gte(royalties.calculatedAt, periodStart)
+        )
+      );
 
     const [pendingReviewsResult] = await db
       .select({ count: sql<number>`count(*)` })
@@ -386,6 +415,7 @@ export class DatabaseStorage implements IStorage {
       expiringSoon: expiringSoonResult.count,
       totalRoyalties: totalRoyaltiesResult.total,
       pendingReviews: pendingReviewsResult.count,
+      periodLabel,
     };
   }
 }

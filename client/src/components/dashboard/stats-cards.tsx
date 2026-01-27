@@ -8,9 +8,10 @@ interface StatsCardsProps {
     totalRoyalties: string;
     pendingReviews: number;
   };
+  periodLabel?: string;
 }
 
-export default function StatsCards({ stats }: StatsCardsProps) {
+export default function StatsCards({ stats, periodLabel }: StatsCardsProps) {
   if (!stats) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -35,7 +36,7 @@ export default function StatsCards({ stats }: StatsCardsProps) {
       testId: "stat-active-contracts",
     },
     {
-      title: "Expiring Soon",
+      title: "Expiring Soon (60 days)",
       value: stats.expiringSoon,
       icon: AlertTriangle,
       color: "text-amber-600",
@@ -43,7 +44,7 @@ export default function StatsCards({ stats }: StatsCardsProps) {
       testId: "stat-expiring-soon",
     },
     {
-      title: "Total Royalties",
+      title: `Royalties${periodLabel ? ` (${periodLabel})` : ""}`,
       value: `$${Number(stats.totalRoyalties).toLocaleString()}`,
       icon: DollarSign,
       color: "text-green-600",
