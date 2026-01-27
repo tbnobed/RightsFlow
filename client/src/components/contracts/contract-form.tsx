@@ -109,7 +109,6 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
       licensee: "",
       territory: "",
       platform: "",
-      content: "",
       startDate: "",
       endDate: "",
       royaltyType: "Revenue Share",
@@ -137,7 +136,6 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
         licensee: existingContract.licensee || "",
         territory: existingContract.territory || "",
         platform: isPredefined ? existingPlatform : "",
-        content: existingContract.content || "",
         startDate: existingContract.startDate || "",
         endDate: existingContract.endDate || "",
         royaltyType: existingContract.royaltyType || "Revenue Share",
@@ -473,25 +471,6 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
                     </div>
                   </PopoverContent>
                 </Popover>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="content"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Content</FormLabel>
-                <FormControl>
-                  <Input 
-                    placeholder="Enter content details (optional)" 
-                    data-testid="input-content"
-                    {...field}
-                    value={field.value ?? ""}
-                  />
-                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
