@@ -1,14 +1,31 @@
 import { useState } from "react";
-import { Contract } from "@shared/schema";
+import { Contract, ContentItem } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Eye, Edit, Trash2 } from "lucide-react";
+import { Eye, Edit, Trash2, Film, Tv, Radio, FileVideo, Plus, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import ContractForm from "./contract-form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+function getContentIcon(type: string) {
+  switch (type) {
+    case "Film":
+      return <Film className="h-4 w-4" />;
+    case "TV Series":
+      return <Tv className="h-4 w-4" />;
+    case "TBN FAST":
+    case "WoF FAST":
+      return <Radio className="h-4 w-4" />;
+    case "TBN Linear":
+      return <FileVideo className="h-4 w-4" />;
+    default:
+      return <Film className="h-4 w-4" />;
+  }
+}
 
 interface ContractTableProps {
   contracts: Contract[];
@@ -16,10 +33,66 @@ interface ContractTableProps {
   onUpdate: () => void;
 }
 
+interface ContractContentLink {
+  id: string;
+  contractId: string;
+  contentId: string;
+  notes: string | null;
+  createdAt: Date | null;
+  content: ContentItem;
+}
+
 export default function ContractTable({ contracts, isLoading, onUpdate }: ContractTableProps) {
   const { toast } = useToast();
   const [viewContract, setViewContract] = useState<Contract | null>(null);
   const [editContract, setEditContract] = useState<Contract | null>(null);
+  const [selectedContentId, setSelectedContentId] = useState<string>("");
+
+  const { data: contractContent = [], refetch: refetchContractContent } = useQuery<ContractContentLink[]>({
+    queryKey: ["/api/contracts", viewContract?.id, "content"],
+    queryFn: async () => {
+      if (!viewContract) return [];
+      const response = await fetch(`/api/contracts/${viewContract.id}/content`);
+      if (!response.ok) throw new Error("Failed to fetch contract content");
+      return response.json();
+    },
+    enabled: !!viewContract,
+  });
+
+  const { data: allContentItems = [] } = useQuery<ContentItem[]>({
+    queryKey: ["/api/content"],
+    enabled: !!viewContract,
+  });
+
+  const linkedContentIds = new Set(contractContent.map((c) => c.contentId));
+  const availableContent = allContentItems.filter((c) => !linkedContentIds.has(c.id));
+
+  const linkContentMutation = useMutation({
+    mutationFn: async ({ contractId, contentId }: { contractId: string; contentId: string }) => {
+      return await apiRequest("POST", `/api/contracts/${contractId}/content`, { contentId });
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "Content linked to contract" });
+      refetchContractContent();
+      setSelectedContentId("");
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to link content", variant: "destructive" });
+    },
+  });
+
+  const unlinkContentMutation = useMutation({
+    mutationFn: async ({ contractId, contentId }: { contractId: string; contentId: string }) => {
+      return await apiRequest("DELETE", `/api/contracts/${contractId}/content/${contentId}`);
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "Content unlinked from contract" });
+      refetchContractContent();
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to unlink content", variant: "destructive" });
+    },
+  });
 
   const deleteContractMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -282,6 +355,81 @@ export default function ContractTable({ contracts, isLoading, onUpdate }: Contra
                   </p>
                 </div>
               )}
+
+              <div className="border-t pt-4 mt-4">
+                <label className="text-sm font-medium text-muted-foreground">Linked Content</label>
+                
+                {contractContent.length > 0 ? (
+                  <div className="mt-2 space-y-2">
+                    {contractContent.map((link) => (
+                      <div 
+                        key={link.id} 
+                        className="flex items-center justify-between bg-muted/50 rounded-md px-3 py-2"
+                        data-testid={`linked-content-${link.contentId}`}
+                      >
+                        <div className="flex items-center gap-2">
+                          {getContentIcon(link.content.type)}
+                          <span className="text-sm font-medium">{link.content.title}</span>
+                          <Badge variant="outline" className="text-xs">{link.content.type}</Badge>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => unlinkContentMutation.mutate({ 
+                            contractId: viewContract.id, 
+                            contentId: link.contentId 
+                          })}
+                          disabled={unlinkContentMutation.isPending}
+                          data-testid={`button-unlink-content-${link.contentId}`}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground mt-2">No content linked to this contract.</p>
+                )}
+
+                <div className="mt-3 flex gap-2">
+                  <Select value={selectedContentId} onValueChange={setSelectedContentId}>
+                    <SelectTrigger className="flex-1" data-testid="select-add-content">
+                      <SelectValue placeholder="Select content to link..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableContent.length === 0 ? (
+                        <SelectItem value="_none" disabled>No available content</SelectItem>
+                      ) : (
+                        availableContent.map((item) => (
+                          <SelectItem key={item.id} value={item.id}>
+                            <div className="flex items-center gap-2">
+                              {getContentIcon(item.type)}
+                              <span>{item.title}</span>
+                              <span className="text-muted-foreground text-xs">({item.type})</span>
+                            </div>
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    onClick={() => {
+                      if (selectedContentId && viewContract) {
+                        linkContentMutation.mutate({ 
+                          contractId: viewContract.id, 
+                          contentId: selectedContentId 
+                        });
+                      }
+                    }}
+                    disabled={!selectedContentId || linkContentMutation.isPending}
+                    data-testid="button-link-content"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Link
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
         </DialogContent>
