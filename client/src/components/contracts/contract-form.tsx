@@ -11,10 +11,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, X, Film, Tv, Radio, FileVideo } from "lucide-react";
+import { ChevronDown, X, Film, Tv, Radio, FileVideo, Upload, FileText, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useRef, type ChangeEvent } from "react";
 
 function getContentIcon(type: string) {
   switch (type) {
@@ -58,6 +59,9 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
   const { toast } = useToast();
   const [documentUrl, setDocumentUrl] = useState<string>("");
   const [isAmendment, setIsAmendment] = useState<boolean>(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch existing contract data if editing
   const { data: existingContract } = useQuery({
@@ -212,11 +216,39 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
       const contract = await response.json();
       const targetContractId = contractId || contract.id;
       
-      // If document was uploaded, attach it to the contract
-      if (documentUrl) {
-        await apiRequest("PUT", `/api/contracts/${targetContractId}/document`, {
-          documentURL: documentUrl,
-        });
+      // Upload document if a file was selected
+      if (selectedFile) {
+        setIsUploading(true);
+        try {
+          const formData = new window.FormData();
+          formData.append('file', selectedFile);
+          
+          const uploadResponse = await fetch(`/api/contracts/${targetContractId}/upload`, {
+            method: 'POST',
+            credentials: 'include',
+            body: formData,
+          });
+          
+          if (!uploadResponse.ok) {
+            throw new Error('Failed to upload document');
+          }
+          
+          const uploadResult = await uploadResponse.json();
+          setDocumentUrl(uploadResult.filePath);
+          
+          toast({
+            title: "Document Uploaded",
+            description: "Contract document uploaded successfully",
+          });
+        } catch (error) {
+          toast({
+            title: "Upload Error",
+            description: "Failed to upload document, but contract was saved",
+            variant: "destructive",
+          });
+        } finally {
+          setIsUploading(false);
+        }
       }
       
       // Handle content linking
@@ -244,6 +276,7 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
       });
       form.reset();
       setDocumentUrl("");
+      setSelectedFile(null);
       setAutoRenew(false);
       setRoyaltyType("Revenue Share");
       setSelectedTerritories([]);
@@ -262,30 +295,21 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
     },
   });
 
-  const getUploadParameters = async () => {
-    const response = await fetch('/api/objects/upload', {
-      method: 'POST',
-      credentials: 'include',
-    });
-    if (!response.ok) throw new Error('Failed to get upload URL');
-    const { uploadURL } = await response.json();
-    return {
-      method: 'PUT' as const,
-      url: uploadURL,
-    };
+  const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const maxSize = 50 * 1024 * 1024; // 50MB
+      if (file.size > maxSize) {
+        toast({
+          title: "File too large",
+          description: "Maximum file size is 50MB",
+          variant: "destructive",
+        });
+        return;
+      }
+      setSelectedFile(file);
+    }
   };
-
-  // Temporarily disabled file upload functionality
-  // const handleUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
-  //   if (result.successful.length > 0) {
-  //     const uploadURL = result.successful[0].uploadURL as string;
-  //     setDocumentUrl(uploadURL);
-  //     toast({
-  //       title: "Success",
-  //       description: "Document uploaded successfully",
-  //     });
-  //   }
-  // };
 
   const onSubmit = (data: FormData) => {
     const finalData = {
@@ -868,11 +892,86 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
           <div className="md:col-span-2">
             <FormLabel>Contract Document</FormLabel>
             <div className="mt-2">
-              {/* Temporarily disabled file upload functionality */}
-              <div className="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-muted rounded-lg text-muted-foreground">
-                <span>📁</span>
-                <span>File upload temporarily disabled for testing</span>
-              </div>
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept=".pdf,.doc,.docx"
+                onChange={handleFileSelect}
+                className="hidden"
+                data-testid="input-contract-file"
+              />
+              
+              {documentUrl && !selectedFile ? (
+                <div className="flex items-center gap-3 p-3 border rounded-lg bg-muted/50">
+                  <FileText className="h-5 w-5 text-primary" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Current Document</p>
+                    <a 
+                      href={documentUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-xs text-primary hover:underline"
+                    >
+                      View Document
+                    </a>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    data-testid="button-replace-document"
+                  >
+                    Replace
+                  </Button>
+                </div>
+              ) : selectedFile ? (
+                <div className="flex items-center gap-3 p-3 border rounded-lg bg-muted/50">
+                  <FileText className="h-5 w-5 text-primary" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{selectedFile.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedFile(null);
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = '';
+                      }
+                    }}
+                    data-testid="button-remove-file"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full h-24 border-2 border-dashed"
+                  onClick={() => fileInputRef.current?.click()}
+                  data-testid="button-upload-document"
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <Upload className="h-6 w-6 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">
+                      Click to upload PDF or Word document
+                    </span>
+                  </div>
+                </Button>
+              )}
+              
+              {isUploading && (
+                <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Uploading document...</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
