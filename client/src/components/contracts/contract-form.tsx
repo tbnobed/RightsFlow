@@ -316,6 +316,9 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
       ...data,
       autoRenew: autoRenew,
       endDate: autoRenew ? undefined : data.endDate,
+      royaltyRate: data.royaltyRate && data.royaltyRate !== "" ? data.royaltyRate : null,
+      flatFeeAmount: data.flatFeeAmount && data.flatFeeAmount !== "" ? data.flatFeeAmount : null,
+      minimumPayment: data.minimumPayment && data.minimumPayment !== "" ? data.minimumPayment : null,
     };
     createContractMutation.mutate(finalData);
   };
