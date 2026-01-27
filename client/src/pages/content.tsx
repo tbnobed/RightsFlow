@@ -39,8 +39,18 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2, Film, Tv, Radio, Search, FileVideo } from "lucide-react";
-import type { ContentItem } from "@shared/schema";
+import { Plus, Pencil, Trash2, Film, Tv, Radio, Search, FileVideo, Eye, File } from "lucide-react";
+import type { ContentItem, Contract } from "@shared/schema";
+import { Link } from "wouter";
+
+interface ContentContractLink {
+  id: string;
+  contractId: string;
+  contentId: string;
+  notes: string | null;
+  createdAt: Date | null;
+  contract: Contract;
+}
 
 const CONTENT_TYPES = ["Film", "TV Series", "TBN FAST", "TBN Linear", "WoF FAST"] as const;
 
@@ -98,12 +108,24 @@ export default function Content() {
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState<ContentItem | null>(null);
   const [deleteItem, setDeleteItem] = useState<ContentItem | null>(null);
+  const [viewItem, setViewItem] = useState<ContentItem | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [formData, setFormData] = useState<ContentFormData>(emptyFormData);
 
   const { data: contentItems = [], isLoading } = useQuery<ContentItem[]>({
     queryKey: ["/api/content"],
+  });
+
+  const { data: contentContracts = [] } = useQuery<ContentContractLink[]>({
+    queryKey: ["/api/content", viewItem?.id, "contracts"],
+    queryFn: async () => {
+      if (!viewItem) return [];
+      const response = await fetch(`/api/content/${viewItem.id}/contracts`);
+      if (!response.ok) throw new Error("Failed to fetch content contracts");
+      return response.json();
+    },
+    enabled: !!viewItem,
   });
 
   const createMutation = useMutation({
@@ -421,6 +443,14 @@ export default function Content() {
                       <Button
                         variant="ghost"
                         size="icon"
+                        onClick={() => setViewItem(item)}
+                        data-testid={`button-view-content-${item.id}`}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => handleOpenForm(item)}
                         data-testid={`button-edit-content-${item.id}`}
                       >
@@ -442,6 +472,112 @@ export default function Content() {
           </Table>
         </div>
       )}
+
+      <Dialog open={!!viewItem} onOpenChange={() => setViewItem(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {viewItem && getContentIcon(viewItem.type)}
+              {viewItem?.title}
+            </DialogTitle>
+          </DialogHeader>
+          {viewItem && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Type</label>
+                  <p className="text-sm">
+                    <Badge variant={getContentBadgeVariant(viewItem.type)}>{viewItem.type}</Badge>
+                  </p>
+                </div>
+                {viewItem.genre && (
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Genre</label>
+                    <p className="text-sm">{viewItem.genre}</p>
+                  </div>
+                )}
+                {viewItem.releaseYear && (
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Release Year</label>
+                    <p className="text-sm">{viewItem.releaseYear}</p>
+                  </div>
+                )}
+                {viewItem.duration && (
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Duration</label>
+                    <p className="text-sm">{viewItem.duration} minutes</p>
+                  </div>
+                )}
+                {viewItem.type === "TV Series" && viewItem.season && (
+                  <>
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Season</label>
+                      <p className="text-sm">{viewItem.season}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground">Episodes</label>
+                      <p className="text-sm">{viewItem.episodeCount || "-"}</p>
+                    </div>
+                  </>
+                )}
+              </div>
+              
+              {viewItem.description && (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Description</label>
+                  <p className="text-sm">{viewItem.description}</p>
+                </div>
+              )}
+
+              <div className="border-t pt-4 mt-4">
+                <label className="text-sm font-medium text-muted-foreground">Linked Contracts</label>
+                
+                {contentContracts.length > 0 ? (
+                  <div className="mt-2 space-y-2">
+                    {contentContracts.map((link) => (
+                      <div 
+                        key={link.id} 
+                        className="flex items-center justify-between bg-muted/50 rounded-md px-3 py-2"
+                        data-testid={`linked-contract-${link.contractId}`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <File className="h-4 w-4" />
+                          <span className="text-sm font-medium">{link.contract.partner}</span>
+                          <Badge variant="outline" className="text-xs">{link.contract.licensee}</Badge>
+                          <span className="text-xs text-muted-foreground">{link.contract.territory}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge 
+                            className={
+                              link.contract.status === "Active" ? "bg-green-100 text-green-800" :
+                              link.contract.status === "Expired" ? "bg-red-100 text-red-800" :
+                              "bg-gray-100 text-gray-800"
+                            }
+                          >
+                            {link.contract.status}
+                          </Badge>
+                          <Link href="/contracts">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              data-testid={`button-go-to-contract-${link.contractId}`}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              View
+                            </Button>
+                          </Link>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground mt-2">This content is not linked to any contracts yet.</p>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={!!deleteItem} onOpenChange={() => setDeleteItem(null)}>
         <AlertDialogContent>

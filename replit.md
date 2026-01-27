@@ -28,6 +28,8 @@ Preferred communication style: Simple, everyday language.
 - **Key Tables**:
   - Users with role-based access (Admin, Legal, Finance, Sales)
   - Contracts with comprehensive IP licensing details
+  - Content Items (catalog of Films, TV Series, TBN FAST, TBN Linear, WoF FAST)
+  - Contract-Content junction table (many-to-many relationship)
   - Royalties with calculation tracking
   - Audit logs for activity monitoring
   - Sessions for authentication state

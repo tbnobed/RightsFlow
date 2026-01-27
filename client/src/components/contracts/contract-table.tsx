@@ -73,7 +73,9 @@ export default function ContractTable({ contracts, isLoading, onUpdate }: Contra
     },
     onSuccess: () => {
       toast({ title: "Success", description: "Content linked to contract" });
-      refetchContractContent();
+      if (viewContract) {
+        queryClient.invalidateQueries({ queryKey: ["/api/contracts", viewContract.id, "content"] });
+      }
       setSelectedContentId("");
     },
     onError: () => {
@@ -87,7 +89,9 @@ export default function ContractTable({ contracts, isLoading, onUpdate }: Contra
     },
     onSuccess: () => {
       toast({ title: "Success", description: "Content unlinked from contract" });
-      refetchContractContent();
+      if (viewContract) {
+        queryClient.invalidateQueries({ queryKey: ["/api/contracts", viewContract.id, "content"] });
+      }
     },
     onError: () => {
       toast({ title: "Error", description: "Failed to unlink content", variant: "destructive" });
@@ -399,7 +403,7 @@ export default function ContractTable({ contracts, isLoading, onUpdate }: Contra
                     </SelectTrigger>
                     <SelectContent>
                       {availableContent.length === 0 ? (
-                        <SelectItem value="_none" disabled>No available content</SelectItem>
+                        <SelectItem value="__none" disabled>No available content</SelectItem>
                       ) : (
                         availableContent.map((item) => (
                           <SelectItem key={item.id} value={item.id}>
