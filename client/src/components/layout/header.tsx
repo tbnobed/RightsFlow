@@ -1,7 +1,9 @@
 import { useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Bell, LogOut } from "lucide-react";
+import { Settings, LogOut } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/useAuth";
+import NotificationBell from "./notification-bell";
 
 const pageTitles: Record<string, string> = {
   "/": "Dashboard",
@@ -9,14 +11,16 @@ const pageTitles: Record<string, string> = {
   "/availability": "Rights Availability",
   "/royalties": "Royalty Management",
   "/statements": "Royalty Statements",
-  "/notifications": "Email Notifications",
   "/reports": "Reports & Analytics",
+  "/settings": "Settings",
   "/audit": "Audit Trail",
   "/users": "User Management",
 };
 
 export default function Header() {
   const [location] = useLocation();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "Admin";
   
   const handleLogout = async () => {
     try {
@@ -45,11 +49,14 @@ export default function Header() {
           {pageTitles[location] || "Rights & Royalties Management"}
         </h2>
         <div className="flex items-center space-x-4">
-          <Link href="/notifications">
-            <Button variant="ghost" size="icon" data-testid="button-notifications" className="text-[hsl(215,15%,85%)] hover:text-[hsl(215,15%,95%)] hover:bg-[hsl(215,20%,25%)]">
-              <Bell className="h-4 w-4" />
-            </Button>
-          </Link>
+          <NotificationBell />
+          {isAdmin && (
+            <Link href="/settings">
+              <Button variant="ghost" size="icon" data-testid="button-settings" className="text-[hsl(215,15%,85%)] hover:text-[hsl(215,15%,95%)] hover:bg-[hsl(215,20%,25%)]">
+                <Settings className="h-4 w-4" />
+              </Button>
+            </Link>
+          )}
           <Button variant="ghost" size="icon" onClick={handleLogout} data-testid="button-logout" className="text-[hsl(215,15%,85%)] hover:text-[hsl(215,15%,95%)] hover:bg-[hsl(215,20%,25%)]">
             <LogOut className="h-4 w-4" />
           </Button>

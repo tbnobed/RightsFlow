@@ -7,37 +7,22 @@ import {
   Calendar, 
   DollarSign, 
   FileText,
-  Bell,
-  ChartBar, 
-  History,
-  Users
+  ChartBar
 } from "lucide-react";
 import promissioLogo from "@assets/promissio_1758823299279.png";
 
-const getNavigation = (isAdmin: boolean) => {
-  const baseNavigation = [
-    { name: "Dashboard", href: "/", icon: BarChart3 },
-    { name: "Contracts", href: "/contracts", icon: File },
-    { name: "Rights Availability", href: "/availability", icon: Calendar },
-    { name: "Royalties", href: "/royalties", icon: DollarSign },
-    { name: "Statements", href: "/statements", icon: FileText },
-    { name: "Notifications", href: "/notifications", icon: Bell },
-    { name: "Reports", href: "/reports", icon: ChartBar },
-  ];
-
-  if (isAdmin) {
-    baseNavigation.push({ name: "Audit Trail", href: "/audit", icon: History });
-    baseNavigation.push({ name: "Users", href: "/users", icon: Users });
-  }
-
-  return baseNavigation;
-};
+const navigation = [
+  { name: "Dashboard", href: "/", icon: BarChart3 },
+  { name: "Contracts", href: "/contracts", icon: File },
+  { name: "Rights Availability", href: "/availability", icon: Calendar },
+  { name: "Royalties", href: "/royalties", icon: DollarSign },
+  { name: "Statements", href: "/statements", icon: FileText },
+  { name: "Reports", href: "/reports", icon: ChartBar },
+];
 
 export default function Sidebar() {
   const [location] = useLocation();
   const { user } = useAuth();
-  
-  const navigation = getNavigation(user?.role === "Admin" || false);
 
   return (
     <div className="w-64 sidebar flex flex-col">
