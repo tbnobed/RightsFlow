@@ -417,8 +417,11 @@ export class DatabaseStorage implements IStorage {
       .from(contracts)
       .where(eq(contracts.status, "Active"));
 
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
     const expiringDate = new Date();
     expiringDate.setDate(expiringDate.getDate() + 60); // 60 days from now
+    const expiringDateStr = expiringDate.toISOString().split('T')[0];
 
     const [expiringSoonResult] = await db
       .select({ count: sql<number>`count(*)` })
@@ -426,7 +429,9 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(contracts.status, "Active"),
-          lte(contracts.endDate, expiringDate.toISOString().split('T')[0])
+          sql`${contracts.endDate} IS NOT NULL`,
+          sql`${contracts.endDate}::date >= ${todayStr}::date`,
+          sql`${contracts.endDate}::date <= ${expiringDateStr}::date`
         )
       );
 
