@@ -158,8 +158,8 @@ export default function ExpirationCalendar({ contracts }: ExpirationCalendarProp
     if (hasExpiration) {
       const daysUntilExpiry = Math.floor((day.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
       if (daysUntilExpiry < 0) return "bg-red-500/20 border-red-500";
-      if (daysUntilExpiry <= 7) return "bg-orange-500/20 border-orange-500";
-      if (daysUntilExpiry <= 30) return "bg-yellow-500/20 border-yellow-500";
+      if (daysUntilExpiry <= 30) return "bg-orange-500/20 border-orange-500";
+      if (daysUntilExpiry <= 60) return "bg-yellow-500/20 border-yellow-500";
       return "bg-blue-500/20 border-blue-500";
     }
     
@@ -300,15 +300,15 @@ export default function ExpirationCalendar({ contracts }: ExpirationCalendarProp
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded border border-orange-500 bg-orange-500/20"></div>
-              <span className="text-muted-foreground">Expiring ≤ 7 days</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded border border-yellow-500 bg-yellow-500/20"></div>
               <span className="text-muted-foreground">Expiring ≤ 30 days</span>
             </div>
             <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded border border-yellow-500 bg-yellow-500/20"></div>
+              <span className="text-muted-foreground">Expiring ≤ 60 days</span>
+            </div>
+            <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded border border-blue-500 bg-blue-500/20"></div>
-              <span className="text-muted-foreground">Expiring &gt; 30 days</span>
+              <span className="text-muted-foreground">Expiring &gt; 60 days</span>
             </div>
             <div className="flex items-center gap-2 col-span-2">
               <div className="w-3 h-3 rounded border border-purple-500 bg-purple-500/20"></div>

@@ -359,7 +359,7 @@ export class DatabaseStorage implements IStorage {
       .where(eq(contracts.status, "Active"));
 
     const expiringDate = new Date();
-    expiringDate.setMonth(expiringDate.getMonth() + 3); // 3 months from now
+    expiringDate.setDate(expiringDate.getDate() + 60); // 60 days from now
 
     const [expiringSoonResult] = await db
       .select({ count: sql<number>`count(*)` })
