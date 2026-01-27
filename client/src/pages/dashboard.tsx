@@ -36,7 +36,7 @@ export default function Dashboard() {
     pendingReviews: number;
     periodLabel: string;
   }>({
-    queryKey: ["/api/dashboard/stats", { period: timePeriod }],
+    queryKey: [`/api/dashboard/stats?period=${timePeriod}`],
   });
 
   const { data: contracts, isLoading: contractsLoading } = useQuery<Contract[]>({
