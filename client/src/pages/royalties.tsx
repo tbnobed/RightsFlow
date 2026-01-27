@@ -3,9 +3,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import RoyaltyCalculator from "@/components/royalties/royalty-calculator";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { Download, CheckCircle, DollarSign } from "lucide-react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 
 export default function Royalties() {
   const { toast } = useToast();
@@ -27,6 +28,29 @@ export default function Royalties() {
 
   const { data: royalties, isLoading: royaltiesLoading, refetch } = useQuery({
     queryKey: ["/api/royalties"],
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      return apiRequest(`/api/royalties/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/royalties"] });
+      toast({
+        title: "Status Updated",
+        description: "Royalty status has been updated successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update royalty status",
+        variant: "destructive",
+      });
+    },
   });
 
   const handleExport = async () => {
@@ -104,6 +128,7 @@ export default function Royalties() {
                   <th className="text-left py-3 text-sm font-medium text-muted-foreground">Revenue</th>
                   <th className="text-left py-3 text-sm font-medium text-muted-foreground">Royalty</th>
                   <th className="text-left py-3 text-sm font-medium text-muted-foreground">Status</th>
+                  <th className="text-left py-3 text-sm font-medium text-muted-foreground">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -129,11 +154,42 @@ export default function Royalties() {
                         {royalty.status}
                       </Badge>
                     </td>
+                    <td className="py-3">
+                      <div className="flex gap-2">
+                        {royalty.status === 'Pending' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => updateStatusMutation.mutate({ id: royalty.id, status: 'Approved' })}
+                            disabled={updateStatusMutation.isPending}
+                            data-testid={`button-approve-${royalty.id}`}
+                          >
+                            <CheckCircle className="h-4 w-4 mr-1" />
+                            Approve
+                          </Button>
+                        )}
+                        {(royalty.status === 'Pending' || royalty.status === 'Approved') && (
+                          <Button
+                            size="sm"
+                            variant="default"
+                            onClick={() => updateStatusMutation.mutate({ id: royalty.id, status: 'Paid' })}
+                            disabled={updateStatusMutation.isPending}
+                            data-testid={`button-paid-${royalty.id}`}
+                          >
+                            <DollarSign className="h-4 w-4 mr-1" />
+                            Mark Paid
+                          </Button>
+                        )}
+                        {royalty.status === 'Paid' && (
+                          <span className="text-sm text-muted-foreground">Completed</span>
+                        )}
+                      </div>
+                    </td>
                   </tr>
                 ))}
                 {(!Array.isArray(royalties) || royalties.length === 0) && (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                    <td colSpan={7} className="py-8 text-center text-muted-foreground">
                       No royalty calculations found. Create a new calculation to get started.
                     </td>
                   </tr>
