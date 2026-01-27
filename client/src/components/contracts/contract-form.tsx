@@ -35,7 +35,7 @@ interface ContractFormProps {
   onCancel?: () => void;
 }
 
-const PREDEFINED_PLATFORMS = ["Streaming", "TV Broadcast", "Movie Theater", "Digital Download", "Music Streaming"];
+const PREDEFINED_PLATFORMS = ["SVOD", "TVOD", "AVOD", "FAST", "Linear"];
 
 export default function ContractForm({ contractId, onSuccess, onCancel }: ContractFormProps) {
   const { toast } = useToast();

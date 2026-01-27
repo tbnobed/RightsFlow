@@ -13,7 +13,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Search, CheckCircle, XCircle } from "lucide-react";
 
-const PREDEFINED_PLATFORMS = ["Streaming", "TV Broadcast", "Movie Theater", "Digital Download", "Music Streaming"];
+const PREDEFINED_PLATFORMS = ["SVOD", "TVOD", "AVOD", "FAST", "Linear"];
 
 const availabilitySchema = z.object({
   partner: z.string().min(1, "Partner name is required"),
