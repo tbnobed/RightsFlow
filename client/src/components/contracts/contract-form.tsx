@@ -35,13 +35,11 @@ interface ContractFormProps {
   onCancel?: () => void;
 }
 
-const PREDEFINED_PLATFORMS = ["SVOD", "TVOD", "AVOD", "FAST", "Linear"];
+const PREDEFINED_PLATFORMS = ["FAST", "VOD", "TVOD", "SVOD", "AVOD", "Linear"];
 
 export default function ContractForm({ contractId, onSuccess, onCancel }: ContractFormProps) {
   const { toast } = useToast();
   const [documentUrl, setDocumentUrl] = useState<string>("");
-  const [platformType, setPlatformType] = useState<"predefined" | "custom">("predefined");
-  const [customPlatform, setCustomPlatform] = useState<string>("");
   const [isAmendment, setIsAmendment] = useState<boolean>(false);
 
   // Fetch existing contract data if editing
@@ -65,6 +63,7 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
   const [royaltyType, setRoyaltyType] = useState<"Revenue Share" | "Flat Fee">("Revenue Share");
   const [selectedTerritories, setSelectedTerritories] = useState<string[]>([]);
   const [otherTerritory, setOtherTerritory] = useState<string>("");
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
 
   const TERRITORY_OPTIONS = ["Global", "US", "Canada", "UK"];
 
@@ -120,14 +119,6 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
       });
       setRoyaltyType(existingContract.royaltyType || "Revenue Share");
       
-      if (!isPredefined && existingPlatform) {
-        setPlatformType("custom");
-        setCustomPlatform(existingPlatform);
-      } else {
-        setPlatformType("predefined");
-        setCustomPlatform("");
-      }
-      
       setDocumentUrl(existingContract.contractDocumentUrl || "");
       setIsAmendment(!!existingContract.parentContractId);
       setAutoRenew(existingContract.autoRenew || false);
@@ -140,6 +131,12 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
         setSelectedTerritories(predefined);
         setOtherTerritory(other);
       }
+      
+      // Parse existing platforms for multi-select
+      if (existingContract.platform) {
+        const platforms = existingContract.platform.split(",").map((p: string) => p.trim());
+        setSelectedPlatforms(platforms.filter((p: string) => PREDEFINED_PLATFORMS.includes(p)));
+      }
     }
   }, [existingContract, contractId, form]);
 
@@ -151,6 +148,11 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
     }
     form.setValue("territory", allTerritories.join(", "));
   }, [selectedTerritories, otherTerritory, form]);
+
+  // Sync selected platforms with form field
+  useEffect(() => {
+    form.setValue("platform", selectedPlatforms.join(", "));
+  }, [selectedPlatforms, form]);
 
   const createContractMutation = useMutation({
     mutationFn: async (data: FormData) => {
@@ -176,12 +178,11 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
       });
       form.reset();
       setDocumentUrl("");
-      setPlatformType("predefined");
-      setCustomPlatform("");
       setAutoRenew(false);
       setRoyaltyType("Revenue Share");
       setSelectedTerritories([]);
       setOtherTerritory("");
+      setSelectedPlatforms([]);
       onSuccess?.();
     },
     onError: (error) => {
@@ -219,10 +220,8 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
   // };
 
   const onSubmit = (data: FormData) => {
-    // Use custom platform if that's what the user selected
     const finalData = {
       ...data,
-      platform: platformType === "custom" ? customPlatform : data.platform,
       autoRenew: autoRenew,
       endDate: autoRenew ? undefined : data.endDate,
     };
@@ -332,56 +331,37 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
             )}
           />
 
-          <div className="space-y-2">
-            <FormField
-              control={form.control}
-              name="platform"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Platform</FormLabel>
-                  <Select 
-                    onValueChange={(value) => {
-                      if (value === "custom") {
-                        setPlatformType("custom");
-                        field.onChange("");
-                      } else {
-                        setPlatformType("predefined");
-                        setCustomPlatform("");
-                        field.onChange(value);
-                      }
-                    }} 
-                    value={platformType === "custom" ? "custom" : field.value ?? undefined}
-                  >
-                    <FormControl>
-                      <SelectTrigger data-testid="select-platform">
-                        <SelectValue placeholder="Select Platform" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {PREDEFINED_PLATFORMS.map((platform) => (
-                        <SelectItem key={platform} value={platform}>
-                          {platform}
-                        </SelectItem>
-                      ))}
-                      <SelectItem value="custom">Custom</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            {platformType === "custom" && (
-              <div className="pt-2">
-                <Input 
-                  placeholder="Enter custom platform" 
-                  data-testid="input-custom-platform"
-                  value={customPlatform}
-                  onChange={(e) => setCustomPlatform(e.target.value)}
-                />
-              </div>
+          <FormField
+            control={form.control}
+            name="platform"
+            render={() => (
+              <FormItem>
+                <FormLabel>Platform</FormLabel>
+                <div className="flex flex-wrap gap-4">
+                  {PREDEFINED_PLATFORMS.map((platform) => (
+                    <div key={platform} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`platform-${platform}`}
+                        checked={selectedPlatforms.includes(platform)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedPlatforms([...selectedPlatforms, platform]);
+                          } else {
+                            setSelectedPlatforms(selectedPlatforms.filter(p => p !== platform));
+                          }
+                        }}
+                        data-testid={`checkbox-platform-${platform.toLowerCase()}`}
+                      />
+                      <Label htmlFor={`platform-${platform}`} className="text-sm cursor-pointer">
+                        {platform}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+                <FormMessage />
+              </FormItem>
             )}
-          </div>
+          />
 
           <FormField
             control={form.control}
@@ -725,8 +705,9 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
             variant="outline" 
             onClick={() => {
               form.reset();
-              setPlatformType("predefined");
-              setCustomPlatform("");
+              setSelectedPlatforms([]);
+              setSelectedTerritories([]);
+              setOtherTerritory("");
               setIsAmendment(false);
               if (onCancel) {
                 onCancel();
