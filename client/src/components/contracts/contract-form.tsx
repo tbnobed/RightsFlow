@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ChevronDown } from "lucide-react";
 // import { ObjectUploader } from "@/components/ObjectUploader"; // Temporarily disabled
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -294,37 +296,55 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
             render={() => (
               <FormItem>
                 <FormLabel>Territory *</FormLabel>
-                <div className="space-y-3">
-                  <div className="flex flex-wrap gap-4">
-                    {TERRITORY_OPTIONS.map((territory) => (
-                      <div key={territory} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={`territory-${territory}`}
-                          checked={selectedTerritories.includes(territory)}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setSelectedTerritories([...selectedTerritories, territory]);
-                            } else {
-                              setSelectedTerritories(selectedTerritories.filter(t => t !== territory));
-                            }
-                          }}
-                          data-testid={`checkbox-territory-${territory.toLowerCase()}`}
-                        />
-                        <Label htmlFor={`territory-${territory}`} className="text-sm cursor-pointer">
-                          {territory}
-                        </Label>
+                <div className="space-y-2">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        className="w-full justify-between font-normal"
+                        data-testid="select-territory"
+                      >
+                        {selectedTerritories.length > 0
+                          ? selectedTerritories.join(", ")
+                          : "Select territories..."}
+                        <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[300px] p-3">
+                      <div className="space-y-2">
+                        {TERRITORY_OPTIONS.map((territory) => (
+                          <div key={territory} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`territory-${territory}`}
+                              checked={selectedTerritories.includes(territory)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedTerritories([...selectedTerritories, territory]);
+                                } else {
+                                  setSelectedTerritories(selectedTerritories.filter(t => t !== territory));
+                                }
+                              }}
+                              data-testid={`checkbox-territory-${territory.toLowerCase()}`}
+                            />
+                            <Label htmlFor={`territory-${territory}`} className="text-sm cursor-pointer">
+                              {territory}
+                            </Label>
+                          </div>
+                        ))}
+                        <div className="border-t pt-2 mt-2">
+                          <Label className="text-xs text-muted-foreground">Other territories</Label>
+                          <Input
+                            placeholder="e.g., Australia, Germany"
+                            value={otherTerritory}
+                            onChange={(e) => setOtherTerritory(e.target.value)}
+                            className="mt-1"
+                            data-testid="input-other-territory"
+                          />
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-sm text-muted-foreground">Other territories</Label>
-                    <Input
-                      placeholder="e.g., Australia, Germany, Japan"
-                      value={otherTerritory}
-                      onChange={(e) => setOtherTerritory(e.target.value)}
-                      data-testid="input-other-territory"
-                    />
-                  </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <FormMessage />
               </FormItem>
@@ -337,27 +357,44 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
             render={() => (
               <FormItem>
                 <FormLabel>Platform</FormLabel>
-                <div className="flex flex-wrap gap-4">
-                  {PREDEFINED_PLATFORMS.map((platform) => (
-                    <div key={platform} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`platform-${platform}`}
-                        checked={selectedPlatforms.includes(platform)}
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            setSelectedPlatforms([...selectedPlatforms, platform]);
-                          } else {
-                            setSelectedPlatforms(selectedPlatforms.filter(p => p !== platform));
-                          }
-                        }}
-                        data-testid={`checkbox-platform-${platform.toLowerCase()}`}
-                      />
-                      <Label htmlFor={`platform-${platform}`} className="text-sm cursor-pointer">
-                        {platform}
-                      </Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className="w-full justify-between font-normal"
+                      data-testid="select-platform"
+                    >
+                      {selectedPlatforms.length > 0
+                        ? selectedPlatforms.join(", ")
+                        : "Select platforms..."}
+                      <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[300px] p-3">
+                    <div className="space-y-2">
+                      {PREDEFINED_PLATFORMS.map((platform) => (
+                        <div key={platform} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`platform-${platform}`}
+                            checked={selectedPlatforms.includes(platform)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedPlatforms([...selectedPlatforms, platform]);
+                              } else {
+                                setSelectedPlatforms(selectedPlatforms.filter(p => p !== platform));
+                              }
+                            }}
+                            data-testid={`checkbox-platform-${platform.toLowerCase()}`}
+                          />
+                          <Label htmlFor={`platform-${platform}`} className="text-sm cursor-pointer">
+                            {platform}
+                          </Label>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </PopoverContent>
+                </Popover>
                 <FormMessage />
               </FormItem>
             )}
