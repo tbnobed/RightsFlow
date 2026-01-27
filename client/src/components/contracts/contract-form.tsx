@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertContractSchema } from "@shared/schema";
+import { insertContractSchema, type ContentItem } from "@shared/schema";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,12 +10,27 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ChevronDown } from "lucide-react";
-// import { ObjectUploader } from "@/components/ObjectUploader"; // Temporarily disabled
+import { Badge } from "@/components/ui/badge";
+import { ChevronDown, X, Film, Tv, Radio, FileVideo } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-// import type { UploadResult } from "@uppy/core"; // Temporarily disabled
+import { apiRequest, queryClient } from "@/lib/queryClient";
+
+function getContentIcon(type: string) {
+  switch (type) {
+    case "Film":
+      return <Film className="h-3 w-3" />;
+    case "TV Series":
+      return <Tv className="h-3 w-3" />;
+    case "TBN FAST":
+    case "WoF FAST":
+      return <Radio className="h-3 w-3" />;
+    case "TBN Linear":
+      return <FileVideo className="h-3 w-3" />;
+    default:
+      return <Film className="h-3 w-3" />;
+  }
+}
 
 const formSchema = insertContractSchema.extend({
   startDate: z.string().min(1, "Start date is required"),
@@ -67,8 +82,24 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
   const [otherTerritory, setOtherTerritory] = useState<string>("");
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [otherPlatform, setOtherPlatform] = useState<string>("");
+  const [selectedContentIds, setSelectedContentIds] = useState<string[]>([]);
 
   const TERRITORY_OPTIONS = ["Global", "US", "Canada", "UK"];
+
+  const { data: allContentItems = [] } = useQuery<ContentItem[]>({
+    queryKey: ["/api/content"],
+  });
+
+  const { data: existingLinkedContent = [] } = useQuery<{ contentId: string }[]>({
+    queryKey: ["/api/contracts", contractId, "content"],
+    queryFn: async () => {
+      if (!contractId) return [];
+      const response = await fetch(`/api/contracts/${contractId}/content`);
+      if (!response.ok) throw new Error("Failed to fetch linked content");
+      return response.json();
+    },
+    enabled: !!contractId,
+  });
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -146,6 +177,13 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
     }
   }, [existingContract, contractId, form]);
 
+  // Load existing linked content when editing
+  useEffect(() => {
+    if (existingLinkedContent.length > 0) {
+      setSelectedContentIds(existingLinkedContent.map(c => c.contentId));
+    }
+  }, [existingLinkedContent]);
+
   // Sync selected territories with form field
   useEffect(() => {
     const allTerritories = [...selectedTerritories];
@@ -174,13 +212,33 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
     },
     onSuccess: async (response) => {
       const contract = await response.json();
+      const targetContractId = contractId || contract.id;
       
       // If document was uploaded, attach it to the contract
       if (documentUrl) {
-        await apiRequest("PUT", `/api/contracts/${contract.id}/document`, {
+        await apiRequest("PUT", `/api/contracts/${targetContractId}/document`, {
           documentURL: documentUrl,
         });
       }
+      
+      // Handle content linking
+      const existingIds = existingLinkedContent.map(c => c.contentId);
+      const toLink = selectedContentIds.filter(id => !existingIds.includes(id));
+      const toUnlink = existingIds.filter(id => !selectedContentIds.includes(id));
+      
+      // Link new content
+      for (const contentId of toLink) {
+        await apiRequest("POST", `/api/contracts/${targetContractId}/content`, { contentId });
+      }
+      
+      // Unlink removed content
+      for (const contentId of toUnlink) {
+        await apiRequest("DELETE", `/api/contracts/${targetContractId}/content/${contentId}`);
+      }
+      
+      // Invalidate queries
+      queryClient.invalidateQueries({ queryKey: ["/api/contracts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/contracts", targetContractId, "content"] });
       
       toast({
         title: "Success",
@@ -194,6 +252,7 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
       setOtherTerritory("");
       setSelectedPlatforms([]);
       setOtherPlatform("");
+      setSelectedContentIds([]);
       onSuccess?.();
     },
     onError: (error) => {
@@ -744,6 +803,90 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
           </div>
 
           <div className="md:col-span-2">
+            <Label>Linked Content (Optional)</Label>
+            <p className="text-xs text-muted-foreground mb-2">
+              Select content items to associate with this contract
+            </p>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-between"
+                  type="button"
+                  data-testid="button-select-content"
+                >
+                  <span>
+                    {selectedContentIds.length === 0 
+                      ? "Select content..." 
+                      : `${selectedContentIds.length} content item${selectedContentIds.length > 1 ? 's' : ''} selected`}
+                  </span>
+                  <ChevronDown className="h-4 w-4 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80 p-2" align="start">
+                <div className="max-h-60 overflow-y-auto space-y-1">
+                  {allContentItems.length === 0 ? (
+                    <p className="text-sm text-muted-foreground p-2">No content items available</p>
+                  ) : (
+                    allContentItems.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center space-x-2 p-2 hover:bg-muted rounded cursor-pointer"
+                        onClick={() => {
+                          if (selectedContentIds.includes(item.id)) {
+                            setSelectedContentIds(prev => prev.filter(id => id !== item.id));
+                          } else {
+                            setSelectedContentIds(prev => [...prev, item.id]);
+                          }
+                        }}
+                      >
+                        <Checkbox
+                          checked={selectedContentIds.includes(item.id)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedContentIds(prev => [...prev, item.id]);
+                            } else {
+                              setSelectedContentIds(prev => prev.filter(id => id !== item.id));
+                            }
+                          }}
+                        />
+                        <div className="flex items-center gap-2 flex-1">
+                          {getContentIcon(item.type)}
+                          <span className="text-sm">{item.title}</span>
+                          <Badge variant="outline" className="text-xs">{item.type}</Badge>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </PopoverContent>
+            </Popover>
+            
+            {selectedContentIds.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {selectedContentIds.map(id => {
+                  const item = allContentItems.find(c => c.id === id);
+                  if (!item) return null;
+                  return (
+                    <Badge 
+                      key={id} 
+                      variant="secondary"
+                      className="flex items-center gap-1"
+                    >
+                      {getContentIcon(item.type)}
+                      {item.title}
+                      <X 
+                        className="h-3 w-3 cursor-pointer ml-1" 
+                        onClick={() => setSelectedContentIds(prev => prev.filter(cid => cid !== id))}
+                      />
+                    </Badge>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="md:col-span-2">
             <FormLabel>Contract Document</FormLabel>
             <div className="mt-2">
               {/* Temporarily disabled file upload functionality */}
@@ -765,6 +908,7 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
               setOtherPlatform("");
               setSelectedTerritories([]);
               setOtherTerritory("");
+              setSelectedContentIds([]);
               setIsAmendment(false);
               if (onCancel) {
                 onCancel();
