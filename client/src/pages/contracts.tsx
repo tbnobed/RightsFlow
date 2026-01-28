@@ -191,11 +191,10 @@ export default function Contracts() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Territories</SelectItem>
-              <SelectItem value="North America">North America</SelectItem>
-              <SelectItem value="Europe">Europe</SelectItem>
-              <SelectItem value="Asia Pacific">Asia Pacific</SelectItem>
-              <SelectItem value="Latin America">Latin America</SelectItem>
               <SelectItem value="Global">Global</SelectItem>
+              <SelectItem value="US">US</SelectItem>
+              <SelectItem value="Canada">Canada</SelectItem>
+              <SelectItem value="UK">UK</SelectItem>
             </SelectContent>
           </Select>
           <Button 
