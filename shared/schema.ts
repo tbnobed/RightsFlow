@@ -191,12 +191,10 @@ export const insertContractSchema = createInsertSchema(contracts).omit({
   updatedAt: true,
 }).extend({
   partner: z.string().min(1, "Partner name is required"),
-  content: z.string().min(1, "Content/Title is required"),
   licensor: z.string().min(1, "Licensor is required"),
   licensee: z.string().min(1, "Licensee is required"),
   territory: z.string().min(1, "Territory is required"),
   startDate: z.string().min(1, "Start date is required"),
-  endDate: z.string().min(1, "End date is required"),
 });
 
 export const insertRoyaltySchema = createInsertSchema(royalties).omit({
