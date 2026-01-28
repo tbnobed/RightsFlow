@@ -27,8 +27,8 @@ export default function Sidebar() {
   const { user } = useAuth();
 
   return (
-    <div className="w-64 bg-[#006666] text-white flex flex-col">
-      <div className="p-6 bg-[#004c4c]">
+    <div className="w-64 bg-[#004c4c] text-white flex flex-col">
+      <div className="p-6 bg-[#003333]">
         <div className="flex flex-col items-center space-y-2">
           <img 
             src={promissioLogo} 
@@ -51,8 +51,8 @@ export default function Sidebar() {
                 <Link 
                   href={item.href}
                   className={cn(
-                    "flex items-center px-3 py-2 rounded-md transition-all text-white hover:bg-[#008080]",
-                    isActive && "bg-[#008080] font-medium"
+                    "flex items-center px-3 py-2 rounded-md transition-all text-white hover:bg-[#006666]",
+                    isActive && "bg-[#006666] font-medium"
                   )}
                   data-testid={`nav-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
                 >
@@ -65,9 +65,9 @@ export default function Sidebar() {
         </ul>
       </nav>
       
-      <div className="p-4 border-t border-[#004c4c]">
+      <div className="p-4 border-t border-[#003333]">
         <div className="flex items-center">
-          <div className="w-8 h-8 rounded-full flex items-center justify-center font-medium mr-3 bg-[#008080] text-white">
+          <div className="w-8 h-8 rounded-full flex items-center justify-center font-medium mr-3 bg-[#006666] text-white">
             {user?.firstName?.[0] || 'U'}
           </div>
           <div>

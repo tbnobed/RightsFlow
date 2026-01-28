@@ -45,7 +45,7 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-[#006666] border-b border-[#004c4c] px-6 py-4">
+    <header className="bg-[#004c4c] border-b border-[#003333] px-6 py-4">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold text-white" data-testid="page-title">
           {pageTitles[location] || "Rights & Royalties Management"}
@@ -54,12 +54,12 @@ export default function Header() {
           <NotificationBell />
           {canAccessAdmin && (
             <Link href="/settings">
-              <Button variant="ghost" size="icon" data-testid="button-settings" className="text-white hover:text-white hover:bg-[#008080]">
+              <Button variant="ghost" size="icon" data-testid="button-settings" className="text-white hover:text-white hover:bg-[#006666]">
                 <Settings className="h-4 w-4" />
               </Button>
             </Link>
           )}
-          <Button variant="ghost" size="icon" onClick={handleLogout} data-testid="button-logout" className="text-white hover:text-white hover:bg-[#008080]">
+          <Button variant="ghost" size="icon" onClick={handleLogout} data-testid="button-logout" className="text-white hover:text-white hover:bg-[#006666]">
             <LogOut className="h-4 w-4" />
           </Button>
         </div>
