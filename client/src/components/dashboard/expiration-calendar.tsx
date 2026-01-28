@@ -330,29 +330,26 @@ export default function ExpirationCalendar({ contracts, timePeriod = "month" }: 
           })}
         </div>
 
-        <div className="mt-4 pt-4 border-t border-border">
-          <div className="text-xs font-medium text-muted-foreground mb-2">Legend:</div>
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded border border-red-500 bg-red-500/20"></div>
-              <span className="text-muted-foreground">Expired</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded border border-orange-500 bg-orange-500/20"></div>
-              <span className="text-muted-foreground">Expiring ≤ 30 days</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded border border-yellow-500 bg-yellow-500/20"></div>
-              <span className="text-muted-foreground">Expiring ≤ 60 days</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded border border-blue-500 bg-blue-500/20"></div>
-              <span className="text-muted-foreground">Expiring &gt; 60 days</span>
-            </div>
-            <div className="flex items-center gap-2 col-span-2">
-              <div className="w-3 h-3 rounded border border-purple-500 bg-purple-500/20"></div>
-              <span className="text-muted-foreground">Revenue Report Due</span>
-            </div>
+        <div className="mt-3 pt-3 border-t border-border flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] text-muted-foreground">
+          <div className="flex items-center gap-1">
+            <div className="w-2.5 h-2.5 rounded border border-red-500 bg-red-500/20"></div>
+            <span>Expired</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-2.5 h-2.5 rounded border border-orange-500 bg-orange-500/20"></div>
+            <span>≤30d</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-2.5 h-2.5 rounded border border-yellow-500 bg-yellow-500/20"></div>
+            <span>≤60d</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-2.5 h-2.5 rounded border border-blue-500 bg-blue-500/20"></div>
+            <span>&gt;60d</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-2.5 h-2.5 rounded border border-purple-500 bg-purple-500/20"></div>
+            <span>Report Due</span>
           </div>
         </div>
       </CardContent>
