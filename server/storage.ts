@@ -52,10 +52,10 @@ export interface IStorage {
   checkRightsAvailability(params: {
     partner: string;
     territory: string;
-    platform: string;
+    platform?: string;
     startDate: string;
     endDate: string;
-  }): Promise<{ available: boolean; conflicts: Contract[] }>;
+  }): Promise<{ available: boolean; conflicts: Contract[]; suggestions?: { territories: string[]; platforms: string[] } }>;
 
   // Royalty operations
   getRoyalties(): Promise<(Royalty & { contract: Contract })[]>;
@@ -314,29 +314,38 @@ export class DatabaseStorage implements IStorage {
   async checkRightsAvailability(params: {
     partner: string;
     territory: string;
-    platform: string;
+    platform?: string;
     startDate: string;
     endDate: string;
   }): Promise<{ available: boolean; conflicts: Contract[]; suggestions?: { territories: string[]; platforms: string[] } }> {
+    // Build conditions - territory and platform can be comma-separated in DB
+    const conditions = [
+      eq(contracts.partner, params.partner),
+      // Check if the searched territory is contained within the contract's territory field
+      sql`${contracts.territory} ILIKE ${'%' + params.territory + '%'}`,
+      or(
+        eq(contracts.status, "Active"),
+        eq(contracts.status, "In Perpetuity")
+      ),
+      // Date overlap: contract overlaps if contract.start <= check.end AND contract.end >= check.start
+      and(
+        lte(contracts.startDate, params.endDate),
+        or(
+          gte(contracts.endDate, params.startDate),
+          isNull(contracts.endDate) // Handle auto-renew contracts with no end date
+        )
+      )
+    ];
+
+    // Only add platform filter if provided
+    if (params.platform) {
+      conditions.push(sql`${contracts.platform} ILIKE ${'%' + params.platform + '%'}`);
+    }
+
     const conflicts = await db
       .select()
       .from(contracts)
-      .where(
-        and(
-          eq(contracts.partner, params.partner),
-          eq(contracts.territory, params.territory),
-          eq(contracts.platform, params.platform),
-          or(
-            eq(contracts.status, "Active"),
-            eq(contracts.status, "In Perpetuity")
-          ),
-          // Date overlap: contract overlaps if contract.start <= check.end AND contract.end >= check.start
-          and(
-            lte(contracts.startDate, params.endDate),
-            gte(contracts.endDate, params.startDate)
-          )
-        )
-      );
+      .where(and(...conditions));
 
     // Check if any conflicts are exclusive - if so, suggest alternatives
     const hasExclusive = conflicts.some((c: Contract) => c.exclusivity === "Exclusive");
@@ -344,7 +353,7 @@ export class DatabaseStorage implements IStorage {
 
     if (hasExclusive) {
       // Find territories and platforms where this partner's content is NOT exclusively licensed
-      const allTerritories = ["North America", "Europe", "Asia Pacific", "Latin America", "Global"];
+      const allTerritories = ["Global", "US", "Canada", "UK"];
       const allPlatforms = ["SVOD", "TVOD", "AVOD", "FAST", "Linear"];
 
       // Get all exclusive contracts for this partner in the date range
