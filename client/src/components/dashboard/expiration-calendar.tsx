@@ -243,63 +243,6 @@ export default function ExpirationCalendar({ contracts, timePeriod = "month" }: 
 
   return (
     <div className="space-y-6">
-      <Card className="bg-card border-border" data-testid="expiring-contracts-cards">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg font-semibold flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-orange-500" />
-              Expiring Contracts - {getPeriodLabel()}
-            </CardTitle>
-            <Badge variant="outline">{expiringContracts.length} contract{expiringContracts.length !== 1 ? 's' : ''}</Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          {expiringContracts.length > 0 ? (
-            <div className="max-h-[280px] overflow-y-auto">
-              <div className="divide-y divide-border">
-                {expiringContracts.map((contract) => {
-                  const endDate = typeof contract.endDate === 'string' 
-                    ? parseISO(contract.endDate) 
-                    : new Date(contract.endDate!);
-                  return (
-                    <div 
-                      key={contract.id} 
-                      className="px-4 py-3 hover:bg-muted/30 transition-colors flex items-center justify-between gap-3"
-                      data-testid={`expiring-contract-card-${contract.id}`}
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <span className="font-medium text-sm text-foreground truncate">{contract.partner}</span>
-                          <span className="text-xs text-muted-foreground">•</span>
-                          <span className="text-xs text-muted-foreground truncate">{contract.licensee}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <span className="truncate">{contract.territory}</span>
-                          <span>•</span>
-                          <span className="whitespace-nowrap">{format(endDate, "MMM d, yyyy")}</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        {getUrgencyBadge(endDate)}
-                        <Link href={`/contracts?edit=${contract.id}`}>
-                          <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">
-                            View
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ) : (
-            <p className="text-center text-muted-foreground py-6">
-              No contracts expiring {getPeriodLabel().toLowerCase()}
-            </p>
-          )}
-        </CardContent>
-      </Card>
-
       <Card className="bg-card border-border" data-testid="calendar-expiration">
       <CardHeader>
         <div className="flex items-center justify-between">
@@ -443,6 +386,63 @@ export default function ExpirationCalendar({ contracts, timePeriod = "month" }: 
         </Link>
       </CardFooter>
     </Card>
+
+      <Card className="bg-card border-border" data-testid="expiring-contracts-cards">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg font-semibold flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-orange-500" />
+              Expiring Contracts - {getPeriodLabel()}
+            </CardTitle>
+            <Badge variant="outline">{expiringContracts.length} contract{expiringContracts.length !== 1 ? 's' : ''}</Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          {expiringContracts.length > 0 ? (
+            <div className="max-h-[280px] overflow-y-auto">
+              <div className="divide-y divide-border">
+                {expiringContracts.map((contract) => {
+                  const endDate = typeof contract.endDate === 'string' 
+                    ? parseISO(contract.endDate) 
+                    : new Date(contract.endDate!);
+                  return (
+                    <div 
+                      key={contract.id} 
+                      className="px-4 py-3 hover:bg-muted/30 transition-colors flex items-center justify-between gap-3"
+                      data-testid={`expiring-contract-card-${contract.id}`}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="font-medium text-sm text-foreground truncate">{contract.partner}</span>
+                          <span className="text-xs text-muted-foreground">•</span>
+                          <span className="text-xs text-muted-foreground truncate">{contract.licensee}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span className="truncate">{contract.territory}</span>
+                          <span>•</span>
+                          <span className="whitespace-nowrap">{format(endDate, "MMM d, yyyy")}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        {getUrgencyBadge(endDate)}
+                        <Link href={`/contracts?edit=${contract.id}`}>
+                          <Button variant="ghost" size="sm" className="h-7 px-2 text-xs">
+                            View
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <p className="text-center text-muted-foreground py-6">
+              No contracts expiring {getPeriodLabel().toLowerCase()}
+            </p>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
