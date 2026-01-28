@@ -39,7 +39,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2, Film, Tv, Radio, Search, FileVideo, Eye, File } from "lucide-react";
+import { Plus, Pencil, Trash2, Film, Tv, Radio, Search, FileVideo, Eye, File, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import type { ContentItem, Contract } from "@shared/schema";
 import { Link } from "wouter";
 
@@ -103,6 +103,9 @@ const emptyFormData: ContentFormData = {
   duration: "",
 };
 
+type SortColumn = "title" | "type" | "genre" | "releaseYear" | "duration";
+type SortDirection = "asc" | "desc";
+
 export default function Content() {
   const { toast } = useToast();
   const [showForm, setShowForm] = useState(false);
@@ -112,6 +115,8 @@ export default function Content() {
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [formData, setFormData] = useState<ContentFormData>(emptyFormData);
+  const [sortColumn, setSortColumn] = useState<SortColumn | null>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
   const { data: contentItems = [], isLoading } = useQuery<ContentItem[]>({
     queryKey: ["/api/content"],
@@ -226,11 +231,63 @@ export default function Content() {
     }
   };
 
+  const handleSort = (column: SortColumn) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
+  };
+
+  const getSortIcon = (column: SortColumn) => {
+    if (sortColumn !== column) {
+      return <ArrowUpDown className="h-3 w-3 ml-1 opacity-50" />;
+    }
+    return sortDirection === "asc" 
+      ? <ArrowUp className="h-3 w-3 ml-1" />
+      : <ArrowDown className="h-3 w-3 ml-1" />;
+  };
+
   const filteredItems = contentItems.filter((item) => {
     const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (item.description?.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesType = typeFilter === "all" || item.type === typeFilter;
     return matchesSearch && matchesType;
+  });
+
+  const sortedItems = [...filteredItems].sort((a, b) => {
+    if (!sortColumn) return 0;
+    
+    let aVal: string | number = "";
+    let bVal: string | number = "";
+    
+    switch (sortColumn) {
+      case "title":
+        aVal = a.title?.toLowerCase() || "";
+        bVal = b.title?.toLowerCase() || "";
+        break;
+      case "type":
+        aVal = a.type?.toLowerCase() || "";
+        bVal = b.type?.toLowerCase() || "";
+        break;
+      case "genre":
+        aVal = a.genre?.toLowerCase() || "";
+        bVal = b.genre?.toLowerCase() || "";
+        break;
+      case "releaseYear":
+        aVal = a.releaseYear || 0;
+        bVal = b.releaseYear || 0;
+        break;
+      case "duration":
+        aVal = a.duration || 0;
+        bVal = b.duration || 0;
+        break;
+    }
+    
+    if (aVal < bVal) return sortDirection === "asc" ? -1 : 1;
+    if (aVal > bVal) return sortDirection === "asc" ? 1 : -1;
+    return 0;
   });
 
   return (
@@ -408,16 +465,41 @@ export default function Content() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Title</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Genre</TableHead>
-                <TableHead>Year</TableHead>
-                <TableHead>Duration</TableHead>
+                <TableHead 
+                  className="cursor-pointer hover:text-foreground select-none"
+                  onClick={() => handleSort("title")}
+                >
+                  <div className="flex items-center">Title{getSortIcon("title")}</div>
+                </TableHead>
+                <TableHead 
+                  className="cursor-pointer hover:text-foreground select-none"
+                  onClick={() => handleSort("type")}
+                >
+                  <div className="flex items-center">Type{getSortIcon("type")}</div>
+                </TableHead>
+                <TableHead 
+                  className="cursor-pointer hover:text-foreground select-none"
+                  onClick={() => handleSort("genre")}
+                >
+                  <div className="flex items-center">Genre{getSortIcon("genre")}</div>
+                </TableHead>
+                <TableHead 
+                  className="cursor-pointer hover:text-foreground select-none"
+                  onClick={() => handleSort("releaseYear")}
+                >
+                  <div className="flex items-center">Year{getSortIcon("releaseYear")}</div>
+                </TableHead>
+                <TableHead 
+                  className="cursor-pointer hover:text-foreground select-none"
+                  onClick={() => handleSort("duration")}
+                >
+                  <div className="flex items-center">Duration{getSortIcon("duration")}</div>
+                </TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredItems.map((item) => (
+              {sortedItems.map((item) => (
                 <TableRow key={item.id} data-testid={`row-content-${item.id}`}>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-2">
