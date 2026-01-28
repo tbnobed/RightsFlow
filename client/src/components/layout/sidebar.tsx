@@ -28,7 +28,7 @@ export default function Sidebar() {
 
   return (
     <div className="w-64 bg-[#004c4c] text-white flex flex-col">
-      <div className="p-6 bg-[#003333]">
+      <div className="p-6 bg-black">
         <div className="flex flex-col items-center space-y-2">
           <img 
             src={promissioLogo} 
