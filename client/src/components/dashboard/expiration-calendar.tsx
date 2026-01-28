@@ -40,17 +40,6 @@ export default function ExpirationCalendar({ contracts, timePeriod = "month" }: 
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today);
   
-  const todayMonth = getMonth(today);
-  const todayYear = getYear(today);
-  const viewMonth = getMonth(currentMonth);
-  const viewYear = getYear(currentMonth);
-
-  const canGoBack = viewYear > todayYear || (viewYear === todayYear && viewMonth > todayMonth);
-  
-  const nextMonthDate = addMonths(today, 1);
-  const nextMonth = getMonth(nextMonthDate);
-  const nextYear = getYear(nextMonthDate);
-  const canGoForward = viewYear < nextYear || (viewYear === nextYear && viewMonth < nextMonth);
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -182,15 +171,11 @@ export default function ExpirationCalendar({ contracts, timePeriod = "month" }: 
   };
 
   const goToPreviousMonth = () => {
-    if (canGoBack) {
-      setCurrentMonth(addMonths(currentMonth, -1));
-    }
+    setCurrentMonth(addMonths(currentMonth, -1));
   };
 
   const goToNextMonth = () => {
-    if (canGoForward) {
-      setCurrentMonth(addMonths(currentMonth, 1));
-    }
+    setCurrentMonth(addMonths(currentMonth, 1));
   };
 
   const goToToday = () => {
@@ -260,7 +245,6 @@ export default function ExpirationCalendar({ contracts, timePeriod = "month" }: 
               variant="ghost"
               size="icon"
               onClick={goToPreviousMonth}
-              disabled={!canGoBack}
               data-testid="button-calendar-prev"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -272,7 +256,6 @@ export default function ExpirationCalendar({ contracts, timePeriod = "month" }: 
               variant="ghost"
               size="icon"
               onClick={goToNextMonth}
-              disabled={!canGoForward}
               data-testid="button-calendar-next"
             >
               <ChevronRight className="h-4 w-4" />
