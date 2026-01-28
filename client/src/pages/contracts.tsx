@@ -17,8 +17,16 @@ export default function Contracts() {
   const { isAuthenticated, isLoading } = useAuth();
   const [location, setLocation] = useLocation();
   
-  const urlParams = useMemo(() => new URLSearchParams(window.location.search), [location]);
-  const urlFilter = urlParams.get('filter');
+  const [urlFilter, setUrlFilter] = useState<string | null>(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('filter');
+  });
+  
+  // Sync URL filter with location changes
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setUrlFilter(params.get('filter'));
+  }, [location]);
   
   const [filters, setFilters] = useState({
     search: "",
@@ -28,7 +36,9 @@ export default function Contracts() {
   const [showForm, setShowForm] = useState(false);
   
   const clearUrlFilter = () => {
+    setUrlFilter(null);
     setLocation('/contracts');
+    window.history.replaceState({}, '', '/contracts');
   };
 
   useEffect(() => {
