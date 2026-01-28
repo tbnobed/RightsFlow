@@ -432,84 +432,116 @@ export default function Settings() {
         </TabsContent>
 
         <TabsContent value="notifications" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Contract Expiration Alerts</CardTitle>
-                <CardDescription>Send email notifications about expiring contracts</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Recipient Email</Label>
-                  <Input
-                    type="email"
-                    value={expiringEmail}
-                    onChange={(e) => setExpiringEmail(e.target.value)}
-                    placeholder="email@example.com"
-                    data-testid="input-expiring-email"
-                  />
+          <Card className="border-primary/20 bg-primary/5">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bell className="h-5 w-5" />
+                Automated Weekly Notifications
+              </CardTitle>
+              <CardDescription>
+                Email notifications are automatically sent to all Admin users every Monday morning
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-start gap-3 p-3 bg-background rounded-lg border">
+                  <div className="h-8 w-8 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                    <Bell className="h-4 w-4 text-amber-500" />
+                  </div>
+                  <div>
+                    <p className="font-medium">Contract Expiration Alerts</p>
+                    <p className="text-sm text-muted-foreground">Contracts expiring within 30 days are included in the weekly email</p>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Expiration Threshold</Label>
-                  <Select value={expiringDays} onValueChange={setExpiringDays}>
-                    <SelectTrigger data-testid="select-expiring-days">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="7">Within 7 Days</SelectItem>
-                      <SelectItem value="14">Within 14 Days</SelectItem>
-                      <SelectItem value="30">Within 30 Days</SelectItem>
-                      <SelectItem value="60">Within 60 Days</SelectItem>
-                      <SelectItem value="90">Within 90 Days</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="flex items-start gap-3 p-3 bg-background rounded-lg border">
+                  <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                    <Send className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium">Revenue Report Reminders</p>
+                    <p className="text-sm text-muted-foreground">Contracts with pending revenue reports (Monthly, Quarterly, Annual) are included</p>
+                  </div>
                 </div>
-                <Button
-                  onClick={() => expiringMutation.mutate()}
-                  disabled={expiringMutation.isPending || !expiringEmail}
-                  className="w-full"
-                  data-testid="button-send-expiring"
-                >
-                  {expiringMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
-                  Send Expiration Alert
-                </Button>
-              </CardContent>
-            </Card>
+              </div>
+            </CardContent>
+          </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Revenue Report Reminders</CardTitle>
-                <CardDescription>Send reminders about expected revenue reports</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Recipient Email</Label>
-                  <Input
-                    type="email"
-                    value={revenueEmail}
-                    onChange={(e) => setRevenueEmail(e.target.value)}
-                    placeholder="email@example.com"
-                    data-testid="input-revenue-email"
-                  />
+          <Card>
+            <CardHeader>
+              <CardTitle>Send Manual Notification</CardTitle>
+              <CardDescription>Send a one-time notification now (in addition to automated weekly emails)</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="space-y-4 p-4 border rounded-lg">
+                  <h4 className="font-medium">Contract Expiration Alert</h4>
+                  <div className="space-y-2">
+                    <Label>Recipient Email</Label>
+                    <Input
+                      type="email"
+                      value={expiringEmail}
+                      onChange={(e) => setExpiringEmail(e.target.value)}
+                      placeholder="email@example.com"
+                      data-testid="input-expiring-email"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Expiration Threshold</Label>
+                    <Select value={expiringDays} onValueChange={setExpiringDays}>
+                      <SelectTrigger data-testid="select-expiring-days">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="7">Within 7 Days</SelectItem>
+                        <SelectItem value="14">Within 14 Days</SelectItem>
+                        <SelectItem value="30">Within 30 Days</SelectItem>
+                        <SelectItem value="60">Within 60 Days</SelectItem>
+                        <SelectItem value="90">Within 90 Days</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button
+                    onClick={() => expiringMutation.mutate()}
+                    disabled={expiringMutation.isPending || !expiringEmail}
+                    className="w-full"
+                    data-testid="button-send-expiring"
+                  >
+                    {expiringMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
+                    Send Now
+                  </Button>
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground">Report Types</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Includes contracts with Monthly, Quarterly, and Annual reporting
-                  </p>
+
+                <div className="space-y-4 p-4 border rounded-lg">
+                  <h4 className="font-medium">Revenue Report Reminder</h4>
+                  <div className="space-y-2">
+                    <Label>Recipient Email</Label>
+                    <Input
+                      type="email"
+                      value={revenueEmail}
+                      onChange={(e) => setRevenueEmail(e.target.value)}
+                      placeholder="email@example.com"
+                      data-testid="input-revenue-email"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-muted-foreground">Report Types</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Includes contracts with Monthly, Quarterly, and Annual reporting
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => revenueMutation.mutate()}
+                    disabled={revenueMutation.isPending || !revenueEmail}
+                    className="w-full"
+                    data-testid="button-send-revenue"
+                  >
+                    {revenueMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
+                    Send Now
+                  </Button>
                 </div>
-                <Button
-                  onClick={() => revenueMutation.mutate()}
-                  disabled={revenueMutation.isPending || !revenueEmail}
-                  className="w-full"
-                  data-testid="button-send-revenue"
-                >
-                  {revenueMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
-                  Send Report Reminder
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
