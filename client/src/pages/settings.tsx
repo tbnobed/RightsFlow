@@ -39,7 +39,7 @@ type AuditLog = {
 export default function Settings() {
   const { toast } = useToast();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
-  const [activeTab, setActiveTab] = useState("users");
+  const [activeTab, setActiveTab] = useState("");
   
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("Sales");
@@ -62,10 +62,10 @@ export default function Settings() {
       return;
     }
     
-    if (user && user.role !== "Admin") {
+    if (user && user.role !== "Admin" && user.role !== "Sales Manager") {
       toast({
         title: "Access Denied",
-        description: "Only administrators can access settings.",
+        description: "Only administrators and sales managers can access settings.",
         variant: "destructive",
       });
       setTimeout(() => {
@@ -79,6 +79,15 @@ export default function Settings() {
       setExpiringEmail(user.email);
       setRevenueEmail(user.email);
     }
+    if (user?.role) {
+      if (user.role === "Admin") {
+        setActiveTab("users");
+      } else if (user.role === "Sales Manager") {
+        setActiveTab("audit");
+      } else {
+        setActiveTab("notifications");
+      }
+    }
   }, [user]);
 
   const { data: users = [], isLoading: usersLoading } = useQuery<User[]>({
@@ -86,9 +95,11 @@ export default function Settings() {
     enabled: user?.role === "Admin",
   });
 
+  const canViewAudit = user?.role === "Admin" || user?.role === "Sales Manager";
+  
   const { data: auditLogs = [], isLoading: auditLoading } = useQuery<AuditLog[]>({
     queryKey: ["/api/audit"],
-    enabled: user?.role === "Admin",
+    enabled: canViewAudit,
   });
 
   const inviteMutation = useMutation({
@@ -169,15 +180,19 @@ export default function Settings() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="users" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            User Management
-          </TabsTrigger>
-          <TabsTrigger value="audit" className="flex items-center gap-2">
-            <History className="h-4 w-4" />
-            Audit Trail
-          </TabsTrigger>
+        <TabsList className={`grid w-full ${user?.role === "Admin" ? "grid-cols-3" : "grid-cols-2"}`}>
+          {user?.role === "Admin" && (
+            <TabsTrigger value="users" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              User Management
+            </TabsTrigger>
+          )}
+          {canViewAudit && (
+            <TabsTrigger value="audit" className="flex items-center gap-2">
+              <History className="h-4 w-4" />
+              Audit Trail
+            </TabsTrigger>
+          )}
           <TabsTrigger value="notifications" className="flex items-center gap-2">
             <Bell className="h-4 w-4" />
             Notifications
