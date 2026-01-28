@@ -106,8 +106,13 @@ export default function Contracts() {
             <div className="mt-2">
               <Badge variant="secondary" className="gap-1">
                 Showing: {getFilterLabel()}
-                <button onClick={clearUrlFilter} className="ml-1 hover:bg-muted rounded-full p-0.5">
-                  <X className="h-3 w-3" />
+                <button 
+                  type="button"
+                  onClick={clearUrlFilter} 
+                  className="ml-1 hover:bg-muted rounded-full p-1 cursor-pointer"
+                  data-testid="button-clear-filter"
+                >
+                  <X className="h-4 w-4" />
                 </button>
               </Badge>
             </div>
