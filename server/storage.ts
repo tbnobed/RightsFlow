@@ -19,7 +19,7 @@ import {
   type InsertContractContent,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, or, gte, lte, desc, sql, inArray } from "drizzle-orm";
+import { eq, and, or, gte, lte, lt, desc, sql, inArray, isNull, ne } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -181,11 +181,40 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Contract operations
+  
+  // Helper method to auto-update expired contracts
+  private async updateExpiredContracts(): Promise<void> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Update contracts where:
+    // - status is "Active"
+    // - endDate is in the past
+    // - autoRenew is false or null
+    await db
+      .update(contracts)
+      .set({ status: "Expired", updatedAt: new Date() })
+      .where(
+        and(
+          eq(contracts.status, "Active"),
+          lt(contracts.endDate, today),
+          or(
+            eq(contracts.autoRenew, false),
+            isNull(contracts.autoRenew)
+          )
+        )
+      );
+  }
+  
   async getContracts(): Promise<Contract[]> {
+    // Auto-update any expired contracts before fetching
+    await this.updateExpiredContracts();
     return await db.select().from(contracts).orderBy(desc(contracts.createdAt));
   }
 
   async getContract(id: string): Promise<Contract | undefined> {
+    // Auto-update any expired contracts before fetching
+    await this.updateExpiredContracts();
     const [contract] = await db.select().from(contracts).where(eq(contracts.id, id));
     return contract;
   }
@@ -214,6 +243,8 @@ export class DatabaseStorage implements IStorage {
     search?: string;
     filter?: string;
   }): Promise<Contract[]> {
+    // Auto-update any expired contracts before fetching
+    await this.updateExpiredContracts();
     let query = db.select().from(contracts);
     
     const conditions = [];
