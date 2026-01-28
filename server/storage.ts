@@ -45,6 +45,7 @@ export interface IStorage {
     territory?: string;
     search?: string;
     filter?: string;
+    expiring?: string;
   }): Promise<Contract[]>;
 
   // Rights availability
@@ -247,6 +248,7 @@ export class DatabaseStorage implements IStorage {
     territory?: string;
     search?: string;
     filter?: string;
+    expiring?: string;
   }): Promise<Contract[]> {
     // Auto-update any expired contracts before fetching
     await this.updateExpiredContracts();
@@ -273,7 +275,20 @@ export class DatabaseStorage implements IStorage {
       );
     }
     
-    if (filters.filter === 'expiring') {
+    // Handle expiring filter (30, 60, 90 days)
+    if (filters.expiring && ['30', '60', '90'].includes(filters.expiring)) {
+      const days = parseInt(filters.expiring);
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
+      const expiringDate = new Date();
+      expiringDate.setDate(expiringDate.getDate() + days);
+      const expiringDateStr = expiringDate.toISOString().split('T')[0];
+      
+      conditions.push(eq(contracts.status, 'Active'));
+      conditions.push(sql`${contracts.endDate} IS NOT NULL`);
+      conditions.push(sql`${contracts.endDate}::date >= ${todayStr}::date`);
+      conditions.push(sql`${contracts.endDate}::date <= ${expiringDateStr}::date`);
+    } else if (filters.filter === 'expiring') {
       const today = new Date();
       const todayStr = today.toISOString().split('T')[0];
       const expiringDate = new Date();

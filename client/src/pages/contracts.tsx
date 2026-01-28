@@ -32,6 +32,7 @@ export default function Contracts() {
     search: "",
     status: "",
     territory: "",
+    expiring: "",
   });
   const [showForm, setShowForm] = useState(false);
   
@@ -62,6 +63,7 @@ export default function Contracts() {
       if (filters.search) params.append('search', filters.search);
       if (filters.status && filters.status !== 'all') params.append('status', filters.status);
       if (filters.territory && filters.territory !== 'all') params.append('territory', filters.territory);
+      if (filters.expiring && filters.expiring !== 'all') params.append('expiring', filters.expiring);
       if (urlFilter) params.append('filter', urlFilter);
       
       const response = await fetch(`/api/contracts?${params}`);
@@ -160,7 +162,7 @@ export default function Contracts() {
 
       {/* Filters */}
       <div className="bg-card rounded-lg border p-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <Input
             placeholder="Search contracts..."
             value={filters.search}
@@ -197,11 +199,25 @@ export default function Contracts() {
               <SelectItem value="UK">UK</SelectItem>
             </SelectContent>
           </Select>
+          <Select
+            value={filters.expiring}
+            onValueChange={(value) => setFilters(prev => ({ ...prev, expiring: value }))}
+          >
+            <SelectTrigger data-testid="select-expiring">
+              <SelectValue placeholder="Expiring In" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Contracts</SelectItem>
+              <SelectItem value="30">Expiring in 30 days</SelectItem>
+              <SelectItem value="60">Expiring in 60 days</SelectItem>
+              <SelectItem value="90">Expiring in 90 days</SelectItem>
+            </SelectContent>
+          </Select>
           <Button 
             variant="secondary" 
             data-testid="button-reset-filters"
-            onClick={() => setFilters({ search: "", status: "", territory: "" })}
-            disabled={!filters.search && !filters.status && !filters.territory}
+            onClick={() => setFilters({ search: "", status: "", territory: "", expiring: "" })}
+            disabled={!filters.search && !filters.status && !filters.territory && !filters.expiring}
           >
             <X className="h-4 w-4 mr-2" />
             Reset Filters

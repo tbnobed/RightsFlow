@@ -45,12 +45,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Contract routes
   app.get("/api/contracts", isAuthenticated, async (req, res) => {
     try {
-      const { status, territory, search, filter } = req.query;
+      const { status, territory, search, filter, expiring } = req.query;
       const contracts = await storage.getContractsByFilters({
         status: status as string,
         territory: territory as string,
         search: search as string,
         filter: filter as string,
+        expiring: expiring as string,
       });
       res.json(contracts);
     } catch (error) {
