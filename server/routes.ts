@@ -169,6 +169,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get contract history (royalties, audit logs, amendments, creator info)
+  app.get("/api/contracts/:id/history", isAuthenticated, async (req, res) => {
+    try {
+      const contractId = req.params.id;
+      const contract = await storage.getContract(contractId);
+      if (!contract) {
+        return res.status(404).json({ message: "Contract not found" });
+      }
+
+      // Get creator info
+      let createdByUser = null;
+      if (contract.createdBy) {
+        createdByUser = await storage.getUser(contract.createdBy);
+      }
+
+      // Get royalties for this contract
+      const allRoyalties = await storage.getRoyalties();
+      const contractRoyalties = allRoyalties.filter(r => r.contractId === contractId);
+
+      // Get audit logs for this contract
+      const allAuditLogs = await storage.getAuditLogs({});
+      const contractAuditLogs = allAuditLogs.filter(
+        log => log.entityType === "Contract" && log.entityId === contractId
+      );
+
+      // Get amendments (child contracts)
+      const allContracts = await storage.getContracts();
+      const amendments = allContracts.filter(c => c.parentContractId === contractId);
+
+      res.json({
+        createdAt: contract.createdAt,
+        createdBy: createdByUser ? {
+          id: createdByUser.id,
+          firstName: createdByUser.firstName,
+          lastName: createdByUser.lastName,
+          email: createdByUser.email,
+        } : null,
+        royalties: contractRoyalties,
+        auditLogs: contractAuditLogs,
+        amendments,
+      });
+    } catch (error) {
+      console.error("Error fetching contract history:", error);
+      res.status(500).json({ message: "Failed to fetch contract history" });
+    }
+  });
+
   // Rights availability routes
   app.post("/api/availability/check", isAuthenticated, async (req, res) => {
     try {

@@ -3,7 +3,7 @@ import { Contract, ContentItem } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Eye, Edit, Trash2, Film, Tv, Radio, FileVideo, Plus, X, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Eye, Edit, Trash2, Film, Tv, Radio, FileVideo, Plus, X, ArrowUpDown, ArrowUp, ArrowDown, History, DollarSign, FileText, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -48,6 +48,31 @@ interface ContractContentLink {
   content: ContentItem;
 }
 
+interface ContractHistory {
+  createdAt: string | null;
+  createdBy: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  } | null;
+  royalties: Array<{
+    id: string;
+    period: string;
+    revenue: string;
+    royaltyAmount: string;
+    status: string;
+    createdAt: string;
+  }>;
+  auditLogs: Array<{
+    id: string;
+    action: string;
+    createdAt: string;
+    userId: string | null;
+  }>;
+  amendments: Contract[];
+}
+
 type SortColumn = "partner" | "licensee" | "territory" | "platform" | "startDate" | "endDate" | "status";
 type SortDirection = "asc" | "desc";
 
@@ -72,6 +97,17 @@ export default function ContractTable({ contracts, isLoading, onUpdate }: Contra
 
   const { data: allContentItems = [] } = useQuery<ContentItem[]>({
     queryKey: ["/api/content"],
+    enabled: !!viewContract,
+  });
+
+  const { data: contractHistory } = useQuery<ContractHistory>({
+    queryKey: ["/api/contracts", viewContract?.id, "history"],
+    queryFn: async () => {
+      if (!viewContract) return null;
+      const response = await fetch(`/api/contracts/${viewContract.id}/history`);
+      if (!response.ok) throw new Error("Failed to fetch contract history");
+      return response.json();
+    },
     enabled: !!viewContract,
   });
 
@@ -558,6 +594,109 @@ export default function ContractTable({ contracts, isLoading, onUpdate }: Contra
                     Link
                   </Button>
                 </div>
+              </div>
+
+              {/* Contract History Section */}
+              <div className="border-t pt-4 mt-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <History className="h-4 w-4 text-muted-foreground" />
+                  <label className="text-sm font-medium text-muted-foreground">Contract History</label>
+                </div>
+
+                {/* Creation Info */}
+                {contractHistory && (
+                  <div className="bg-muted/30 rounded-md px-3 py-2 mb-3">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Users className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-muted-foreground">Created</span>
+                      {contractHistory.createdAt && (
+                        <span>{new Date(contractHistory.createdAt).toLocaleDateString()}</span>
+                      )}
+                      {contractHistory.createdBy && (
+                        <span className="text-muted-foreground">
+                          by {contractHistory.createdBy.firstName} {contractHistory.createdBy.lastName}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Amendments */}
+                {contractHistory?.amendments && contractHistory.amendments.length > 0 && (
+                  <div className="mb-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <FileText className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-xs font-medium text-muted-foreground">Amendments ({contractHistory.amendments.length})</span>
+                    </div>
+                    <div className="space-y-1">
+                      {contractHistory.amendments.map((amendment) => (
+                        <div key={amendment.id} className="flex items-center justify-between bg-purple-50 dark:bg-purple-900/20 rounded-md px-3 py-2 text-sm">
+                          <div className="flex items-center gap-2">
+                            <Badge className="bg-purple-100 text-purple-800 text-xs">Amendment</Badge>
+                            <span>{amendment.partner}</span>
+                          </div>
+                          <span className="text-xs text-muted-foreground">
+                            {formatDateLocal(amendment.startDate)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Royalties */}
+                {contractHistory?.royalties && contractHistory.royalties.length > 0 && (
+                  <div className="mb-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <DollarSign className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-xs font-medium text-muted-foreground">Royalties ({contractHistory.royalties.length})</span>
+                    </div>
+                    <div className="space-y-1 max-h-32 overflow-y-auto">
+                      {contractHistory.royalties.map((royalty) => (
+                        <div key={royalty.id} className="flex items-center justify-between bg-muted/50 rounded-md px-3 py-2 text-sm">
+                          <div className="flex items-center gap-2">
+                            <span>{royalty.period}</span>
+                            <Badge className={
+                              royalty.status === "Paid" ? "bg-green-100 text-green-800" :
+                              royalty.status === "Approved" ? "bg-blue-100 text-blue-800" :
+                              "bg-yellow-100 text-yellow-800"
+                            }>
+                              {royalty.status}
+                            </Badge>
+                          </div>
+                          <span className="font-medium">${Number(royalty.royaltyAmount).toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Audit Trail */}
+                {contractHistory?.auditLogs && contractHistory.auditLogs.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <History className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-xs font-medium text-muted-foreground">Activity Log ({contractHistory.auditLogs.length})</span>
+                    </div>
+                    <div className="space-y-1 max-h-32 overflow-y-auto">
+                      {contractHistory.auditLogs.slice(0, 10).map((log) => (
+                        <div key={log.id} className="flex items-center justify-between text-xs text-muted-foreground bg-muted/30 rounded px-2 py-1.5">
+                          <span>{log.action}</span>
+                          <span>{new Date(log.createdAt).toLocaleDateString()}</span>
+                        </div>
+                      ))}
+                      {contractHistory.auditLogs.length > 10 && (
+                        <p className="text-xs text-muted-foreground text-center py-1">
+                          +{contractHistory.auditLogs.length - 10} more entries
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {(!contractHistory?.royalties?.length && !contractHistory?.auditLogs?.length && !contractHistory?.amendments?.length) && (
+                  <p className="text-sm text-muted-foreground">No history available for this contract.</p>
+                )}
               </div>
             </div>
           )}
