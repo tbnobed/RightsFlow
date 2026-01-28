@@ -14,8 +14,6 @@ import Reports from "@/pages/reports";
 import Statements from "@/pages/statements";
 import Notifications from "@/pages/notifications";
 import Settings from "@/pages/settings";
-import Audit from "@/pages/audit";
-import Users from "@/pages/users";
 import AcceptInvite from "@/pages/accept-invite";
 import ResetPassword from "@/pages/reset-password";
 import NotFound from "@/pages/not-found";
@@ -67,8 +65,6 @@ function Router() {
             <Route path="/notifications" component={Notifications} />
             <Route path="/reports" component={Reports} />
             <Route path="/settings" component={Settings} />
-            <Route path="/audit" component={Audit} />
-            <Route path="/users" component={Users} />
             <Route component={NotFound} />
           </Switch>
         </main>
