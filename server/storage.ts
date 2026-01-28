@@ -254,7 +254,8 @@ export class DatabaseStorage implements IStorage {
     }
     
     if (filters.territory) {
-      conditions.push(eq(contracts.territory, filters.territory));
+      // Use ILIKE for partial match to handle comma-separated territories like "US, Canada"
+      conditions.push(sql`${contracts.territory} ILIKE ${`%${filters.territory}%`}`);
     }
     
     if (filters.search) {
