@@ -74,8 +74,8 @@ export default function StatsCards({ stats, periodLabel }: StatsCardsProps) {
                     {card.value}
                   </p>
                 </div>
-                <div className="w-10 h-10 border border-border rounded-md flex items-center justify-center bg-muted/30">
-                  <card.icon className="h-5 w-5 text-muted-foreground" />
+                <div className="w-10 h-10 rounded-md flex items-center justify-center" style={{ backgroundColor: '#66b2b2' }}>
+                  <card.icon className="h-5 w-5 text-white" />
                 </div>
               </div>
             </CardContent>
