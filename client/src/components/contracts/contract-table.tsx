@@ -11,6 +11,12 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import ContractForm from "./contract-form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+function formatDateLocal(dateString: string | null | undefined): string {
+  if (!dateString) return "-";
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString();
+}
+
 function getContentIcon(type: string) {
   switch (type) {
     case "Film":
@@ -221,14 +227,14 @@ export default function ContractTable({ contracts, isLoading, onUpdate }: Contra
                   {contract.platform}
                 </td>
                 <td className="py-4 px-6 text-muted-foreground" data-testid={`text-start-date-${contract.id}`}>
-                  {new Date(contract.startDate).toLocaleDateString()}
+                  {formatDateLocal(contract.startDate)}
                 </td>
                 <td className="py-4 px-6 text-muted-foreground" data-testid={`text-end-date-${contract.id}`}>
                   <div className="flex items-center gap-1">
                     {contract.autoRenew ? (
                       <Badge className="bg-cyan-100 text-cyan-800">Auto-renew</Badge>
                     ) : contract.endDate ? (
-                      new Date(contract.endDate).toLocaleDateString()
+                      formatDateLocal(contract.endDate)
                     ) : (
                       "-"
                     )}
@@ -322,7 +328,7 @@ export default function ContractTable({ contracts, isLoading, onUpdate }: Contra
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Start Date</label>
-                  <p className="text-sm">{new Date(viewContract.startDate).toLocaleDateString()}</p>
+                  <p className="text-sm">{formatDateLocal(viewContract.startDate)}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">End Date</label>
@@ -330,7 +336,7 @@ export default function ContractTable({ contracts, isLoading, onUpdate }: Contra
                     {viewContract.autoRenew ? (
                       <Badge className="bg-cyan-100 text-cyan-800">Auto-renew</Badge>
                     ) : viewContract.endDate ? (
-                      new Date(viewContract.endDate).toLocaleDateString()
+                      formatDateLocal(viewContract.endDate)
                     ) : (
                       "-"
                     )}
