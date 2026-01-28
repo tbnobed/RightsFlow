@@ -34,6 +34,8 @@ export default function Settings() {
   const [activeTab, setActiveTab] = useState("");
   
   const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteFirstName, setInviteFirstName] = useState("");
+  const [inviteLastName, setInviteLastName] = useState("");
   const [inviteRole, setInviteRole] = useState("Sales");
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   
@@ -97,6 +99,8 @@ export default function Settings() {
     mutationFn: async () => {
       const res = await apiRequest("POST", "/api/auth/invite", {
         email: inviteEmail,
+        firstName: inviteFirstName,
+        lastName: inviteLastName,
         role: user?.role === "Sales Manager" ? "Sales" : inviteRole,
       });
       return res.json();
@@ -104,6 +108,8 @@ export default function Settings() {
     onSuccess: () => {
       toast({ title: "Invite Sent", description: `Invitation sent to ${inviteEmail}` });
       setInviteEmail("");
+      setInviteFirstName("");
+      setInviteLastName("");
       setInviteDialogOpen(false);
       queryClient.invalidateQueries({ queryKey: ["/api/auth/users"] });
     },
@@ -227,6 +233,26 @@ export default function Settings() {
                     <DialogTitle>Invite New User</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4 pt-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>First Name</Label>
+                        <Input
+                          value={inviteFirstName}
+                          onChange={(e) => setInviteFirstName(e.target.value)}
+                          placeholder="John"
+                          data-testid="input-invite-firstname"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Last Name</Label>
+                        <Input
+                          value={inviteLastName}
+                          onChange={(e) => setInviteLastName(e.target.value)}
+                          placeholder="Doe"
+                          data-testid="input-invite-lastname"
+                        />
+                      </div>
+                    </div>
                     <div className="space-y-2">
                       <Label>Email</Label>
                       <Input
@@ -258,7 +284,7 @@ export default function Settings() {
                     </div>
                     <Button
                       onClick={() => inviteMutation.mutate()}
-                      disabled={inviteMutation.isPending || !inviteEmail}
+                      disabled={inviteMutation.isPending || !inviteEmail || !inviteFirstName || !inviteLastName}
                       className="w-full"
                       data-testid="button-send-invite"
                     >
