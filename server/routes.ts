@@ -188,10 +188,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const allRoyalties = await storage.getRoyalties();
       const contractRoyalties = allRoyalties.filter(r => r.contractId === contractId);
 
-      // Get audit logs for this contract
+      // Get audit logs for this contract with user info
       const allAuditLogs = await storage.getAuditLogs({});
       const contractAuditLogs = allAuditLogs.filter(
         log => log.entityType === "Contract" && log.entityId === contractId
+      );
+
+      // Enrich audit logs with user info
+      const enrichedAuditLogs = await Promise.all(
+        contractAuditLogs.map(async (log) => {
+          let user = null;
+          if (log.userId) {
+            const logUser = await storage.getUser(log.userId);
+            if (logUser) {
+              user = {
+                id: logUser.id,
+                firstName: logUser.firstName,
+                lastName: logUser.lastName,
+                email: logUser.email,
+              };
+            }
+          }
+          return {
+            ...log,
+            user,
+          };
+        })
       );
 
       // Get amendments (child contracts)
@@ -207,7 +229,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           email: createdByUser.email,
         } : null,
         royalties: contractRoyalties,
-        auditLogs: contractAuditLogs,
+        auditLogs: enrichedAuditLogs,
         amendments,
       });
     } catch (error) {

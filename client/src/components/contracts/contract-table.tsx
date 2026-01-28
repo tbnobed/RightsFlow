@@ -71,6 +71,14 @@ interface ContractHistory {
     action: string;
     createdAt: string;
     userId: string | null;
+    oldValues: Record<string, any> | null;
+    newValues: Record<string, any> | null;
+    user: {
+      id: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+    } | null;
   }>;
   amendments: Contract[];
 }
@@ -762,13 +770,54 @@ export default function ContractTable({ contracts, isLoading, onUpdate, initialV
                 )}
 
                 {contractHistory?.auditLogs && contractHistory.auditLogs.length > 0 ? (
-                  <div className="space-y-1 max-h-48 overflow-y-auto">
-                    {contractHistory.auditLogs.map((log) => (
-                      <div key={log.id} className="flex items-center justify-between text-sm bg-background rounded px-3 py-2 border border-border">
-                        <span>{log.action}</span>
-                        <span className="text-xs text-muted-foreground">{new Date(log.createdAt).toLocaleDateString()}</span>
-                      </div>
-                    ))}
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {contractHistory.auditLogs.map((log) => {
+                      // Determine what changed
+                      const getChangeSummary = () => {
+                        if (!log.oldValues || !log.newValues) return null;
+                        const changes: string[] = [];
+                        const fieldsToTrack = ['partner', 'licensee', 'territory', 'platform', 'startDate', 'endDate', 'status', 'royaltyType', 'royaltyRate', 'flatFeeAmount', 'minimumPayment', 'paymentTerms'];
+                        
+                        for (const field of fieldsToTrack) {
+                          const oldVal = log.oldValues[field];
+                          const newVal = log.newValues[field];
+                          if (oldVal !== newVal && (oldVal || newVal)) {
+                            const label = field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                            changes.push(`${label}: "${oldVal || '—'}" → "${newVal || '—'}"`);
+                          }
+                        }
+                        return changes;
+                      };
+                      
+                      const changes = getChangeSummary();
+                      
+                      return (
+                        <div key={log.id} className="bg-background rounded-md px-3 py-2 border border-border">
+                          <div className="flex items-center justify-between text-sm">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{log.action}</span>
+                              {log.user && (
+                                <span className="text-muted-foreground">
+                                  by <span className="text-foreground">{log.user.firstName} {log.user.lastName}</span>
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(log.createdAt).toLocaleDateString()} {new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                          {changes && changes.length > 0 && (
+                            <div className="mt-2 pt-2 border-t border-border">
+                              <div className="text-xs text-muted-foreground space-y-1">
+                                {changes.map((change, idx) => (
+                                  <div key={idx} className="font-mono">{change}</div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground">No activity recorded yet.</p>
