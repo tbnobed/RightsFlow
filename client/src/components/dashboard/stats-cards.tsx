@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { File, AlertTriangle, DollarSign, Clock } from "lucide-react";
+import { FileText, CalendarClock, TrendingUp, ClipboardCheck } from "lucide-react";
 import { Link } from "wouter";
 
 interface StatsCardsProps {
@@ -31,36 +31,28 @@ export default function StatsCards({ stats, periodLabel }: StatsCardsProps) {
     {
       title: "Active Contracts",
       value: stats.activeContracts,
-      icon: File,
-      color: "text-primary",
-      bgColor: "bg-primary/10",
+      icon: FileText,
       testId: "stat-active-contracts",
       href: "/contracts?filter=active",
     },
     {
       title: "Expiring Soon (60 days)",
       value: stats.expiringSoon,
-      icon: AlertTriangle,
-      color: "text-amber-600",
-      bgColor: "bg-amber-100",
+      icon: CalendarClock,
       testId: "stat-expiring-soon",
       href: "/contracts?filter=expiring",
     },
     {
       title: `Royalties${periodLabel ? ` (${periodLabel})` : ""}`,
       value: `$${Number(stats.totalRoyalties).toLocaleString()}`,
-      icon: DollarSign,
-      color: "text-green-600",
-      bgColor: "bg-green-100",
+      icon: TrendingUp,
       testId: "stat-total-royalties",
       href: "/royalties",
     },
     {
       title: "Pending Reviews",
       value: stats.pendingReviews,
-      icon: Clock,
-      color: "text-red-600",
-      bgColor: "bg-red-100",
+      icon: ClipboardCheck,
       testId: "stat-pending-reviews",
       href: "/royalties?filter=pending",
     },
@@ -82,8 +74,8 @@ export default function StatsCards({ stats, periodLabel }: StatsCardsProps) {
                     {card.value}
                   </p>
                 </div>
-                <div className={`w-12 h-12 ${card.bgColor} rounded-lg flex items-center justify-center`}>
-                  <card.icon className={`h-6 w-6 ${card.color}`} />
+                <div className="w-10 h-10 border border-border rounded-md flex items-center justify-center bg-muted/30">
+                  <card.icon className="h-5 w-5 text-muted-foreground" />
                 </div>
               </div>
             </CardContent>
