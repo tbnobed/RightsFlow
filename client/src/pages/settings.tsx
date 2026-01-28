@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Users, History, Bell, Plus, Loader2, Send, Trash2, Pencil } from "lucide-react";
+import { Users, History, Bell, Plus, Loader2, Send, Trash2, Pencil, Key, Mail } from "lucide-react";
 import { format } from "date-fns";
 import AuditLog from "@/components/audit/audit-log";
 
@@ -145,6 +145,19 @@ export default function Settings() {
     },
     onError: (error: any) => {
       toast({ title: "Error", description: error.message || "Failed to update user", variant: "destructive" });
+    },
+  });
+
+  const sendResetLinkMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const res = await apiRequest("POST", `/api/auth/users/${userId}/send-reset-link`);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Reset Link Sent", description: "Password reset link has been sent to the user's email" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to send reset link", variant: "destructive" });
     },
   });
 
@@ -327,7 +340,7 @@ export default function Settings() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <div className="flex gap-2">
+                          <div className="flex gap-1">
                             {u.id !== user?.id && user?.role === "Admin" && (
                               <>
                                 <Button
@@ -338,6 +351,7 @@ export default function Settings() {
                                     setEditRole(u.role);
                                     setEditDialogOpen(true);
                                   }}
+                                  title="Edit User"
                                   data-testid={`button-edit-user-${u.id}`}
                                 >
                                   <Pencil className="h-4 w-4" />
@@ -345,8 +359,19 @@ export default function Settings() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
+                                  onClick={() => sendResetLinkMutation.mutate(u.id)}
+                                  disabled={sendResetLinkMutation.isPending}
+                                  title="Send Password Reset Link"
+                                  data-testid={`button-reset-link-${u.id}`}
+                                >
+                                  <Key className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
                                   onClick={() => deleteUserMutation.mutate(u.id)}
                                   disabled={deleteUserMutation.isPending}
+                                  title="Delete User"
                                   data-testid={`button-delete-user-${u.id}`}
                                 >
                                   <Trash2 className="h-4 w-4 text-destructive" />
