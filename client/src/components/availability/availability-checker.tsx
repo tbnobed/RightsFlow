@@ -5,6 +5,7 @@ import { z } from "zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,9 @@ import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Search, CheckCircle, Eye, FileText, Calendar, MapPin, Monitor } from "lucide-react";
 import type { Contract } from "@shared/schema";
+
+const TERRITORY_OPTIONS = ["Any", "Global", "US", "Canada", "UK"];
+const PLATFORM_OPTIONS = ["Any", "SVOD", "TVOD", "AVOD", "FAST", "Linear", "VOD"];
 
 const availabilitySchema = z.object({
   partner: z.string().min(1, "Partner name is required"),
@@ -74,7 +78,13 @@ export default function AvailabilityChecker() {
   });
 
   const onSubmit = (data: AvailabilityData) => {
-    checkAvailabilityMutation.mutate(data);
+    // Convert "Any" to empty string so backend doesn't filter on it
+    const searchData = {
+      ...data,
+      territory: data.territory === "Any" ? "" : data.territory,
+      platform: data.platform === "Any" ? "" : data.platform,
+    };
+    checkAvailabilityMutation.mutate(searchData);
   };
 
   const formatDate = (dateStr: string | null) => {
@@ -116,13 +126,20 @@ export default function AvailabilityChecker() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Territory</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="e.g. US, Canada, UK, Global..." 
-                        data-testid="input-territory"
-                        {...field} 
-                      />
-                    </FormControl>
+                    <Select onValueChange={field.onChange} value={field.value || "Any"}>
+                      <FormControl>
+                        <SelectTrigger data-testid="select-territory">
+                          <SelectValue placeholder="Select Territory" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {TERRITORY_OPTIONS.map((territory) => (
+                          <SelectItem key={territory} value={territory}>
+                            {territory}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -134,13 +151,20 @@ export default function AvailabilityChecker() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Platform</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="e.g. SVOD, TVOD, AVOD, FAST..." 
-                        data-testid="input-platform"
-                        {...field} 
-                      />
-                    </FormControl>
+                    <Select onValueChange={field.onChange} value={field.value || "Any"}>
+                      <FormControl>
+                        <SelectTrigger data-testid="select-platform">
+                          <SelectValue placeholder="Select Platform" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {PLATFORM_OPTIONS.map((platform) => (
+                          <SelectItem key={platform} value={platform}>
+                            {platform}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
