@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 import RoyaltyCalculator from "@/components/royalties/royalty-calculator";
 import { Button } from "@/components/ui/button";
 import { Download, CheckCircle, DollarSign } from "lucide-react";
@@ -11,6 +12,18 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 export default function Royalties() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading } = useAuth();
+  const [location, setLocation] = useLocation();
+
+  const [initialPartner, setInitialPartner] = useState<string | null>(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('partner');
+  });
+
+  // Sync URL partner with location changes
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setInitialPartner(params.get('partner'));
+  }, [location]);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -100,7 +113,7 @@ export default function Royalties() {
         </Button>
       </div>
 
-      <RoyaltyCalculator onCalculated={refetch} />
+      <RoyaltyCalculator onCalculated={refetch} initialPartner={initialPartner} />
 
       {/* Royalty Summary */}
       <div className="bg-card rounded-lg border p-6">

@@ -302,7 +302,10 @@ export default function ExpirationCalendar({ contracts, timePeriod = "month" }: 
                     {events.slice(0, 2).map((event, idx) => (
                       <Link
                         key={`${event.contract.id}-${event.type}-${idx}`}
-                        href={`/contracts?edit=${event.contract.id}`}
+                        href={event.type === "expiration" 
+                          ? `/contracts?view=${event.contract.id}`
+                          : `/royalties?partner=${encodeURIComponent(event.contract.partner)}`
+                        }
                       >
                         <div
                           className={`text-[10px] leading-tight px-1 py-0.5 rounded truncate flex items-center gap-1 cursor-pointer hover:opacity-80 ${

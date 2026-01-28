@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -23,9 +23,10 @@ type CalculatorData = z.infer<typeof calculatorSchema>;
 
 interface RoyaltyCalculatorProps {
   onCalculated?: () => void;
+  initialPartner?: string | null;
 }
 
-export default function RoyaltyCalculator({ onCalculated }: RoyaltyCalculatorProps) {
+export default function RoyaltyCalculator({ onCalculated, initialPartner }: RoyaltyCalculatorProps) {
   const { toast } = useToast();
   const [calculation, setCalculation] = useState<{
     revenue: number;
@@ -49,6 +50,16 @@ export default function RoyaltyCalculator({ onCalculated }: RoyaltyCalculatorPro
       contract.status === "Active" || contract.status === "In Perpetuity"
     ) : [],
   });
+
+  // Pre-select contract based on initial partner
+  useEffect(() => {
+    if (initialPartner && contracts && contracts.length > 0) {
+      const matchingContract = contracts.find((c: any) => c.partner === initialPartner);
+      if (matchingContract) {
+        form.setValue("contractId", matchingContract.id);
+      }
+    }
+  }, [initialPartner, contracts, form]);
 
   const selectedContract = contracts?.find((c: any) => c.id === form.watch("contractId"));
 

@@ -37,6 +37,8 @@ interface ContractTableProps {
   contracts: Contract[];
   isLoading: boolean;
   onUpdate: () => void;
+  initialViewContractId?: string | null;
+  onClearViewContract?: () => void;
 }
 
 interface ContractContentLink {
@@ -76,13 +78,31 @@ interface ContractHistory {
 type SortColumn = "partner" | "licensee" | "territory" | "platform" | "startDate" | "endDate" | "status";
 type SortDirection = "asc" | "desc";
 
-export default function ContractTable({ contracts, isLoading, onUpdate }: ContractTableProps) {
+export default function ContractTable({ contracts, isLoading, onUpdate, initialViewContractId, onClearViewContract }: ContractTableProps) {
   const { toast } = useToast();
   const [viewContract, setViewContract] = useState<Contract | null>(null);
   const [editContract, setEditContract] = useState<Contract | null>(null);
   const [selectedContentId, setSelectedContentId] = useState<string>("");
   const [sortColumn, setSortColumn] = useState<SortColumn | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+
+  // Handle initial view contract from URL
+  useEffect(() => {
+    if (initialViewContractId && contracts.length > 0) {
+      const contract = contracts.find(c => c.id === initialViewContractId);
+      if (contract) {
+        setViewContract(contract);
+      }
+    }
+  }, [initialViewContractId, contracts]);
+
+  // Clear URL when dialog is closed
+  const handleCloseViewDialog = () => {
+    setViewContract(null);
+    if (onClearViewContract) {
+      onClearViewContract();
+    }
+  };
 
   const { data: contractContent = [], refetch: refetchContractContent } = useQuery<ContractContentLink[]>({
     queryKey: ["/api/contracts", viewContract?.id, "content"],
@@ -424,7 +444,7 @@ export default function ContractTable({ contracts, isLoading, onUpdate }: Contra
       </div>
 
       {/* View Contract Dialog */}
-      <Dialog open={!!viewContract} onOpenChange={() => setViewContract(null)}>
+      <Dialog open={!!viewContract} onOpenChange={handleCloseViewDialog}>
         <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Contract Details</DialogTitle>

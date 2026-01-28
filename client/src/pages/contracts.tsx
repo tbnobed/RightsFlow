@@ -21,11 +21,17 @@ export default function Contracts() {
     const params = new URLSearchParams(window.location.search);
     return params.get('filter');
   });
+
+  const [viewContractId, setViewContractId] = useState<string | null>(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('view');
+  });
   
-  // Sync URL filter with location changes
+  // Sync URL filter and view with location changes
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setUrlFilter(params.get('filter'));
+    setViewContractId(params.get('view'));
   }, [location]);
   
   const [filters, setFilters] = useState({
@@ -229,6 +235,12 @@ export default function Contracts() {
         contracts={contracts || []} 
         isLoading={contractsLoading}
         onUpdate={refetch}
+        initialViewContractId={viewContractId}
+        onClearViewContract={() => {
+          setViewContractId(null);
+          setLocation('/contracts');
+          window.history.replaceState({}, '', '/contracts');
+        }}
       />
     </div>
   );
