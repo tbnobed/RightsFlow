@@ -553,6 +553,7 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
                   if (isChecked) {
                     form.setValue("endDate", "");
                     form.clearErrors("endDate");
+                    form.setValue("status", "In Perpetuity");
                   }
                 }}
                 data-testid="checkbox-auto-renew"
