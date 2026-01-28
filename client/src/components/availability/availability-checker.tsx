@@ -5,19 +5,19 @@ import { z } from "zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import { Search, CheckCircle, XCircle } from "lucide-react";
-
-const PREDEFINED_PLATFORMS = ["SVOD", "TVOD", "AVOD", "FAST", "Linear"];
+import { Search, CheckCircle, Eye, FileText, Calendar, MapPin, Monitor } from "lucide-react";
+import type { Contract } from "@shared/schema";
 
 const availabilitySchema = z.object({
   partner: z.string().min(1, "Partner name is required"),
-  territory: z.string().min(1, "Territory is required"),
+  territory: z.string().optional(),
   platform: z.string().optional(),
   startDate: z.string().min(1, "Start date is required"),
   endDate: z.string().min(1, "End date is required"),
@@ -29,11 +29,10 @@ export default function AvailabilityChecker() {
   const { toast } = useToast();
   const [result, setResult] = useState<{
     available: boolean;
-    conflicts: any[];
+    conflicts: Contract[];
     suggestions?: { territories: string[]; platforms: string[] };
   } | null>(null);
-  const [platformType, setPlatformType] = useState<"predefined" | "custom">("predefined");
-  const [customPlatform, setCustomPlatform] = useState<string>("");
+  const [viewContract, setViewContract] = useState<Contract | null>(null);
 
   const form = useForm<AvailabilityData>({
     resolver: zodResolver(availabilitySchema),
@@ -75,12 +74,12 @@ export default function AvailabilityChecker() {
   });
 
   const onSubmit = (data: AvailabilityData) => {
-    // Use custom platform if that's what the user selected
-    const finalData = {
-      ...data,
-      platform: platformType === "custom" ? customPlatform : data.platform,
-    };
-    checkAvailabilityMutation.mutate(finalData);
+    checkAvailabilityMutation.mutate(data);
+  };
+
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return "N/A";
+    return new Date(dateStr).toLocaleDateString();
   };
 
   return (
@@ -98,7 +97,7 @@ export default function AvailabilityChecker() {
                 name="partner"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Partner</FormLabel>
+                    <FormLabel>Partner *</FormLabel>
                     <FormControl>
                       <Input 
                         placeholder="Enter partner name..." 
@@ -117,81 +116,42 @@ export default function AvailabilityChecker() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Territory</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger data-testid="select-territory">
-                          <SelectValue placeholder="Select Territory" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Global">Global</SelectItem>
-                        <SelectItem value="US">US</SelectItem>
-                        <SelectItem value="Canada">Canada</SelectItem>
-                        <SelectItem value="UK">UK</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormControl>
+                      <Input 
+                        placeholder="e.g. US, Canada, UK, Global..." 
+                        data-testid="input-territory"
+                        {...field} 
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <div className="space-y-2">
-                <FormField
-                  control={form.control}
-                  name="platform"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Platform</FormLabel>
-                      <Select 
-                        onValueChange={(value) => {
-                          if (value === "custom") {
-                            setPlatformType("custom");
-                            field.onChange("");
-                          } else {
-                            setPlatformType("predefined");
-                            setCustomPlatform("");
-                            field.onChange(value);
-                          }
-                        }} 
-                        value={platformType === "custom" ? "custom" : field.value ?? undefined}
-                      >
-                        <FormControl>
-                          <SelectTrigger data-testid="select-platform">
-                            <SelectValue placeholder="Select Platform" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {PREDEFINED_PLATFORMS.map((platform) => (
-                            <SelectItem key={platform} value={platform}>
-                              {platform}
-                            </SelectItem>
-                          ))}
-                          <SelectItem value="custom">Custom</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                {platformType === "custom" && (
-                  <div className="pt-2">
-                    <Input 
-                      placeholder="Enter custom platform" 
-                      data-testid="input-custom-platform"
-                      value={customPlatform}
-                      onChange={(e) => setCustomPlatform(e.target.value)}
-                    />
-                  </div>
+              <FormField
+                control={form.control}
+                name="platform"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Platform</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="e.g. SVOD, TVOD, AVOD, FAST..." 
+                        data-testid="input-platform"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
                 )}
-              </div>
+              />
 
               <FormField
                 control={form.control}
                 name="startDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Start Date</FormLabel>
+                    <FormLabel>Start Date *</FormLabel>
                     <FormControl>
                       <Input 
                         type="date" 
@@ -209,7 +169,7 @@ export default function AvailabilityChecker() {
                 name="endDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>End Date</FormLabel>
+                    <FormLabel>End Date *</FormLabel>
                     <FormControl>
                       <Input 
                         type="date" 
@@ -247,27 +207,27 @@ export default function AvailabilityChecker() {
           <CardContent className="space-y-4">
             <div className={`border rounded-lg p-4 ${
               result.conflicts.length === 0 
-                ? 'border-green-200 bg-green-50' 
-                : 'border-blue-200 bg-blue-50'
+                ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950' 
+                : 'border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950'
             }`}>
               <div className="flex items-center justify-between">
                 <div>
                   <h4 className={`font-semibold ${
-                    result.conflicts.length === 0 ? 'text-green-800' : 'text-blue-800'
+                    result.conflicts.length === 0 ? 'text-green-800 dark:text-green-200' : 'text-blue-800 dark:text-blue-200'
                   }`} data-testid="availability-status">
                     {result.conflicts.length === 0 ? 'No Existing Contracts' : 'Existing Contracts Found'}
                   </h4>
                   <p className={`${
-                    result.conflicts.length === 0 ? 'text-green-700' : 'text-blue-700'
+                    result.conflicts.length === 0 ? 'text-green-700 dark:text-green-300' : 'text-blue-700 dark:text-blue-300'
                   }`}>
                     {result.conflicts.length === 0 
                       ? 'No existing contracts found for this partner, territory, and time period.'
-                      : `Found ${result.conflicts.length} existing contract(s) for this combination. Rights can overlap with multiple partners.`
+                      : `Found ${result.conflicts.length} existing contract(s) for this combination.`
                     }
                   </p>
                 </div>
                 <CheckCircle className={`h-8 w-8 ${
-                  result.conflicts.length === 0 ? 'text-green-600' : 'text-blue-600'
+                  result.conflicts.length === 0 ? 'text-green-600 dark:text-green-400' : 'text-blue-600 dark:text-blue-400'
                 }`} />
               </div>
             </div>
@@ -275,18 +235,55 @@ export default function AvailabilityChecker() {
             {result.conflicts.length > 0 && (
               <div className="bg-muted rounded-lg p-4">
                 <h4 className="font-semibold text-foreground mb-3">Existing Contracts</h4>
-                <div className="space-y-2">
-                  {result.conflicts.map((contract: any) => (
-                    <div key={contract.id} className="bg-background p-3 rounded border" data-testid={`existing-contract-${contract.id}`}>
-                      <div className="flex items-center justify-between">
-                        <p className="font-medium text-foreground">{contract.partner}</p>
-                        {contract.exclusivity === "Exclusive" && (
-                          <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded">Exclusive</span>
-                        )}
+                <div className="space-y-3">
+                  {result.conflicts.map((contract: Contract) => (
+                    <div key={contract.id} className="bg-background p-4 rounded border" data-testid={`existing-contract-${contract.id}`}>
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 space-y-2">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="font-medium text-foreground">{contract.partner}</p>
+                            {contract.exclusivity === "Exclusive" && (
+                              <Badge variant="outline" className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 border-amber-300">
+                                Exclusive
+                              </Badge>
+                            )}
+                            <Badge variant="outline" className={
+                              contract.status === "Active" ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" :
+                              contract.status === "In Perpetuity" ? "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200" :
+                              "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+                            }>
+                              {contract.status}
+                            </Badge>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-sm">
+                            <div className="flex items-center gap-1 text-muted-foreground">
+                              <FileText className="h-3 w-3" />
+                              <span>{contract.licensee}</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-muted-foreground">
+                              <MapPin className="h-3 w-3" />
+                              <span>{contract.territory}</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-muted-foreground">
+                              <Monitor className="h-3 w-3" />
+                              <span>{contract.platform}</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-muted-foreground">
+                              <Calendar className="h-3 w-3" />
+                              <span>{formatDate(contract.startDate)} - {contract.autoRenew ? 'Auto-renew' : formatDate(contract.endDate)}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setViewContract(contract)}
+                          data-testid={`button-view-contract-${contract.id}`}
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          View
+                        </Button>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        {contract.licensee} • {contract.startDate} to {contract.autoRenew ? 'Auto-renew' : contract.endDate}
-                      </p>
                     </div>
                   ))}
                 </div>
@@ -305,13 +302,13 @@ export default function AvailabilityChecker() {
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Exclusive Deals:</span>
                   <span className="text-foreground font-medium" data-testid="date-coverage">
-                    {result.conflicts.filter((c: any) => c.exclusivity === "Exclusive").length} found
+                    {result.conflicts.filter((c: Contract) => c.exclusivity === "Exclusive").length} found
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Non-Exclusive Deals:</span>
                   <span className="text-foreground font-medium" data-testid="platform-rights">
-                    {result.conflicts.filter((c: any) => c.exclusivity !== "Exclusive").length} found
+                    {result.conflicts.filter((c: Contract) => c.exclusivity !== "Exclusive").length} found
                   </span>
                 </div>
               </div>
@@ -319,20 +316,20 @@ export default function AvailabilityChecker() {
 
             {/* Alternative Suggestions - only shown when exclusive rights are found */}
             {result.suggestions && (
-              <div className="border border-amber-200 bg-amber-50 rounded-lg p-4">
-                <h4 className="font-semibold text-amber-800 mb-3">Alternative Options Available</h4>
-                <p className="text-sm text-amber-700 mb-3">
+              <div className="border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950 rounded-lg p-4">
+                <h4 className="font-semibold text-amber-800 dark:text-amber-200 mb-3">Alternative Options Available</h4>
+                <p className="text-sm text-amber-700 dark:text-amber-300 mb-3">
                   Exclusive rights exist for the searched combination. Consider these alternatives:
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {result.suggestions.territories.length > 0 && (
                     <div>
-                      <p className="text-sm font-medium text-amber-800 mb-2">Available Territories:</p>
+                      <p className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-2">Available Territories:</p>
                       <div className="flex flex-wrap gap-1">
                         {result.suggestions.territories.map((territory) => (
                           <span 
                             key={territory} 
-                            className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded"
+                            className="text-xs bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 px-2 py-1 rounded"
                           >
                             {territory}
                           </span>
@@ -342,12 +339,12 @@ export default function AvailabilityChecker() {
                   )}
                   {result.suggestions.platforms.length > 0 && (
                     <div>
-                      <p className="text-sm font-medium text-amber-800 mb-2">Available Platforms:</p>
+                      <p className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-2">Available Platforms:</p>
                       <div className="flex flex-wrap gap-1">
                         {result.suggestions.platforms.map((platform) => (
                           <span 
                             key={platform} 
-                            className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded"
+                            className="text-xs bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 px-2 py-1 rounded"
                           >
                             {platform}
                           </span>
@@ -361,6 +358,89 @@ export default function AvailabilityChecker() {
           </CardContent>
         </Card>
       )}
+
+      {/* Contract Detail Dialog */}
+      <Dialog open={!!viewContract} onOpenChange={() => setViewContract(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Contract Details</DialogTitle>
+          </DialogHeader>
+          {viewContract && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Partner</label>
+                  <p className="text-sm">{viewContract.partner}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Status</label>
+                  <p className="text-sm">
+                    <Badge variant="outline" className={
+                      viewContract.status === "Active" ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" :
+                      viewContract.status === "In Perpetuity" ? "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200" :
+                      "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+                    }>
+                      {viewContract.status}
+                    </Badge>
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Licensor</label>
+                  <p className="text-sm">{viewContract.licensor || "N/A"}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Licensee</label>
+                  <p className="text-sm">{viewContract.licensee}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Territory</label>
+                  <p className="text-sm">{viewContract.territory}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Platform</label>
+                  <p className="text-sm">{viewContract.platform}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Start Date</label>
+                  <p className="text-sm">{formatDate(viewContract.startDate)}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">End Date</label>
+                  <p className="text-sm">{viewContract.autoRenew ? 'Auto-renew' : formatDate(viewContract.endDate)}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Exclusivity</label>
+                  <p className="text-sm">{viewContract.exclusivity}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Royalty Type</label>
+                  <p className="text-sm">{viewContract.royaltyType}</p>
+                </div>
+                {viewContract.royaltyType === "Revenue Share" && (
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Royalty Rate</label>
+                    <p className="text-sm">{viewContract.royaltyRate}%</p>
+                  </div>
+                )}
+                {viewContract.royaltyType === "Flat Fee" && (
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Flat Fee</label>
+                    <p className="text-sm">${viewContract.flatFeeAmount}</p>
+                  </div>
+                )}
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Minimum Payment</label>
+                  <p className="text-sm">{viewContract.minimumPayment ? `$${viewContract.minimumPayment}` : "N/A"}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Payment Terms</label>
+                  <p className="text-sm">{viewContract.paymentTerms || "N/A"}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

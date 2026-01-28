@@ -51,7 +51,7 @@ export interface IStorage {
   // Rights availability
   checkRightsAvailability(params: {
     partner: string;
-    territory: string;
+    territory?: string;
     platform?: string;
     startDate: string;
     endDate: string;
@@ -313,16 +313,14 @@ export class DatabaseStorage implements IStorage {
   // Rights availability
   async checkRightsAvailability(params: {
     partner: string;
-    territory: string;
+    territory?: string;
     platform?: string;
     startDate: string;
     endDate: string;
   }): Promise<{ available: boolean; conflicts: Contract[]; suggestions?: { territories: string[]; platforms: string[] } }> {
     // Build conditions - territory and platform can be comma-separated in DB
-    const conditions = [
+    const conditions: any[] = [
       eq(contracts.partner, params.partner),
-      // Check if the searched territory is contained within the contract's territory field
-      sql`${contracts.territory} ILIKE ${'%' + params.territory + '%'}`,
       or(
         eq(contracts.status, "Active"),
         eq(contracts.status, "In Perpetuity")
@@ -336,6 +334,11 @@ export class DatabaseStorage implements IStorage {
         )
       )
     ];
+
+    // Only add territory filter if provided
+    if (params.territory) {
+      conditions.push(sql`${contracts.territory} ILIKE ${'%' + params.territory + '%'}`);
+    }
 
     // Only add platform filter if provided
     if (params.platform) {
