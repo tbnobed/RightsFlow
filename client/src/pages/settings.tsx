@@ -79,20 +79,20 @@ export default function Settings() {
       setExpiringEmail(user.email);
       setRevenueEmail(user.email);
     }
-    if (user?.role) {
-      if (user.role === "Admin") {
+    if (user?.role && !activeTab) {
+      if (user.role === "Admin" || user.role === "Sales Manager") {
         setActiveTab("users");
-      } else if (user.role === "Sales Manager") {
-        setActiveTab("audit");
       } else {
         setActiveTab("notifications");
       }
     }
   }, [user]);
 
+  const canManageUsers = user?.role === "Admin" || user?.role === "Sales Manager";
+  
   const { data: users = [], isLoading: usersLoading } = useQuery<User[]>({
     queryKey: ["/api/auth/users"],
-    enabled: user?.role === "Admin",
+    enabled: canManageUsers,
   });
 
   const canViewAudit = user?.role === "Admin" || user?.role === "Sales Manager";
@@ -181,7 +181,7 @@ export default function Settings() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className={`grid w-full ${user?.role === "Admin" ? "grid-cols-3" : "grid-cols-2"}`}>
-          {user?.role === "Admin" && (
+          {(user?.role === "Admin" || user?.role === "Sales Manager") && (
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               User Management
@@ -193,10 +193,12 @@ export default function Settings() {
               Audit Trail
             </TabsTrigger>
           )}
-          <TabsTrigger value="notifications" className="flex items-center gap-2">
-            <Bell className="h-4 w-4" />
-            Notifications
-          </TabsTrigger>
+          {user?.role === "Admin" && (
+            <TabsTrigger value="notifications" className="flex items-center gap-2">
+              <Bell className="h-4 w-4" />
+              Notifications
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="users" className="space-y-4">
@@ -230,17 +232,22 @@ export default function Settings() {
                     </div>
                     <div className="space-y-2">
                       <Label>Role</Label>
-                      <Select value={inviteRole} onValueChange={setInviteRole}>
-                        <SelectTrigger data-testid="select-invite-role">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Admin">Admin</SelectItem>
-                          <SelectItem value="Legal">Legal</SelectItem>
-                          <SelectItem value="Finance">Finance</SelectItem>
-                          <SelectItem value="Sales">Sales</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      {user?.role === "Sales Manager" ? (
+                        <Input value="Sales" disabled data-testid="input-invite-role-fixed" />
+                      ) : (
+                        <Select value={inviteRole} onValueChange={setInviteRole}>
+                          <SelectTrigger data-testid="select-invite-role">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Admin">Admin</SelectItem>
+                            <SelectItem value="Legal">Legal</SelectItem>
+                            <SelectItem value="Finance">Finance</SelectItem>
+                            <SelectItem value="Sales Manager">Sales Manager</SelectItem>
+                            <SelectItem value="Sales">Sales</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
                     </div>
                     <Button
                       onClick={() => inviteMutation.mutate()}
