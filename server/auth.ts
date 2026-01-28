@@ -260,8 +260,8 @@ export function setupAuth(app: Express) {
     }
   });
 
-  // List all users (admin only)
-  app.get("/api/auth/users", isAuthenticated, isAdmin, async (req: any, res) => {
+  // List all users (admin and sales manager)
+  app.get("/api/auth/users", isAuthenticated, isAdminOrSalesManager, async (req: any, res) => {
     try {
       const users = await storage.getAllUsers();
       res.json(users.map(user => ({
