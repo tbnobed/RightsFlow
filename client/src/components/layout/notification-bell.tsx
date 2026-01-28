@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Bell, FileWarning, FilePlus, Clock } from "lucide-react";
 import { format, differenceInDays, addDays } from "date-fns";
-import { Link } from "wouter";
+import { useLocation } from "wouter";
 
 type Contract = {
   id: string;
@@ -23,10 +23,34 @@ type Notification = {
   description: string;
   date: Date;
   contractId?: string;
+  isRead?: boolean;
 };
+
+const READ_NOTIFICATIONS_KEY = "promissio_read_notifications";
+
+function getReadNotifications(): Set<string> {
+  try {
+    const stored = localStorage.getItem(READ_NOTIFICATIONS_KEY);
+    return stored ? new Set(JSON.parse(stored)) : new Set();
+  } catch {
+    return new Set();
+  }
+}
+
+function markNotificationRead(id: string) {
+  const readNotifications = getReadNotifications();
+  readNotifications.add(id);
+  localStorage.setItem(READ_NOTIFICATIONS_KEY, JSON.stringify([...readNotifications]));
+}
 
 export default function NotificationBell() {
   const [open, setOpen] = useState(false);
+  const [readIds, setReadIds] = useState<Set<string>>(new Set());
+  const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    setReadIds(getReadNotifications());
+  }, []);
 
   const { data: contracts = [] } = useQuery<Contract[]>({
     queryKey: ["/api/contracts"],
@@ -84,8 +108,23 @@ export default function NotificationBell() {
     return notifications.sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 10);
   };
 
-  const notifications = getNotifications();
+  const notifications = getNotifications().map(n => ({
+    ...n,
+    isRead: readIds.has(n.id),
+  }));
+  const unreadCount = notifications.filter(n => !n.isRead).length;
   const hasNotifications = notifications.length > 0;
+
+  const handleNotificationClick = (notification: Notification) => {
+    markNotificationRead(notification.id);
+    setReadIds(new Set([...readIds, notification.id]));
+    setOpen(false);
+    if (notification.contractId) {
+      setLocation(`/contracts?highlight=${notification.contractId}`);
+    } else {
+      setLocation('/contracts');
+    }
+  };
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -110,8 +149,10 @@ export default function NotificationBell() {
           data-testid="button-notifications"
         >
           <Bell className="h-4 w-4" />
-          {hasNotifications && (
-            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 min-w-4 h-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center px-1">
+              {unreadCount}
+            </span>
           )}
         </Button>
       </PopoverTrigger>
@@ -126,37 +167,46 @@ export default function NotificationBell() {
             </div>
           ) : (
             notifications.map((notification) => (
-              <Link
+              <div
                 key={notification.id}
-                href="/contracts"
-                onClick={() => setOpen(false)}
+                onClick={() => handleNotificationClick(notification)}
+                className={`flex items-start gap-3 p-3 hover:bg-muted/50 cursor-pointer border-b last:border-b-0 ${
+                  notification.isRead ? 'opacity-60' : 'bg-muted/20'
+                }`}
+                data-testid={`notification-${notification.id}`}
               >
-                <div
-                  className="flex items-start gap-3 p-3 hover:bg-muted/50 cursor-pointer border-b last:border-b-0"
-                  data-testid={`notification-${notification.id}`}
-                >
-                  <div className="mt-0.5">{getIcon(notification.type)}</div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium">{notification.title}</p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {notification.description}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {format(notification.date, "MMM dd, yyyy")}
-                    </p>
-                  </div>
+                <div className="mt-0.5">{getIcon(notification.type)}</div>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm ${notification.isRead ? 'font-normal' : 'font-semibold'}`}>
+                    {notification.title}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {notification.description}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {format(notification.date, "MMM dd, yyyy")}
+                  </p>
                 </div>
-              </Link>
+                {!notification.isRead && (
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2" />
+                )}
+              </div>
             ))
           )}
         </div>
         {hasNotifications && (
           <div className="p-2 border-t">
-            <Link href="/contracts" onClick={() => setOpen(false)}>
-              <Button variant="ghost" size="sm" className="w-full">
-                View All Contracts
-              </Button>
-            </Link>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full"
+              onClick={() => {
+                setOpen(false);
+                setLocation('/contracts');
+              }}
+            >
+              View All Contracts
+            </Button>
           </div>
         )}
       </PopoverContent>
