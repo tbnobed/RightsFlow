@@ -46,7 +46,8 @@ export default function Statements() {
 
   const partners = useMemo(() => {
     if (!contracts) return [];
-    const uniquePartners = [...new Set(contracts.map(c => c.partner))];
+    // Filter out empty/null partner values to prevent SelectItem error
+    const uniquePartners = [...new Set(contracts.map(c => c.partner).filter(p => p && p.trim() !== ''))];
     return uniquePartners.sort();
   }, [contracts]);
 
