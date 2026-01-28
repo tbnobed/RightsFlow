@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Users, History, Bell, Plus, Loader2, Send, Trash2 } from "lucide-react";
 import { format } from "date-fns";
+import AuditLog from "@/components/audit/audit-log";
 
 type User = {
   id: string;
@@ -26,15 +27,6 @@ type User = {
   createdAt: string;
 };
 
-type AuditLog = {
-  id: string;
-  action: string;
-  entityType: string;
-  entityId: string | null;
-  userId: string | null;
-  createdAt: string;
-  user?: { firstName: string; lastName: string; email: string };
-};
 
 export default function Settings() {
   const { toast } = useToast();
@@ -96,11 +88,6 @@ export default function Settings() {
   });
 
   const canViewAudit = user?.role === "Admin" || user?.role === "Sales Manager";
-  
-  const { data: auditLogs = [], isLoading: auditLoading } = useQuery<AuditLog[]>({
-    queryKey: ["/api/audit"],
-    enabled: canViewAudit,
-  });
 
   const inviteMutation = useMutation({
     mutationFn: async () => {
@@ -316,44 +303,7 @@ export default function Settings() {
         </TabsContent>
 
         <TabsContent value="audit" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Audit Trail</CardTitle>
-              <CardDescription>View all system activity and changes</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {auditLoading ? (
-                <div className="flex justify-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                </div>
-              ) : (
-                <div className="space-y-4 max-h-[600px] overflow-y-auto">
-                  {auditLogs.slice(0, 50).map((log) => (
-                    <div key={log.id} className="flex items-start gap-4 p-4 border rounded-lg" data-testid={`audit-log-${log.id}`}>
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
-                        {log.user?.firstName?.[0] || log.user?.email?.[0] || "S"}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex justify-between">
-                          <p className="font-medium">{log.action}</p>
-                          <span className="text-sm text-muted-foreground">
-                            {format(new Date(log.createdAt), 'MMM dd, yyyy HH:mm')}
-                          </span>
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          {log.user ? `${log.user.firstName || ''} ${log.user.lastName || ''}`.trim() || log.user.email : 'System'}
-                          {log.entityType && ` • ${log.entityType}`}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                  {auditLogs.length === 0 && (
-                    <p className="text-center text-muted-foreground py-8">No audit logs found</p>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <AuditLog filters={{}} />
         </TabsContent>
 
         <TabsContent value="notifications" className="space-y-4">
