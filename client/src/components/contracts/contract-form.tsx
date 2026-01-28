@@ -55,12 +55,13 @@ interface ContractFormProps {
 
 const PREDEFINED_PLATFORMS = ["FAST", "VOD", "TVOD", "SVOD", "AVOD", "Linear"];
 
-function getComputedStatus(contract: { status?: string | null; endDate?: string | null; autoRenew?: boolean | null }): "Active" | "Expired" | "In Perpetuity" | "Terminated" {
-  if (contract.status === 'Terminated' || contract.status === 'In Perpetuity') {
-    return contract.status;
-  }
+type ContractStatus = "Active" | "Expired" | "In Perpetuity" | "Terminated";
+
+function getComputedStatus(contract: { status?: string | null; endDate?: string | null; autoRenew?: boolean | null }): ContractStatus {
+  if (contract.status === 'Terminated') return 'Terminated';
+  if (contract.status === 'In Perpetuity') return 'In Perpetuity';
   if (contract.autoRenew) {
-    return contract.status || 'Active';
+    return (contract.status as ContractStatus) || 'Active';
   }
   if (contract.endDate) {
     const endDate = new Date(contract.endDate);
@@ -71,7 +72,7 @@ function getComputedStatus(contract: { status?: string | null; endDate?: string 
       return 'Expired';
     }
   }
-  return contract.status || 'Active';
+  return (contract.status as ContractStatus) || 'Active';
 }
 
 export default function ContractForm({ contractId, onSuccess, onCancel }: ContractFormProps) {
