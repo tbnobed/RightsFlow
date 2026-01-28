@@ -300,23 +300,27 @@ export default function ExpirationCalendar({ contracts, timePeriod = "month" }: 
                 {events.length > 0 && (
                   <div className="space-y-1">
                     {events.slice(0, 2).map((event, idx) => (
-                      <div
+                      <Link
                         key={`${event.contract.id}-${event.type}-${idx}`}
-                        className={`text-[10px] leading-tight px-1 py-0.5 rounded truncate flex items-center gap-1 ${
-                          event.type === "expiration" 
-                            ? "bg-primary/10" 
-                            : "bg-purple-500/20"
-                        }`}
-                        title={`${event.type === "expiration" ? "Expires: " : "Report Due: "}${event.label}`}
-                        data-testid={`event-${event.type}-${event.contract.id}`}
+                        href={`/contracts?edit=${event.contract.id}`}
                       >
-                        {event.type === "expiration" ? (
-                          <Calendar className="h-2 w-2 flex-shrink-0" />
-                        ) : (
-                          <FileText className="h-2 w-2 flex-shrink-0" />
-                        )}
-                        <span className="truncate">{event.label}</span>
-                      </div>
+                        <div
+                          className={`text-[10px] leading-tight px-1 py-0.5 rounded truncate flex items-center gap-1 cursor-pointer hover:opacity-80 ${
+                            event.type === "expiration" 
+                              ? "bg-primary/10" 
+                              : "bg-purple-500/20"
+                          }`}
+                          title={`${event.type === "expiration" ? "Expires: " : "Report Due: "}${event.label} - Click to view`}
+                          data-testid={`event-${event.type}-${event.contract.id}`}
+                        >
+                          {event.type === "expiration" ? (
+                            <Calendar className="h-2 w-2 flex-shrink-0" />
+                          ) : (
+                            <FileText className="h-2 w-2 flex-shrink-0" />
+                          )}
+                          <span className="truncate">{event.label}</span>
+                        </div>
+                      </Link>
                     ))}
                     {events.length > 2 && (
                       <div className="text-[10px] text-muted-foreground px-1">
