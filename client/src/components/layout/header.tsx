@@ -1,8 +1,9 @@
 import { useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Settings, LogOut } from "lucide-react";
+import { Settings, LogOut, Sun, Moon } from "lucide-react";
 import { queryClient } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/contexts/theme-context";
 import NotificationBell from "./notification-bell";
 
 const pageTitles: Record<string, string> = {
@@ -20,6 +21,7 @@ const pageTitles: Record<string, string> = {
 export default function Header() {
   const [location] = useLocation();
   const { user } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const isAdmin = user?.role === "Admin";
   const isSalesManager = user?.role === "Sales Manager";
   const canAccessAdmin = isAdmin || isSalesManager;
@@ -52,6 +54,16 @@ export default function Header() {
         </h2>
         <div className="flex items-center space-x-4">
           <NotificationBell />
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={toggleTheme} 
+            data-testid="button-theme-toggle"
+            className="text-white hover:text-white hover:bg-[#006666]"
+            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </Button>
           {canAccessAdmin && (
             <Link href="/settings">
               <Button variant="ghost" size="icon" data-testid="button-settings" className="text-white hover:text-white hover:bg-[#006666]">
