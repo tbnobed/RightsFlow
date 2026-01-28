@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Users, History, Bell, Plus, Loader2, Send, Trash2 } from "lucide-react";
+import { Users, History, Bell, Plus, Loader2, Send, Trash2, Pencil } from "lucide-react";
 import { format } from "date-fns";
 import AuditLog from "@/components/audit/audit-log";
 
@@ -36,6 +36,10 @@ export default function Settings() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("Sales");
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editRole, setEditRole] = useState("");
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   
   const [expiringEmail, setExpiringEmail] = useState("");
   const [expiringDays, setExpiringDays] = useState("30");
@@ -91,9 +95,9 @@ export default function Settings() {
 
   const inviteMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/auth/users/invite", {
+      const res = await apiRequest("POST", "/api/auth/invite", {
         email: inviteEmail,
-        role: inviteRole,
+        role: user?.role === "Sales Manager" ? "Sales" : inviteRole,
       });
       return res.json();
     },
@@ -119,6 +123,22 @@ export default function Settings() {
     },
     onError: (error: any) => {
       toast({ title: "Error", description: error.message || "Failed to delete user", variant: "destructive" });
+    },
+  });
+
+  const updateUserMutation = useMutation({
+    mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
+      const res = await apiRequest("PUT", `/api/auth/users/${userId}`, { role });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "User Updated", description: "User role has been updated" });
+      setEditDialogOpen(false);
+      setEditingUser(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/users"] });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to update user", variant: "destructive" });
     },
   });
 
@@ -281,17 +301,33 @@ export default function Settings() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          {u.id !== user?.id && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => deleteUserMutation.mutate(u.id)}
-                              disabled={deleteUserMutation.isPending}
-                              data-testid={`button-delete-user-${u.id}`}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          )}
+                          <div className="flex gap-2">
+                            {u.id !== user?.id && user?.role === "Admin" && (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setEditingUser(u);
+                                    setEditRole(u.role);
+                                    setEditDialogOpen(true);
+                                  }}
+                                  data-testid={`button-edit-user-${u.id}`}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => deleteUserMutation.mutate(u.id)}
+                                  disabled={deleteUserMutation.isPending}
+                                  data-testid={`button-delete-user-${u.id}`}
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -300,6 +336,44 @@ export default function Settings() {
               )}
             </CardContent>
           </Card>
+
+          <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Edit User Role</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 pt-4">
+                <div className="space-y-2">
+                  <Label>User</Label>
+                  <Input value={editingUser?.email || ""} disabled />
+                </div>
+                <div className="space-y-2">
+                  <Label>Role</Label>
+                  <Select value={editRole} onValueChange={setEditRole}>
+                    <SelectTrigger data-testid="select-edit-role">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Admin">Admin</SelectItem>
+                      <SelectItem value="Legal">Legal</SelectItem>
+                      <SelectItem value="Finance">Finance</SelectItem>
+                      <SelectItem value="Sales Manager">Sales Manager</SelectItem>
+                      <SelectItem value="Sales">Sales</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  onClick={() => editingUser && updateUserMutation.mutate({ userId: editingUser.id, role: editRole })}
+                  disabled={updateUserMutation.isPending || !editRole}
+                  className="w-full"
+                  data-testid="button-save-user"
+                >
+                  {updateUserMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                  Save Changes
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </TabsContent>
 
         <TabsContent value="audit" className="space-y-4">
