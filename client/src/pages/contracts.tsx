@@ -103,18 +103,18 @@ export default function Contracts() {
           <h1 className="text-2xl font-bold text-foreground">Contract Management</h1>
           <p className="text-muted-foreground">Manage intellectual property licensing contracts</p>
           {urlFilter && getFilterLabel() && (
-            <div className="mt-2">
-              <Badge variant="secondary" className="gap-1">
+            <div className="mt-2 flex items-center gap-2">
+              <Badge variant="secondary">
                 Showing: {getFilterLabel()}
-                <button 
-                  type="button"
-                  onClick={clearUrlFilter} 
-                  className="ml-1 hover:bg-muted rounded-full p-1 cursor-pointer"
-                  data-testid="button-clear-filter"
-                >
-                  <X className="h-4 w-4" />
-                </button>
               </Badge>
+              <button 
+                type="button"
+                onClick={clearUrlFilter} 
+                className="hover:bg-muted rounded-full p-1 cursor-pointer text-muted-foreground hover:text-foreground"
+                data-testid="button-clear-filter"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
           )}
         </div>
