@@ -129,6 +129,25 @@ export default function ContractTable({ contracts, isLoading, onUpdate }: Contra
     },
   });
 
+  const getComputedStatus = (contract: Contract): string => {
+    if (contract.status === 'Terminated' || contract.status === 'In Perpetuity') {
+      return contract.status;
+    }
+    if (contract.autoRenew) {
+      return contract.status || 'Active';
+    }
+    if (contract.endDate) {
+      const endDate = new Date(contract.endDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      endDate.setHours(0, 0, 0, 0);
+      if (endDate < today) {
+        return 'Expired';
+      }
+    }
+    return contract.status || 'Active';
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Active': return 'bg-green-100 text-green-800';
@@ -216,8 +235,8 @@ export default function ContractTable({ contracts, isLoading, onUpdate }: Contra
                   </div>
                 </td>
                 <td className="py-4 px-6" data-testid={`status-${contract.id}`}>
-                  <Badge className={getStatusColor(contract.status || "Active")}>
-                    {contract.status || "Active"}
+                  <Badge className={getStatusColor(getComputedStatus(contract))}>
+                    {getComputedStatus(contract)}
                   </Badge>
                 </td>
                 <td className="py-4 px-6">
@@ -333,8 +352,8 @@ export default function ContractTable({ contracts, isLoading, onUpdate }: Contra
                 )}
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">Status</label>
-                  <Badge className={getStatusColor(viewContract.status || "Active")}>
-                    {viewContract.status || "Active"}
+                  <Badge className={getStatusColor(getComputedStatus(viewContract))}>
+                    {getComputedStatus(viewContract)}
                   </Badge>
                 </div>
                 {viewContract.parentContractId && (

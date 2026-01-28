@@ -55,6 +55,25 @@ interface ContractFormProps {
 
 const PREDEFINED_PLATFORMS = ["FAST", "VOD", "TVOD", "SVOD", "AVOD", "Linear"];
 
+function getComputedStatus(contract: { status?: string | null; endDate?: string | null; autoRenew?: boolean | null }): "Active" | "Expired" | "In Perpetuity" | "Terminated" {
+  if (contract.status === 'Terminated' || contract.status === 'In Perpetuity') {
+    return contract.status;
+  }
+  if (contract.autoRenew) {
+    return contract.status || 'Active';
+  }
+  if (contract.endDate) {
+    const endDate = new Date(contract.endDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    endDate.setHours(0, 0, 0, 0);
+    if (endDate < today) {
+      return 'Expired';
+    }
+  }
+  return contract.status || 'Active';
+}
+
 export default function ContractForm({ contractId, onSuccess, onCancel }: ContractFormProps) {
   const { toast } = useToast();
   const [documentUrl, setDocumentUrl] = useState<string>("");
@@ -146,7 +165,7 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
         royaltyRate: existingContract.royaltyRate || "0",
         flatFeeAmount: existingContract.flatFeeAmount || "",
         exclusivity: existingContract.exclusivity || "Non-Exclusive",
-        status: existingContract.status || "Active",
+        status: getComputedStatus(existingContract),
         reportingFrequency: existingContract.reportingFrequency || "None",
         paymentTerms: existingContract.paymentTerms || "Net 30",
         minimumPayment: existingContract.minimumPayment || "",
