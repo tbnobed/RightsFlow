@@ -166,7 +166,7 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
         royaltyRate: existingContract.royaltyRate || "0",
         flatFeeAmount: existingContract.flatFeeAmount || "",
         exclusivity: existingContract.exclusivity || "Non-Exclusive",
-        status: getComputedStatus(existingContract),
+        status: existingContract.status || "Active",
         reportingFrequency: existingContract.reportingFrequency || "None",
         paymentTerms: existingContract.paymentTerms || "Net 30",
         minimumPayment: existingContract.minimumPayment || "",
