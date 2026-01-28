@@ -234,6 +234,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteContract(id: string): Promise<void> {
+    // Delete related royalties first
+    await db.delete(royalties).where(eq(royalties.contractId, id));
+    // Delete related contract-content links
+    await db.delete(contractContent).where(eq(contractContent.contractId, id));
+    // Now delete the contract
     await db.delete(contracts).where(eq(contracts.id, id));
   }
 
