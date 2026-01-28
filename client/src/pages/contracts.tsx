@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Filter, Download, X } from "lucide-react";
+import { Plus, Download, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 
@@ -198,9 +198,14 @@ export default function Contracts() {
               <SelectItem value="Global">Global</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="secondary" data-testid="button-filter">
-            <Filter className="h-4 w-4 mr-2" />
-            Filter
+          <Button 
+            variant="secondary" 
+            data-testid="button-reset-filters"
+            onClick={() => setFilters({ search: "", status: "", territory: "" })}
+            disabled={!filters.search && !filters.status && !filters.territory}
+          >
+            <X className="h-4 w-4 mr-2" />
+            Reset Filters
           </Button>
         </div>
       </div>
