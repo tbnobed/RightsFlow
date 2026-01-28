@@ -425,111 +425,137 @@ export default function ContractTable({ contracts, isLoading, onUpdate }: Contra
 
       {/* View Contract Dialog */}
       <Dialog open={!!viewContract} onOpenChange={() => setViewContract(null)}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Contract Details</DialogTitle>
           </DialogHeader>
           {viewContract && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Partner</label>
-                  <p className="text-sm">{viewContract.partner}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Licensor</label>
-                  <p className="text-sm">{viewContract.licensor}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Licensee</label>
-                  <p className="text-sm">{viewContract.licensee}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Territory</label>
-                  <p className="text-sm">{viewContract.territory}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Platform</label>
-                  <p className="text-sm">{viewContract.platform}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Royalty Terms</label>
-                  <p className="text-sm">
-                    {viewContract.royaltyType === "Flat Fee" ? (
-                      `Flat Fee: $${viewContract.flatFeeAmount || 0}`
-                    ) : (
-                      `Revenue Share: ${viewContract.royaltyRate || 0}%`
-                    )}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Start Date</label>
-                  <p className="text-sm">{formatDateLocal(viewContract.startDate)}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">End Date</label>
-                  <p className="text-sm">
-                    {viewContract.autoRenew ? (
-                      <Badge className="bg-cyan-100 text-cyan-800">Auto-renew</Badge>
-                    ) : viewContract.endDate ? (
-                      formatDateLocal(viewContract.endDate)
-                    ) : (
-                      "-"
-                    )}
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Exclusivity</label>
-                  <p className="text-sm">{viewContract.exclusivity}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Payment Terms</label>
-                  <p className="text-sm">{viewContract.paymentTerms || "Net 30"}</p>
-                </div>
-                {viewContract.minimumPayment && (
+            <div className="space-y-6">
+              {/* Section: Contract Details */}
+              <div className="bg-muted/20 rounded-lg p-4 border border-border">
+                <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Contract Details
+                </h3>
+                <div className="grid grid-cols-3 gap-4">
                   <div>
-                    <label className="text-sm font-medium text-muted-foreground">Minimum Threshold</label>
-                    <p className="text-sm">${viewContract.minimumPayment}</p>
+                    <label className="text-xs font-medium text-muted-foreground">Partner</label>
+                    <p className="text-sm font-medium">{viewContract.partner}</p>
                   </div>
-                )}
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Status</label>
-                  <Badge className={getStatusColor(getComputedStatus(viewContract))}>
-                    {getComputedStatus(viewContract)}
-                  </Badge>
-                </div>
-                {viewContract.parentContractId && (
                   <div>
-                    <label className="text-sm font-medium text-muted-foreground">Type</label>
-                    <Badge className="bg-purple-100 text-purple-800">Amendment</Badge>
+                    <label className="text-xs font-medium text-muted-foreground">Licensor</label>
+                    <p className="text-sm">{viewContract.licensor}</p>
                   </div>
-                )}
-              </div>
-              {viewContract.contractDocumentUrl && (
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Contract Document</label>
-                  <p className="text-sm">
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Licensee</label>
+                    <p className="text-sm">{viewContract.licensee}</p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Territory</label>
+                    <p className="text-sm">{viewContract.territory}</p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Platform</label>
+                    <p className="text-sm">{viewContract.platform}</p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Exclusivity</label>
+                    <p className="text-sm">{viewContract.exclusivity}</p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Start Date</label>
+                    <p className="text-sm">{formatDateLocal(viewContract.startDate)}</p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">End Date</label>
+                    <p className="text-sm">
+                      {viewContract.autoRenew ? (
+                        <Badge className="bg-cyan-100 text-cyan-800">Auto-renew</Badge>
+                      ) : viewContract.endDate ? (
+                        formatDateLocal(viewContract.endDate)
+                      ) : (
+                        "-"
+                      )}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Status</label>
+                    <div>
+                      <Badge className={getStatusColor(getComputedStatus(viewContract))}>
+                        {getComputedStatus(viewContract)}
+                      </Badge>
+                      {viewContract.parentContractId && (
+                        <Badge className="bg-purple-100 text-purple-800 ml-1">Amendment</Badge>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                {viewContract.contractDocumentUrl && (
+                  <div className="mt-3 pt-3 border-t border-border">
                     <a 
                       href={viewContract.contractDocumentUrl} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline"
+                      className="text-sm text-blue-600 hover:underline flex items-center gap-1"
                     >
-                      View Document
+                      <Eye className="h-3 w-3" />
+                      View Contract Document
                     </a>
-                  </p>
-                </div>
-              )}
+                  </div>
+                )}
+              </div>
 
-              <div className="border-t pt-4 mt-4">
-                <label className="text-sm font-medium text-muted-foreground">Linked Content</label>
+              {/* Section: Financial Terms */}
+              <div className="bg-muted/20 rounded-lg p-4 border border-border">
+                <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <DollarSign className="h-4 w-4" />
+                  Financial Terms
+                </h3>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Royalty Type</label>
+                    <p className="text-sm font-medium">{viewContract.royaltyType}</p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">
+                      {viewContract.royaltyType === "Flat Fee" ? "Flat Fee Amount" : "Revenue Share Rate"}
+                    </label>
+                    <p className="text-sm font-medium">
+                      {viewContract.royaltyType === "Flat Fee" 
+                        ? `$${Number(viewContract.flatFeeAmount || 0).toLocaleString()}`
+                        : `${viewContract.royaltyRate || 0}%`
+                      }
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Payment Terms</label>
+                    <p className="text-sm">{viewContract.paymentTerms || "Net 30"}</p>
+                  </div>
+                  {viewContract.minimumPayment && (
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Minimum Threshold</label>
+                      <p className="text-sm">${Number(viewContract.minimumPayment).toLocaleString()}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Section: Linked Content */}
+              <div className="bg-muted/20 rounded-lg p-4 border border-border">
+                <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <Film className="h-4 w-4" />
+                  Linked Content
+                  {contractContent.length > 0 && (
+                    <Badge variant="secondary" className="ml-auto">{contractContent.length}</Badge>
+                  )}
+                </h3>
                 
                 {contractContent.length > 0 ? (
-                  <div className="mt-2 space-y-2">
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
                     {contractContent.map((link) => (
                       <div 
                         key={link.id} 
-                        className="flex items-center justify-between bg-muted/50 rounded-md px-3 py-2"
+                        className="flex items-center justify-between bg-background rounded-md px-3 py-2 border border-border"
                         data-testid={`linked-content-${link.contentId}`}
                       >
                         <div className="flex items-center gap-2">
@@ -554,7 +580,7 @@ export default function ContractTable({ contracts, isLoading, onUpdate }: Contra
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground mt-2">No content linked to this contract.</p>
+                  <p className="text-sm text-muted-foreground">No content linked to this contract.</p>
                 )}
 
                 <div className="mt-3 flex gap-2">
@@ -596,106 +622,95 @@ export default function ContractTable({ contracts, isLoading, onUpdate }: Contra
                 </div>
               </div>
 
-              {/* Contract History Section */}
-              <div className="border-t pt-4 mt-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <History className="h-4 w-4 text-muted-foreground" />
-                  <label className="text-sm font-medium text-muted-foreground">Contract History</label>
+              {/* Section: Amendments */}
+              {contractHistory?.amendments && contractHistory.amendments.length > 0 && (
+                <div className="bg-muted/20 rounded-lg p-4 border border-border">
+                  <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Amendments
+                    <Badge variant="secondary" className="ml-auto">{contractHistory.amendments.length}</Badge>
+                  </h3>
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {contractHistory.amendments.map((amendment) => (
+                      <div key={amendment.id} className="flex items-center justify-between bg-background rounded-md px-3 py-2 text-sm border border-border">
+                        <div className="flex items-center gap-2">
+                          <Badge className="bg-purple-100 text-purple-800 text-xs">Amendment</Badge>
+                          <span>{amendment.partner}</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {formatDateLocal(amendment.startDate)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
+              )}
 
+              {/* Section: Royalties */}
+              {contractHistory?.royalties && contractHistory.royalties.length > 0 && (
+                <div className="bg-muted/20 rounded-lg p-4 border border-border">
+                  <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                    <DollarSign className="h-4 w-4" />
+                    Royalty History
+                    <Badge variant="secondary" className="ml-auto">{contractHistory.royalties.length}</Badge>
+                  </h3>
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {contractHistory.royalties.map((royalty) => (
+                      <div key={royalty.id} className="flex items-center justify-between bg-background rounded-md px-3 py-2 text-sm border border-border">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{royalty.period}</span>
+                          <Badge className={
+                            royalty.status === "Paid" ? "bg-green-100 text-green-800" :
+                            royalty.status === "Approved" ? "bg-blue-100 text-blue-800" :
+                            "bg-yellow-100 text-yellow-800"
+                          }>
+                            {royalty.status}
+                          </Badge>
+                        </div>
+                        <span className="font-semibold">${Number(royalty.royaltyAmount).toLocaleString()}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Section: Activity Log */}
+              <div className="bg-muted/20 rounded-lg p-4 border border-border">
+                <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <History className="h-4 w-4" />
+                  Activity Log
+                  {contractHistory?.auditLogs && contractHistory.auditLogs.length > 0 && (
+                    <Badge variant="secondary" className="ml-auto">{contractHistory.auditLogs.length}</Badge>
+                  )}
+                </h3>
+                
                 {/* Creation Info */}
                 {contractHistory && (
-                  <div className="bg-muted/30 rounded-md px-3 py-2 mb-3">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Users className="h-3 w-3 text-muted-foreground" />
-                      <span className="text-muted-foreground">Created</span>
-                      {contractHistory.createdAt && (
-                        <span>{new Date(contractHistory.createdAt).toLocaleDateString()}</span>
-                      )}
-                      {contractHistory.createdBy && (
-                        <span className="text-muted-foreground">
-                          by {contractHistory.createdBy.firstName} {contractHistory.createdBy.lastName}
-                        </span>
-                      )}
-                    </div>
+                  <div className="flex items-center gap-2 text-sm mb-3 pb-3 border-b border-border">
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">Created</span>
+                    {contractHistory.createdAt && (
+                      <span className="font-medium">{new Date(contractHistory.createdAt).toLocaleDateString()}</span>
+                    )}
+                    {contractHistory.createdBy && (
+                      <span className="text-muted-foreground">
+                        by <span className="font-medium text-foreground">{contractHistory.createdBy.firstName} {contractHistory.createdBy.lastName}</span>
+                      </span>
+                    )}
                   </div>
                 )}
 
-                {/* Amendments */}
-                {contractHistory?.amendments && contractHistory.amendments.length > 0 && (
-                  <div className="mb-3">
-                    <div className="flex items-center gap-2 mb-2">
-                      <FileText className="h-3 w-3 text-muted-foreground" />
-                      <span className="text-xs font-medium text-muted-foreground">Amendments ({contractHistory.amendments.length})</span>
-                    </div>
-                    <div className="space-y-1">
-                      {contractHistory.amendments.map((amendment) => (
-                        <div key={amendment.id} className="flex items-center justify-between bg-purple-50 dark:bg-purple-900/20 rounded-md px-3 py-2 text-sm">
-                          <div className="flex items-center gap-2">
-                            <Badge className="bg-purple-100 text-purple-800 text-xs">Amendment</Badge>
-                            <span>{amendment.partner}</span>
-                          </div>
-                          <span className="text-xs text-muted-foreground">
-                            {formatDateLocal(amendment.startDate)}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
+                {contractHistory?.auditLogs && contractHistory.auditLogs.length > 0 ? (
+                  <div className="space-y-1 max-h-48 overflow-y-auto">
+                    {contractHistory.auditLogs.map((log) => (
+                      <div key={log.id} className="flex items-center justify-between text-sm bg-background rounded px-3 py-2 border border-border">
+                        <span>{log.action}</span>
+                        <span className="text-xs text-muted-foreground">{new Date(log.createdAt).toLocaleDateString()}</span>
+                      </div>
+                    ))}
                   </div>
-                )}
-
-                {/* Royalties */}
-                {contractHistory?.royalties && contractHistory.royalties.length > 0 && (
-                  <div className="mb-3">
-                    <div className="flex items-center gap-2 mb-2">
-                      <DollarSign className="h-3 w-3 text-muted-foreground" />
-                      <span className="text-xs font-medium text-muted-foreground">Royalties ({contractHistory.royalties.length})</span>
-                    </div>
-                    <div className="space-y-1 max-h-32 overflow-y-auto">
-                      {contractHistory.royalties.map((royalty) => (
-                        <div key={royalty.id} className="flex items-center justify-between bg-muted/50 rounded-md px-3 py-2 text-sm">
-                          <div className="flex items-center gap-2">
-                            <span>{royalty.period}</span>
-                            <Badge className={
-                              royalty.status === "Paid" ? "bg-green-100 text-green-800" :
-                              royalty.status === "Approved" ? "bg-blue-100 text-blue-800" :
-                              "bg-yellow-100 text-yellow-800"
-                            }>
-                              {royalty.status}
-                            </Badge>
-                          </div>
-                          <span className="font-medium">${Number(royalty.royaltyAmount).toLocaleString()}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Audit Trail */}
-                {contractHistory?.auditLogs && contractHistory.auditLogs.length > 0 && (
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <History className="h-3 w-3 text-muted-foreground" />
-                      <span className="text-xs font-medium text-muted-foreground">Activity Log ({contractHistory.auditLogs.length})</span>
-                    </div>
-                    <div className="space-y-1 max-h-32 overflow-y-auto">
-                      {contractHistory.auditLogs.slice(0, 10).map((log) => (
-                        <div key={log.id} className="flex items-center justify-between text-xs text-muted-foreground bg-muted/30 rounded px-2 py-1.5">
-                          <span>{log.action}</span>
-                          <span>{new Date(log.createdAt).toLocaleDateString()}</span>
-                        </div>
-                      ))}
-                      {contractHistory.auditLogs.length > 10 && (
-                        <p className="text-xs text-muted-foreground text-center py-1">
-                          +{contractHistory.auditLogs.length - 10} more entries
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {(!contractHistory?.royalties?.length && !contractHistory?.auditLogs?.length && !contractHistory?.amendments?.length) && (
-                  <p className="text-sm text-muted-foreground">No history available for this contract.</p>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No activity recorded yet.</p>
                 )}
               </div>
             </div>
