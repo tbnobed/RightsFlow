@@ -664,7 +664,7 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Exclusivity</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value ?? undefined}>
+                <Select onValueChange={field.onChange} value={field.value || "Non-Exclusive"}>
                   <FormControl>
                     <SelectTrigger data-testid="select-exclusivity">
                       <SelectValue />
@@ -687,7 +687,7 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Status</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value ?? "Active"}>
+                <Select onValueChange={field.onChange} value={field.value || "Active"}>
                   <FormControl>
                     <SelectTrigger data-testid="select-status">
                       <SelectValue />
@@ -711,7 +711,7 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Revenue Reporting Frequency</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value ?? "None"}>
+                <Select onValueChange={field.onChange} value={field.value || "None"}>
                   <FormControl>
                     <SelectTrigger data-testid="select-reporting-frequency">
                       <SelectValue />
@@ -735,7 +735,7 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Payment Terms</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value ?? "Net 30"}>
+                <Select onValueChange={field.onChange} value={field.value || "Net 30"}>
                   <FormControl>
                     <SelectTrigger data-testid="select-payment-terms">
                       <SelectValue />
