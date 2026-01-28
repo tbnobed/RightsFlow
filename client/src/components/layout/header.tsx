@@ -21,6 +21,8 @@ export default function Header() {
   const [location] = useLocation();
   const { user } = useAuth();
   const isAdmin = user?.role === "Admin";
+  const isSalesManager = user?.role === "Sales Manager";
+  const canAccessAdmin = isAdmin || isSalesManager;
   
   const handleLogout = async () => {
     try {
@@ -50,7 +52,7 @@ export default function Header() {
         </h2>
         <div className="flex items-center space-x-4">
           <NotificationBell />
-          {isAdmin && (
+          {canAccessAdmin && (
             <Link href="/settings">
               <Button variant="ghost" size="icon" data-testid="button-settings" className="text-[hsl(215,15%,85%)] hover:text-[hsl(215,15%,95%)] hover:bg-[hsl(215,20%,25%)]">
                 <Settings className="h-4 w-4" />

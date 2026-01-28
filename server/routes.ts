@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated, isAdmin } from "./auth";
+import { setupAuth, isAuthenticated, isAdmin, isAdminOrSalesManager, canApproveRoyalties } from "./auth";
 import { fileStorageService, FileNotFoundError } from "./fileStorage";
 import multer from "multer";
 import { insertContractSchema, insertRoyaltySchema, availabilityRequestSchema, insertContentItemSchema, insertContractContentSchema } from "@shared/schema";
@@ -230,7 +230,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/royalties/:id", isAuthenticated, async (req: any, res) => {
+  app.put("/api/royalties/:id", isAuthenticated, canApproveRoyalties, async (req: any, res) => {
     try {
       const userId = req.session.userId;
       const royaltyId = req.params.id;
@@ -246,6 +246,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create audit log
       await storage.createAuditLog({
         action: "Royalty Updated",
+        entityType: "Royalty",
+        entityId: royaltyId,
+        oldValues: oldRoyalty,
+        newValues: updatedRoyalty,
+        userId,
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
+      });
+      
+      res.json(updatedRoyalty);
+    } catch (error) {
+      console.error("Error updating royalty:", error);
+      res.status(500).json({ message: "Failed to update royalty" });
+    }
+  });
+
+  // PATCH endpoint for royalty status updates
+  app.patch("/api/royalties/:id", isAuthenticated, canApproveRoyalties, async (req: any, res) => {
+    try {
+      const userId = req.session.userId;
+      const royaltyId = req.params.id;
+      
+      const oldRoyalty = await storage.getRoyalty(royaltyId);
+      if (!oldRoyalty) {
+        return res.status(404).json({ message: "Royalty not found" });
+      }
+      
+      const royaltyData = insertRoyaltySchema.partial().parse(req.body);
+      const updatedRoyalty = await storage.updateRoyalty(royaltyId, royaltyData);
+      
+      // Create audit log
+      await storage.createAuditLog({
+        action: "Royalty Status Updated",
         entityType: "Royalty",
         entityId: royaltyId,
         oldValues: oldRoyalty,
@@ -432,7 +465,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Audit routes
-  app.get("/api/audit", isAuthenticated, async (req, res) => {
+  app.get("/api/audit", isAuthenticated, isAdminOrSalesManager, async (req, res) => {
     try {
       const { action, userId, startDate, endDate } = req.query;
       const auditLogs = await storage.getAuditLogs({

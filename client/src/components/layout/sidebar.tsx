@@ -8,7 +8,8 @@ import {
   DollarSign, 
   FileText,
   ChartBar,
-  Library
+  Library,
+  ClipboardList
 } from "lucide-react";
 import promissioLogo from "@assets/promissio_1758823299279.png";
 
@@ -20,6 +21,10 @@ const navigation = [
   { name: "Royalties", href: "/royalties", icon: DollarSign },
   { name: "Statements", href: "/statements", icon: FileText },
   { name: "Reports", href: "/reports", icon: ChartBar },
+];
+
+const adminNavigation = [
+  { name: "Audit Trail", href: "/audit", icon: ClipboardList, roles: ["Admin", "Sales Manager"] },
 ];
 
 export default function Sidebar() {
@@ -62,6 +67,26 @@ export default function Sidebar() {
               </li>
             );
           })}
+          {adminNavigation
+            .filter(item => user?.role && item.roles.includes(user.role))
+            .map((item) => {
+              const isActive = location === item.href;
+              return (
+                <li key={item.name}>
+                  <Link 
+                    href={item.href}
+                    className={cn(
+                      "flex items-center px-3 py-2 rounded-md transition-all sidebar-link",
+                      isActive && "sidebar-link-active"
+                    )}
+                    data-testid={`nav-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
+                  >
+                    <item.icon className="h-4 w-4 mr-3" />
+                    {item.name}
+                  </Link>
+                </li>
+              );
+            })}
         </ul>
       </nav>
       

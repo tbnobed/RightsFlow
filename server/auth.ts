@@ -84,6 +84,24 @@ export function isAdmin(req: any, res: Response, next: NextFunction) {
   return res.status(403).json({ message: "Admin access required" });
 }
 
+// Admin or Sales Manager middleware (for audit trail access)
+export function isAdminOrSalesManager(req: any, res: Response, next: NextFunction) {
+  if (req.session && req.session.userId && 
+      (req.session.userRole === "Admin" || req.session.userRole === "Sales Manager")) {
+    return next();
+  }
+  return res.status(403).json({ message: "Admin or Sales Manager access required" });
+}
+
+// Can approve royalties middleware
+export function canApproveRoyalties(req: any, res: Response, next: NextFunction) {
+  const allowedRoles = ["Admin", "Finance", "Sales Manager"];
+  if (req.session && req.session.userId && allowedRoles.includes(req.session.userRole)) {
+    return next();
+  }
+  return res.status(403).json({ message: "You don't have permission to approve royalties" });
+}
+
 // Hash password
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 12);
@@ -471,10 +489,15 @@ export function setupAuth(app: Express) {
     }
   });
 
-  // Invite user (admin only)
-  app.post("/api/auth/invite", isAuthenticated, isAdmin, async (req: any, res) => {
+  // Invite user (admin or sales manager)
+  app.post("/api/auth/invite", isAuthenticated, isAdminOrSalesManager, async (req: any, res) => {
     try {
       const inviteData = inviteUserSchema.parse(req.body) as InviteUserData;
+      
+      // Sales Manager can only invite Sales users
+      if (req.session.userRole === "Sales Manager" && inviteData.role !== "Sales") {
+        return res.status(403).json({ message: "Sales Managers can only invite Sales users" });
+      }
       
       // Check if user already exists
       const existingUser = await storage.getUserByEmail(inviteData.email);
