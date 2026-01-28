@@ -3,7 +3,7 @@ import { Contract, ContentItem } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Eye, Edit, Trash2, Film, Tv, Radio, FileVideo, Plus, X } from "lucide-react";
+import { Eye, Edit, Trash2, Film, Tv, Radio, FileVideo, Plus, X, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -48,11 +48,16 @@ interface ContractContentLink {
   content: ContentItem;
 }
 
+type SortColumn = "partner" | "licensee" | "territory" | "platform" | "startDate" | "endDate" | "status";
+type SortDirection = "asc" | "desc";
+
 export default function ContractTable({ contracts, isLoading, onUpdate }: ContractTableProps) {
   const { toast } = useToast();
   const [viewContract, setViewContract] = useState<Contract | null>(null);
   const [editContract, setEditContract] = useState<Contract | null>(null);
   const [selectedContentId, setSelectedContentId] = useState<string>("");
+  const [sortColumn, setSortColumn] = useState<SortColumn | null>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
   const { data: contractContent = [], refetch: refetchContractContent } = useQuery<ContractContentLink[]>({
     queryKey: ["/api/contracts", viewContract?.id, "content"],
@@ -170,6 +175,66 @@ export default function ContractTable({ contracts, isLoading, onUpdate }: Contra
     }
   };
 
+  const handleSort = (column: SortColumn) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
+  };
+
+  const getSortIcon = (column: SortColumn) => {
+    if (sortColumn !== column) {
+      return <ArrowUpDown className="h-3 w-3 ml-1 opacity-50" />;
+    }
+    return sortDirection === "asc" 
+      ? <ArrowUp className="h-3 w-3 ml-1" />
+      : <ArrowDown className="h-3 w-3 ml-1" />;
+  };
+
+  const sortedContracts = [...contracts].sort((a, b) => {
+    if (!sortColumn) return 0;
+    
+    let aVal: string | number = "";
+    let bVal: string | number = "";
+    
+    switch (sortColumn) {
+      case "partner":
+        aVal = a.partner?.toLowerCase() || "";
+        bVal = b.partner?.toLowerCase() || "";
+        break;
+      case "licensee":
+        aVal = a.licensee?.toLowerCase() || "";
+        bVal = b.licensee?.toLowerCase() || "";
+        break;
+      case "territory":
+        aVal = a.territory?.toLowerCase() || "";
+        bVal = b.territory?.toLowerCase() || "";
+        break;
+      case "platform":
+        aVal = a.platform?.toLowerCase() || "";
+        bVal = b.platform?.toLowerCase() || "";
+        break;
+      case "startDate":
+        aVal = a.startDate || "";
+        bVal = b.startDate || "";
+        break;
+      case "endDate":
+        aVal = a.endDate || "";
+        bVal = b.endDate || "";
+        break;
+      case "status":
+        aVal = getComputedStatus(a).toLowerCase();
+        bVal = getComputedStatus(b).toLowerCase();
+        break;
+    }
+    
+    if (aVal < bVal) return sortDirection === "asc" ? -1 : 1;
+    if (aVal > bVal) return sortDirection === "asc" ? 1 : -1;
+    return 0;
+  });
+
   if (isLoading) {
     return (
       <div className="bg-card rounded-lg border overflow-hidden">
@@ -190,18 +255,53 @@ export default function ContractTable({ contracts, isLoading, onUpdate }: Contra
         <table className="w-full">
           <thead className="bg-muted">
             <tr>
-              <th className="text-left py-4 px-6 text-sm font-medium text-muted-foreground">Partner</th>
-              <th className="text-left py-4 px-6 text-sm font-medium text-muted-foreground">Licensee</th>
-              <th className="text-left py-4 px-6 text-sm font-medium text-muted-foreground">Territory</th>
-              <th className="text-left py-4 px-6 text-sm font-medium text-muted-foreground">Platform</th>
-              <th className="text-left py-4 px-6 text-sm font-medium text-muted-foreground">Start Date</th>
-              <th className="text-left py-4 px-6 text-sm font-medium text-muted-foreground">End Date</th>
-              <th className="text-left py-4 px-6 text-sm font-medium text-muted-foreground">Status</th>
+              <th 
+                className="text-left py-4 px-6 text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground select-none"
+                onClick={() => handleSort("partner")}
+              >
+                <div className="flex items-center">Partner{getSortIcon("partner")}</div>
+              </th>
+              <th 
+                className="text-left py-4 px-6 text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground select-none"
+                onClick={() => handleSort("licensee")}
+              >
+                <div className="flex items-center">Licensee{getSortIcon("licensee")}</div>
+              </th>
+              <th 
+                className="text-left py-4 px-6 text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground select-none"
+                onClick={() => handleSort("territory")}
+              >
+                <div className="flex items-center">Territory{getSortIcon("territory")}</div>
+              </th>
+              <th 
+                className="text-left py-4 px-6 text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground select-none"
+                onClick={() => handleSort("platform")}
+              >
+                <div className="flex items-center">Platform{getSortIcon("platform")}</div>
+              </th>
+              <th 
+                className="text-left py-4 px-6 text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground select-none"
+                onClick={() => handleSort("startDate")}
+              >
+                <div className="flex items-center">Start Date{getSortIcon("startDate")}</div>
+              </th>
+              <th 
+                className="text-left py-4 px-6 text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground select-none"
+                onClick={() => handleSort("endDate")}
+              >
+                <div className="flex items-center">End Date{getSortIcon("endDate")}</div>
+              </th>
+              <th 
+                className="text-left py-4 px-6 text-sm font-medium text-muted-foreground cursor-pointer hover:text-foreground select-none"
+                onClick={() => handleSort("status")}
+              >
+                <div className="flex items-center">Status{getSortIcon("status")}</div>
+              </th>
               <th className="text-left py-4 px-6 text-sm font-medium text-muted-foreground">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {contracts.map((contract) => (
+            {sortedContracts.map((contract) => (
               <tr 
                 key={contract.id} 
                 className="border-b border-border hover:bg-muted/30 transition-all"
