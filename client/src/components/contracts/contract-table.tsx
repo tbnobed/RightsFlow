@@ -3,7 +3,7 @@ import { Contract, ContentItem } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Eye, Edit, Trash2, Film, Tv, Radio, FileVideo, Plus, X, ArrowUpDown, ArrowUp, ArrowDown, History, DollarSign, FileText, Users } from "lucide-react";
+import { Eye, Edit, Trash2, Film, Tv, Radio, FileVideo, Plus, X, ArrowUpDown, ArrowUp, ArrowDown, History, DollarSign, FileText, Users, ChevronDown, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -85,6 +85,7 @@ export default function ContractTable({ contracts, isLoading, onUpdate, initialV
   const [selectedContentId, setSelectedContentId] = useState<string>("");
   const [sortColumn, setSortColumn] = useState<SortColumn | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [royaltiesExpanded, setRoyaltiesExpanded] = useState(false);
 
   // Handle initial view contract from URL
   useEffect(() => {
@@ -99,6 +100,7 @@ export default function ContractTable({ contracts, isLoading, onUpdate, initialV
   // Clear URL when dialog is closed
   const handleCloseViewDialog = () => {
     setViewContract(null);
+    setRoyaltiesExpanded(false);
     if (onClearViewContract) {
       onClearViewContract();
     }
@@ -667,32 +669,71 @@ export default function ContractTable({ contracts, isLoading, onUpdate, initialV
               )}
 
               {/* Section: Royalties */}
-              {contractHistory?.royalties && contractHistory.royalties.length > 0 && (
-                <div className="bg-muted/20 rounded-lg p-4 border border-border">
-                  <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                    <DollarSign className="h-4 w-4" />
-                    Royalty History
-                    <Badge variant="secondary" className="ml-auto">{contractHistory.royalties.length}</Badge>
-                  </h3>
-                  <div className="space-y-2 max-h-48 overflow-y-auto">
-                    {contractHistory.royalties.map((royalty) => (
-                      <div key={royalty.id} className="flex items-center justify-between bg-background rounded-md px-3 py-2 text-sm border border-border">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{royalty.period}</span>
-                          <Badge className={
-                            royalty.status === "Paid" ? "bg-green-100 text-green-800" :
-                            royalty.status === "Approved" ? "bg-blue-100 text-blue-800" :
-                            "bg-yellow-100 text-yellow-800"
-                          }>
-                            {royalty.status}
-                          </Badge>
-                        </div>
-                        <span className="font-semibold">${Number(royalty.royaltyAmount).toLocaleString()}</span>
+              {contractHistory?.royalties && contractHistory.royalties.length > 0 && (() => {
+                const totalRoyalties = contractHistory.royalties.reduce((sum, r) => sum + Number(r.royaltyAmount), 0);
+                const paidRoyalties = contractHistory.royalties.filter(r => r.status === "Paid").reduce((sum, r) => sum + Number(r.royaltyAmount), 0);
+                const pendingRoyalties = contractHistory.royalties.filter(r => r.status === "Pending").reduce((sum, r) => sum + Number(r.royaltyAmount), 0);
+                
+                return (
+                  <div className="bg-muted/20 rounded-lg p-4 border border-border">
+                    <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                      <DollarSign className="h-4 w-4" />
+                      Royalties
+                    </h3>
+                    
+                    {/* Summary */}
+                    <div className="grid grid-cols-3 gap-4 mb-3">
+                      <div className="bg-background rounded-md p-3 border border-border text-center">
+                        <div className="text-lg font-bold text-foreground">${totalRoyalties.toLocaleString()}</div>
+                        <div className="text-xs text-muted-foreground">Total</div>
                       </div>
-                    ))}
+                      <div className="bg-background rounded-md p-3 border border-border text-center">
+                        <div className="text-lg font-bold text-green-600">${paidRoyalties.toLocaleString()}</div>
+                        <div className="text-xs text-muted-foreground">Paid</div>
+                      </div>
+                      <div className="bg-background rounded-md p-3 border border-border text-center">
+                        <div className="text-lg font-bold text-amber-600">${pendingRoyalties.toLocaleString()}</div>
+                        <div className="text-xs text-muted-foreground">Pending</div>
+                      </div>
+                    </div>
+                    
+                    {/* Expandable Details */}
+                    <button
+                      onClick={() => setRoyaltiesExpanded(!royaltiesExpanded)}
+                      className="w-full flex items-center justify-between px-3 py-2 bg-background rounded-md border border-border hover:bg-muted/50 transition-colors text-sm"
+                      data-testid="button-expand-royalties"
+                    >
+                      <span className="font-medium">View Detailed Report ({contractHistory.royalties.length} payments)</span>
+                      {royaltiesExpanded ? (
+                        <ChevronDown className="h-4 w-4" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4" />
+                      )}
+                    </button>
+                    
+                    {royaltiesExpanded && (
+                      <div className="mt-3 space-y-2 max-h-64 overflow-y-auto">
+                        {contractHistory.royalties.map((royalty) => (
+                          <div key={royalty.id} className="flex items-center justify-between bg-background rounded-md px-3 py-2 text-sm border border-border">
+                            <div className="flex items-center gap-3">
+                              <span className="font-medium min-w-[80px]">{royalty.period}</span>
+                              <Badge className={
+                                royalty.status === "Paid" ? "bg-green-100 text-green-800" :
+                                royalty.status === "Approved" ? "bg-blue-100 text-blue-800" :
+                                "bg-yellow-100 text-yellow-800"
+                              }>
+                                {royalty.status}
+                              </Badge>
+                              <span className="text-muted-foreground">Revenue: ${Number(royalty.revenue).toLocaleString()}</span>
+                            </div>
+                            <span className="font-semibold">${Number(royalty.royaltyAmount).toLocaleString()}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Section: Activity Log */}
               <div className="bg-muted/20 rounded-lg p-4 border border-border">
