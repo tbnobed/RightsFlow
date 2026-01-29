@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ChevronLeft, ChevronRight, ExternalLink, FileText, Calendar, AlertTriangle } from "lucide-react";
 import { Link } from "wouter";
 import { 
@@ -39,6 +40,7 @@ type CalendarEvent = {
 export default function ExpirationCalendar({ contracts, timePeriod = "month" }: ExpirationCalendarProps) {
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today);
+  const [selectedDay, setSelectedDay] = useState<{ date: Date; events: CalendarEvent[] } | null>(null);
   
 
   const monthStart = startOfMonth(currentMonth);
@@ -326,9 +328,17 @@ export default function ExpirationCalendar({ contracts, timePeriod = "month" }: 
                       </Link>
                     ))}
                     {events.length > 2 && (
-                      <div className="text-[10px] text-muted-foreground px-1">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedDay({ date: day, events });
+                        }}
+                        className="text-[10px] text-primary hover:text-primary/80 px-1 cursor-pointer hover:underline font-medium"
+                        data-testid={`button-more-events-${format(day, "yyyy-MM-dd")}`}
+                      >
                         +{events.length - 2} more
-                      </div>
+                      </button>
                     )}
                   </div>
                 )}
@@ -430,6 +440,75 @@ export default function ExpirationCalendar({ contracts, timePeriod = "month" }: 
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={!!selectedDay} onOpenChange={() => setSelectedDay(null)}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Events for {selectedDay && format(selectedDay.date, "MMMM d, yyyy")}
+            </DialogTitle>
+          </DialogHeader>
+          {selectedDay && (
+            <div className="space-y-2">
+              <div className="flex gap-4 text-sm text-muted-foreground mb-4">
+                <span className="flex items-center gap-1">
+                  <div className="w-3 h-3 rounded bg-primary/20 border border-primary"></div>
+                  Expirations: {selectedDay.events.filter(e => e.type === "expiration").length}
+                </span>
+                <span className="flex items-center gap-1">
+                  <div className="w-3 h-3 rounded bg-purple-500/20 border border-purple-500"></div>
+                  Reports: {selectedDay.events.filter(e => e.type === "report").length}
+                </span>
+              </div>
+              <div className="space-y-2 max-h-[50vh] overflow-y-auto">
+                {selectedDay.events.map((event, idx) => (
+                  <Link
+                    key={`${event.contract.id}-${event.type}-${idx}`}
+                    href={event.type === "expiration" 
+                      ? `/contracts?view=${event.contract.id}`
+                      : `/royalties?partner=${encodeURIComponent(event.contract.partner)}`
+                    }
+                    onClick={() => setSelectedDay(null)}
+                  >
+                    <div
+                      className={`p-3 rounded-lg border cursor-pointer hover:bg-accent/50 transition-colors ${
+                        event.type === "expiration" 
+                          ? "border-primary/30 bg-primary/5" 
+                          : "border-purple-500/30 bg-purple-500/5"
+                      }`}
+                      data-testid={`dialog-event-${event.type}-${event.contract.id}`}
+                    >
+                      <div className="flex items-center gap-2 mb-1">
+                        {event.type === "expiration" ? (
+                          <Calendar className="h-4 w-4 text-primary" />
+                        ) : (
+                          <FileText className="h-4 w-4 text-purple-500" />
+                        )}
+                        <span className="font-medium text-sm">{event.label}</span>
+                        <Badge variant="outline" className="text-[10px] ml-auto">
+                          {event.type === "expiration" ? "Expiration" : "Report Due"}
+                        </Badge>
+                      </div>
+                      <div className="text-xs text-muted-foreground ml-6">
+                        <span>{event.contract.licensee}</span>
+                        <span className="mx-2">•</span>
+                        <span>{event.contract.territory}</span>
+                        {event.contract.platform && (
+                          <>
+                            <span className="mx-2">•</span>
+                            <span>{event.contract.platform}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
