@@ -648,8 +648,11 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
                         step="0.01" 
                         placeholder="0.00" 
                         data-testid="input-flat-fee"
-                        {...field}
                         value={field.value ?? ""}
+                        onChange={(e) => field.onChange(e.target.value)}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        ref={field.ref}
                       />
                     </FormControl>
                     <FormMessage />
