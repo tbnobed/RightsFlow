@@ -370,8 +370,9 @@ export default function ContractTable({ contracts, isLoading, onUpdate, initialV
             {sortedContracts.map((contract) => (
               <tr 
                 key={contract.id} 
-                className="border-b border-border hover:bg-muted/30 transition-all"
+                className="border-b border-border hover:bg-muted/30 transition-all cursor-pointer"
                 data-testid={`contract-row-${contract.id}`}
+                onClick={() => setViewContract(contract)}
               >
                 <td className="py-4 px-6 font-medium text-foreground" data-testid={`text-partner-${contract.id}`}>
                   <div className="flex items-center gap-2">
@@ -411,7 +412,7 @@ export default function ContractTable({ contracts, isLoading, onUpdate, initialV
                     {getComputedStatus(contract)}
                   </Badge>
                 </td>
-                <td className="py-4 px-6">
+                <td className="py-4 px-6" onClick={(e) => e.stopPropagation()}>
                   <div className="flex space-x-2">
                     <Button 
                       variant="ghost" 
