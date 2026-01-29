@@ -636,29 +636,21 @@ export default function ContractForm({ contractId, onSuccess, onCancel }: Contra
                 )}
               />
             ) : (
-              <FormField
-                control={form.control}
-                name="flatFeeAmount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Flat Fee Amount ($)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        step="0.01" 
-                        placeholder="0.00" 
-                        data-testid="input-flat-fee"
-                        value={field.value ?? ""}
-                        onChange={(e) => field.onChange(e.target.value)}
-                        onBlur={field.onBlur}
-                        name={field.name}
-                        ref={field.ref}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="space-y-2">
+                <label className="text-sm font-medium leading-none" htmlFor="flatFeeAmount">
+                  Flat Fee Amount ($)
+                </label>
+                <input
+                  id="flatFeeAmount"
+                  type="number"
+                  step="0.01"
+                  placeholder="0.00"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:text-sm"
+                  data-testid="input-flat-fee"
+                  value={form.watch("flatFeeAmount") ?? ""}
+                  onChange={(e) => form.setValue("flatFeeAmount", e.target.value)}
+                />
+              </div>
             )}
           </div>
 
