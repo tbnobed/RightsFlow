@@ -17,7 +17,7 @@ import {
   type InsertContentItem,
   type ContractContent,
   type InsertContractContent,
-} from "@shared/schema";
+} from "../shared/schema";
 import { db } from "./db";
 import { eq, and, or, gte, lte, lt, desc, sql, inArray, isNull, ne } from "drizzle-orm";
 

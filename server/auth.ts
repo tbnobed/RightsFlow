@@ -3,7 +3,7 @@ import { Express, Request, Response, NextFunction } from "express";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { nanoid } from "nanoid";
-import { loginSchema, CreateUserData, InviteUserData, AcceptInviteData, inviteUserSchema, acceptInviteSchema } from "@shared/schema";
+import { loginSchema, CreateUserData, InviteUserData, AcceptInviteData, inviteUserSchema, acceptInviteSchema } from "../shared/schema";
 import { storage } from "./storage";
 import { sendUserInviteEmail, sendPasswordResetEmail } from "./sendgrid";
 

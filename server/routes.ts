@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isAdmin, isAdminOrSalesManager, canApproveRoyalties } from "./auth";
 import { fileStorageService, FileNotFoundError } from "./fileStorage";
 import multer from "multer";
-import { insertContractSchema, insertRoyaltySchema, availabilityRequestSchema, insertContentItemSchema, insertContractContentSchema } from "@shared/schema";
+import { insertContractSchema, insertRoyaltySchema, availabilityRequestSchema, insertContentItemSchema, insertContractContentSchema } from "../shared/schema";
 import { z } from "zod";
 import { sendRoyaltyStatement, sendContractExpiringNotification, sendRevenueReportDueNotification } from "./sendgrid";
 
