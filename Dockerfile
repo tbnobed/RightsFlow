@@ -56,6 +56,12 @@ COPY --from=builder --chown=appuser:nodejs /app/shared ./shared
 COPY --from=builder --chown=appuser:nodejs /app/migrations ./migrations
 RUN chmod +x /app/migrations/run-migrations.sh
 
+# Copy scripts directory for seeding
+COPY --from=builder --chown=appuser:nodejs /app/scripts ./scripts
+
+# Copy server directory for seed script database access
+COPY --from=builder --chown=appuser:nodejs /app/server ./server
+
 # Copy init script and make it executable
 COPY --from=builder --chown=appuser:nodejs /app/init-db.sh ./init-db.sh
 RUN chmod +x /app/init-db.sh
