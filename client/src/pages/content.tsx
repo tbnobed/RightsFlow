@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import PaginationControls from "@/components/ui/pagination-controls";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -117,6 +118,8 @@ export default function Content() {
   const [formData, setFormData] = useState<ContentFormData>(emptyFormData);
   const [sortColumn, setSortColumn] = useState<SortColumn | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
 
   const { data: contentItems = [], isLoading } = useQuery<ContentItem[]>({
     queryKey: ["/api/content"],
@@ -289,6 +292,25 @@ export default function Content() {
     if (aVal > bVal) return sortDirection === "asc" ? 1 : -1;
     return 0;
   });
+
+  // Pagination
+  const totalPages = Math.ceil(sortedItems.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedItems = sortedItems.slice(startIndex, startIndex + pageSize);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, typeFilter, pageSize]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(1);
+  };
 
   return (
     <div className="p-6 space-y-6" data-testid="content-catalog-view">
@@ -499,7 +521,7 @@ export default function Content() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sortedItems.map((item) => (
+              {paginatedItems.map((item) => (
                 <TableRow key={item.id} data-testid={`row-content-${item.id}`}>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-2">
@@ -552,6 +574,16 @@ export default function Content() {
               ))}
             </TableBody>
           </Table>
+          {sortedItems.length > 0 && (
+            <PaginationControls
+              currentPage={currentPage}
+              totalPages={totalPages}
+              pageSize={pageSize}
+              totalItems={sortedItems.length}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
+            />
+          )}
         </div>
       )}
 

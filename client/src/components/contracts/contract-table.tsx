@@ -10,6 +10,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import ContractForm from "./contract-form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import PaginationControls from "@/components/ui/pagination-controls";
 
 function formatDateLocal(dateString: string | null | undefined): string {
   if (!dateString) return "-";
@@ -94,6 +95,8 @@ export default function ContractTable({ contracts, isLoading, onUpdate, initialV
   const [sortColumn, setSortColumn] = useState<SortColumn | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [royaltiesExpanded, setRoyaltiesExpanded] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
 
   // Handle initial view contract from URL
   useEffect(() => {
@@ -301,6 +304,25 @@ export default function ContractTable({ contracts, isLoading, onUpdate, initialV
     return 0;
   });
 
+  // Pagination
+  const totalPages = Math.ceil(sortedContracts.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedContracts = sortedContracts.slice(startIndex, startIndex + pageSize);
+
+  // Reset to page 1 when contracts change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [contracts.length, pageSize]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(1);
+  };
+
   if (isLoading) {
     return (
       <div className="bg-card rounded-lg border overflow-hidden">
@@ -367,7 +389,7 @@ export default function ContractTable({ contracts, isLoading, onUpdate, initialV
             </tr>
           </thead>
           <tbody>
-            {sortedContracts.map((contract) => (
+            {paginatedContracts.map((contract) => (
               <tr 
                 key={contract.id} 
                 className="border-b border-border hover:bg-muted/30 transition-all cursor-pointer"
@@ -452,6 +474,16 @@ export default function ContractTable({ contracts, isLoading, onUpdate, initialV
             )}
           </tbody>
         </table>
+        {sortedContracts.length > 0 && (
+          <PaginationControls
+            currentPage={currentPage}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            totalItems={sortedContracts.length}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+          />
+        )}
       </div>
 
       {/* View Contract Dialog */}
