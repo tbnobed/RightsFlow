@@ -107,22 +107,42 @@ export default function RoyaltyCalculator({ onCalculated, initialPartner }: Roya
   const handleCalculate = () => {
     const revenue = parseFloat(form.getValues("revenue"));
     const royaltyRate = parseFloat(selectedContract?.royaltyRate || "0");
+    const flatFeeAmount = parseFloat(selectedContract?.flatFeeAmount || "0");
+    const isRevenueShare = selectedContract?.royaltyType === "Revenue Share";
     
-    if (!revenue || !royaltyRate) {
+    if (!selectedContract) {
       toast({
         title: "Error",
-        description: "Please select a contract and enter revenue amount",
+        description: "Please select a contract",
         variant: "destructive",
       });
       return;
     }
 
-    const grossRoyalty = revenue * (royaltyRate / 100);
-    const netRoyalty = grossRoyalty * 0.9; // Assuming 10% deduction
+    if (isRevenueShare && (!revenue || !royaltyRate)) {
+      toast({
+        title: "Error",
+        description: "Please enter revenue amount for revenue share calculation",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    let grossRoyalty: number;
+    let netRoyalty: number;
+
+    if (isRevenueShare) {
+      grossRoyalty = revenue * (royaltyRate / 100);
+      netRoyalty = grossRoyalty * 0.9; // Assuming 10% deduction
+    } else {
+      // Flat fee - the royalty is the flat fee amount
+      grossRoyalty = flatFeeAmount;
+      netRoyalty = flatFeeAmount * 0.9; // Assuming 10% deduction
+    }
 
     setCalculation({
-      revenue,
-      royaltyRate,
+      revenue: isRevenueShare ? revenue : flatFeeAmount,
+      royaltyRate: isRevenueShare ? royaltyRate : 100,
       grossRoyalty,
       netRoyalty,
     });
